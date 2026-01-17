@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { comlink } from 'vite-plugin-comlink';
 
 export default defineConfig({
-  plugins: [viteSingleFile()],
+  plugins: [comlink(), viteSingleFile()],
+  worker: {
+    plugins: () => [comlink()],
+  },
   build: {
     target: 'esnext',
     minify: true,
