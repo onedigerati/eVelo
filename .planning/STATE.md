@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 3 — Simulation Engine
+**Current focus:** Phase 3 Complete — Ready for Phase 4
 
 ## Current Position
 
 Phase: 3 of 10 (Simulation Engine)
-Plan: 3 of 4 complete
-Status: In progress
-Last activity: 2026-01-17 — Completed 03-03-PLAN.md (Regime-Switching)
+Plan: 4 of 4 complete
+Status: Phase complete
+Last activity: 2026-01-17 — Completed 03-04-PLAN.md (Monte Carlo Simulation)
 
-Progress: ████████▓░ 75%
+Progress: ██████████ 100% (Phase 3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 2.7 min
-- Total execution time: 19 min
+- Total plans completed: 8
+- Average duration: 2.75 min
+- Total execution time: 22 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: ████████▓░ 75%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
-| 03-simulation-engine | 3/4 | 9 min | 3 min |
+| 03-simulation-engine | 4/4 | 12 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (2 min), 03-01 (4 min), 03-02 (2 min), 03-03 (3 min)
+- Last 5 plans: 03-01 (4 min), 03-02 (2 min), 03-03 (3 min), 03-04 (3 min)
 - Trend: Consistent velocity
 
 ## Accumulated Context
@@ -94,6 +94,14 @@ Recent decisions affecting current work:
 - Hamilton (1989) regime-switching: bull/bear/crash with configurable transition matrix
 - Cumulative probability selection for Markov transitions
 
+**From 03-04:**
+- BATCH_SIZE = 1000 iterations for progress reporting granularity
+- seedrandom library for reproducible seeded PRNG
+- setTimeout(0) between batches to yield event loop in worker
+- Comlink.transfer() for zero-copy Float64Array transfer
+- Lazy worker initialization (created on first use)
+- Comlink.proxy() wraps progress callback for cross-thread calls
+
 ### Pending Todos
 
 None yet.
@@ -105,5 +113,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 03-03-PLAN.md (Regime-Switching)
+Stopped at: Completed 03-04-PLAN.md (Monte Carlo Simulation) - Phase 3 complete
 Resume file: None
