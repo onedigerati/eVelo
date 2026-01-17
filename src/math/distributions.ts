@@ -19,14 +19,19 @@ const DEFAULT_PRECISION = 6;
  *
  * @param mean - Mean of the distribution (default: 0)
  * @param stddev - Standard deviation (default: 1)
+ * @param rng - Random number generator returning values in [0, 1) (default: Math.random)
  * @returns Random sample from N(mean, stddev^2)
  */
-export function normalRandom(mean: number = 0, stddev: number = 1): number {
+export function normalRandom(
+  mean: number = 0,
+  stddev: number = 1,
+  rng: () => number = Math.random
+): number {
   // Box-Muller transform
   // Generate two uniform random numbers in (0, 1)
-  // Use 1 - Math.random() to avoid log(0)
-  const u1 = 1 - Math.random();
-  const u2 = Math.random();
+  // Use 1 - rng() to avoid log(0)
+  const u1 = 1 - rng();
+  const u2 = rng();
 
   // Transform to standard normal
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
@@ -43,27 +48,40 @@ export function normalRandom(mean: number = 0, stddev: number = 1): number {
  *
  * @param mu - Mean of the underlying normal distribution (default: 0)
  * @param sigma - Stddev of the underlying normal distribution (default: 1)
+ * @param rng - Random number generator returning values in [0, 1) (default: Math.random)
  * @returns Positive random sample from LogNormal(mu, sigma^2)
  */
-export function lognormalRandom(mu: number = 0, sigma: number = 1): number {
+export function lognormalRandom(
+  mu: number = 0,
+  sigma: number = 1,
+  rng: () => number = Math.random
+): number {
   // exp(normal(mu, sigma))
-  return Math.exp(normalRandom(mu, sigma));
+  return Math.exp(normalRandom(mu, sigma, rng));
 }
 
 /**
  * Generate correlated samples using Cholesky decomposition
  *
- * Given a correlation matrix, generates n sets of correlated
- * standard normal samples. The correlation structure is preserved
- * through the transformation Y = L * Z where L is the Cholesky
- * factor and Z is a vector of independent standard normals.
+ * Given a correlation matrix, generates k correlated samples (one per asset).
+ * The correlation structure is preserved through the transformation Y = L * Z
+ * where L is the Cholesky factor and Z is a vector of independent standard normals.
  *
- * @param n - Number of samples to generate
+ * @param n - Number of assets (k = matrix size)
  * @param correlationMatrix - Symmetric positive-definite correlation matrix
- * @returns Array of n sample vectors, each with k elements (k = matrix size)
+ * @param rng - Random number generator returning values in [0, 1) (default: Math.random)
+ * @param mean - Mean of the output distribution (default: 0)
+ * @param stddev - Standard deviation of the output distribution (default: 1)
+ * @returns Array of n correlated samples (one per asset)
  * @throws Error if correlation matrix is not positive-definite
  */
-export function correlatedSamples(n: number, correlationMatrix: number[][]): number[][] {
+export function correlatedSamples(
+  n: number,
+  correlationMatrix: number[][],
+  rng: () => number = Math.random,
+  mean: number = 0,
+  stddev: number = 1
+): number[] {
   // Compute Cholesky decomposition
   const L = choleskyDecomposition(correlationMatrix);
 
@@ -72,29 +90,30 @@ export function correlatedSamples(n: number, correlationMatrix: number[][]): num
   }
 
   const k = correlationMatrix.length; // Number of assets
-  const samples: number[][] = [];
 
-  // Generate n sets of correlated samples
-  for (let sampleIdx = 0; sampleIdx < n; sampleIdx++) {
-    // Generate k independent standard normal samples
-    const uncorrelated: number[] = [];
-    for (let j = 0; j < k; j++) {
-      uncorrelated.push(normalRandom());
-    }
-
-    // Multiply by Cholesky factor: correlated = L * uncorrelated
-    const correlated: number[] = [];
-    for (let i = 0; i < k; i++) {
-      let value = 0;
-      for (let j = 0; j <= i; j++) {
-        // L is lower triangular, so L[i][j] = 0 for j > i
-        value += L[i][j] * uncorrelated[j];
-      }
-      correlated.push(round(value, DEFAULT_PRECISION));
-    }
-
-    samples.push(correlated);
+  // Validate n matches matrix size
+  if (n !== k) {
+    throw new Error(`Number of assets (${n}) must match correlation matrix size (${k})`);
   }
 
-  return samples;
+  // Generate k independent standard normal samples
+  const uncorrelated: number[] = [];
+  for (let j = 0; j < k; j++) {
+    uncorrelated.push(normalRandom(0, 1, rng));
+  }
+
+  // Multiply by Cholesky factor: correlated = L * uncorrelated
+  // Then scale and shift to desired distribution
+  const correlated: number[] = [];
+  for (let i = 0; i < k; i++) {
+    let value = 0;
+    for (let j = 0; j <= i; j++) {
+      // L is lower triangular, so L[i][j] = 0 for j > i
+      value += L[i][j] * uncorrelated[j];
+    }
+    // Scale by stddev and shift by mean
+    correlated.push(round(mean + value * stddev, DEFAULT_PRECISION));
+  }
+
+  return correlated;
 }
