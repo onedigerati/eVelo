@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 3 of 10 (Simulation Engine)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-01-17 — Phase 2 complete, verified
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-01-17 — Completed 03-01-PLAN.md (Worker Infrastructure)
 
-Progress: ██░░░░░░░░ 20%
+Progress: ██▓░░░░░░░ 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 2.5 min
-- Total execution time: 10 min
+- Total plans completed: 5
+- Average duration: 2.8 min
+- Total execution time: 14 min
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: ██░░░░░░░░ 20%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
+| 03-simulation-engine | 1/4 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min), 02-02 (2 min)
+- Last 5 plans: 01-02 (3 min), 02-01 (3 min), 02-02 (2 min), 03-01 (4 min)
 - Trend: Consistent velocity
 
 ## Accumulated Context
@@ -71,6 +72,14 @@ Recent decisions affecting current work:
 - Box-Muller transform for normal distribution sampling
 - Math module barrel export for clean API
 
+**From 03-01:**
+- comlink() plugin before viteSingleFile() in plugins array
+- Separate worker config with plugins: () => [comlink()]
+- Float64Array for terminal values enables transferable objects
+- Simulation module structure: types.ts for interfaces, index.ts as barrel
+- MarketRegime union type: 'bull' | 'bear' | 'crash'
+- Percentile conventions: p10, p25, p50, p75, p90 as standard buckets
+
 ### Pending Todos
 
 None yet.
@@ -82,5 +91,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Phase 2 verified and complete, ready for Phase 3 planning
+Stopped at: Completed 03-01-PLAN.md (Worker Infrastructure and Simulation Types)
 Resume file: None
