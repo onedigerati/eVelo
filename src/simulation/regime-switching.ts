@@ -9,7 +9,7 @@
  * return distributions.
  */
 
-import { normalRandom } from '../math';
+import { normalRandom, correlatedSamples } from '../math';
 import type {
   MarketRegime,
   TransitionMatrix,
@@ -101,6 +101,81 @@ export function generateRegimeReturns(
 
     // Transition to next regime
     currentRegime = nextRegime(currentRegime, effectiveMatrix, rng);
+  }
+
+  return { returns, regimes };
+}
+
+/**
+ * Result of correlated regime-switching return generation
+ */
+export interface CorrelatedRegimeReturnsResult {
+  /** Generated annual returns per asset [asset][year] */
+  returns: number[][];
+  /** Regime for each year (shared across all assets) */
+  regimes: MarketRegime[];
+}
+
+/**
+ * Generate correlated returns across multiple assets using regime model
+ *
+ * All assets share the same regime sequence but returns are
+ * correlated according to the provided correlation matrix.
+ *
+ * @param years Number of years to generate
+ * @param numAssets Number of assets in portfolio
+ * @param correlationMatrix Asset correlation matrix (from historical data)
+ * @param rng Random number generator
+ * @param initialRegime Starting regime
+ * @param matrix Transition matrix
+ * @param params Regime parameters (applied to all assets)
+ * @returns Object with 2D returns array [asset][year] and regime sequence
+ */
+export function generateCorrelatedRegimeReturns(
+  years: number,
+  numAssets: number,
+  correlationMatrix: number[][],
+  rng: () => number,
+  initialRegime: MarketRegime = 'bull',
+  matrix?: TransitionMatrix,
+  params?: RegimeParamsMap
+): CorrelatedRegimeReturnsResult {
+  const effectiveMatrix = matrix ?? DEFAULT_TRANSITION_MATRIX;
+  const effectiveParams = params ?? DEFAULT_REGIME_PARAMS;
+
+  // Generate regime sequence first
+  const regimes: MarketRegime[] = [];
+  let currentRegime = initialRegime;
+
+  for (let year = 0; year < years; year++) {
+    regimes.push(currentRegime);
+    currentRegime = nextRegime(currentRegime, effectiveMatrix, rng);
+  }
+
+  // Initialize returns arrays for each asset
+  const returns: number[][] = Array.from(
+    { length: numAssets },
+    () => new Array(years)
+  );
+
+  // Generate correlated returns for each year
+  for (let year = 0; year < years; year++) {
+    const regime = regimes[year];
+    const { mean, stddev } = effectiveParams[regime];
+
+    // Generate correlated samples with regime-appropriate mean/stddev
+    const yearReturns = correlatedSamples(
+      numAssets,
+      correlationMatrix,
+      rng,
+      mean,
+      stddev
+    );
+
+    // Assign to each asset
+    for (let asset = 0; asset < numAssets; asset++) {
+      returns[asset][year] = yearReturns[asset];
+    }
   }
 
   return { returns, regimes };
