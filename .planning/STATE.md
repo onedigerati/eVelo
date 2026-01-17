@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 3 of 10 (Simulation Engine)
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-01-17 — Completed 03-02-PLAN.md (Bootstrap Resampling)
+Last activity: 2026-01-17 — Completed 03-03-PLAN.md (Regime-Switching)
 
-Progress: ██████▓░░░ 50%
+Progress: ████████▓░ 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 2.7 min
-- Total execution time: 16 min
+- Total execution time: 19 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: ██████▓░░░ 50%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
-| 03-simulation-engine | 2/4 | 6 min | 3 min |
+| 03-simulation-engine | 3/4 | 9 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (3 min), 02-02 (2 min), 03-01 (4 min), 03-02 (2 min)
+- Last 5 plans: 02-02 (2 min), 03-01 (4 min), 03-02 (2 min), 03-03 (3 min)
 - Trend: Consistent velocity
 
 ## Accumulated Context
@@ -87,6 +87,13 @@ Recent decisions affecting current work:
 - Guard against perfect autocorrelation (rhoSquared >= 1) and short series (n < 12)
 - Math.floor for index calculation to avoid out-of-bounds
 
+**From 03-03:**
+- Seeded RNG added to normalRandom, lognormalRandom, correlatedSamples in math module
+- correlatedSamples signature changed: returns single sample set with mean/stddev parameters
+- Shared regime sequence for multi-asset returns (realistic market behavior)
+- Hamilton (1989) regime-switching: bull/bear/crash with configurable transition matrix
+- Cumulative probability selection for Markov transitions
+
 ### Pending Todos
 
 None yet.
@@ -98,5 +105,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 03-02-PLAN.md (Bootstrap Resampling)
+Stopped at: Completed 03-03-PLAN.md (Regime-Switching)
 Resume file: None
