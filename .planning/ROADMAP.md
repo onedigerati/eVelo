@@ -13,7 +13,7 @@ Building a Monte Carlo simulator for the Buy-Borrow-Die tax optimization strateg
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Build System** - Project scaffolding, TypeScript, Web Components, Vite
-- [ ] **Phase 2: Core Math & Statistics** - Statistical functions, Cholesky decomposition, precision handling
+- [x] **Phase 2: Core Math & Statistics** - Statistical functions, Cholesky decomposition, precision handling
 - [ ] **Phase 3: Simulation Engine** - Monte Carlo core, bootstrap resampling, Web Workers
 - [ ] **Phase 4: SBLOC Engine** - Securities-backed lending, margin calls, forced liquidation
 - [ ] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
@@ -54,8 +54,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 02-01: Statistical functions and Cholesky decomposition
-- [ ] 02-02: Correlation engine and precision utilities
+- [x] 02-01: Statistical functions and precision utilities
+- [x] 02-02: Correlation engine and distributions
 
 ### Phase 3: Simulation Engine
 **Goal**: Monte Carlo simulation with configurable iterations and Web Workers
@@ -225,7 +225,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Build System | 2/2 | Complete | 2026-01-17 |
-| 2. Core Math & Statistics | 0/2 | Not started | - |
+| 2. Core Math & Statistics | 2/2 | Complete | 2026-01-17 |
 | 3. Simulation Engine | 0/4 | Not started | - |
 | 4. SBLOC Engine | 0/3 | Not started | - |
 | 5. Financial Calculations | 0/3 | Not started | - |

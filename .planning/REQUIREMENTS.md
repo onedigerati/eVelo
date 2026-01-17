@@ -135,7 +135,7 @@ Which phases cover which requirements. Updated by create-roadmap.
 | SIM-04 | Phase 3 | Pending |
 | SIM-05 | Phase 3 | Pending |
 | SIM-06 | Phase 3 | Pending |
-| SIM-07 | Phase 2 | Pending |
+| SIM-07 | Phase 2 | Complete |
 | SIM-08 | Phase 3 | Pending |
 | SBLOC-01 | Phase 4 | Pending |
 | SBLOC-02 | Phase 4 | Pending |
@@ -152,7 +152,7 @@ Which phases cover which requirements. Updated by create-roadmap.
 | CALC-03 | Phase 5 | Pending |
 | CALC-04 | Phase 5 | Pending |
 | CALC-05 | Phase 5 | Pending |
-| CALC-06 | Phase 2 | Pending |
+| CALC-06 | Phase 2 | Complete |
 | CALC-07 | Phase 5 | Pending |
 | VIZ-01 | Phase 6 | Pending |
 | VIZ-02 | Phase 6 | Pending |
