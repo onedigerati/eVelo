@@ -104,3 +104,58 @@ export function optimalBlockLength(returns: number[]): number {
   // Clamp to reasonable bounds: minimum 3, maximum n/4
   return Math.max(3, Math.min(Math.floor(n / 4), blockLength));
 }
+
+/**
+ * Moving block bootstrap resampling
+ *
+ * Preserves autocorrelation by sampling contiguous blocks from
+ * the historical series. Blocks can overlap in the original series.
+ *
+ * Use for return series with significant serial correlation
+ * (e.g., monthly returns, high-frequency data).
+ *
+ * @param returns Historical return series
+ * @param targetLength Number of returns to generate
+ * @param rng Random number generator (0-1)
+ * @param blockSize Optional fixed block size (auto-calculated if not provided)
+ * @returns Array of resampled returns preserving autocorrelation
+ */
+export function blockBootstrap(
+  returns: number[],
+  targetLength: number,
+  rng: () => number,
+  blockSize?: number
+): number[] {
+  if (returns.length === 0) {
+    throw new Error('Cannot bootstrap from empty returns array');
+  }
+
+  const n = returns.length;
+
+  // Calculate or validate block size
+  const effectiveBlockSize = blockSize ?? optimalBlockLength(returns);
+
+  // Block size cannot exceed series length
+  const safeBlockSize = Math.min(effectiveBlockSize, n);
+
+  if (safeBlockSize < 1) {
+    throw new Error('Block size must be at least 1');
+  }
+
+  const result: number[] = [];
+
+  // Maximum starting index for a block
+  const maxStart = n - safeBlockSize;
+
+  while (result.length < targetLength) {
+    // Select random block starting position
+    const startIdx = maxStart > 0 ? Math.floor(rng() * (maxStart + 1)) : 0;
+
+    // Copy block to result (up to targetLength)
+    for (let i = 0; i < safeBlockSize && result.length < targetLength; i++) {
+      result.push(returns[startIdx + i]);
+    }
+  }
+
+  return result;
+}
