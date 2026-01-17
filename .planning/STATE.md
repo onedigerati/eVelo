@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 2 — Core Math & Statistics
+**Current focus:** Phase 2 complete, ready for Phase 3 — Simulation Engine
 
 ## Current Position
 
 Phase: 2 of 10 (Core Math & Statistics)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-01-17 — Completed 02-01-PLAN.md (core statistics)
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-01-17 — Completed 02-02-PLAN.md (correlation and distributions)
 
-Progress: ███░░░░░░░ 15%
+Progress: ████░░░░░░ 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 2.7 min
-- Total execution time: 8 min
+- Total plans completed: 4
+- Average duration: 2.5 min
+- Total execution time: 10 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 5 min | 2.5 min |
-| 02-core-math | 1/2 | 3 min | 3 min |
+| 02-core-math | 2/2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (3 min), 02-01 (3 min), 02-02 (2 min)
 - Trend: Consistent velocity
 
 ## Accumulated Context
@@ -65,6 +65,12 @@ Recent decisions affecting current work:
 - 6 decimal places default precision for statistical output
 - Sample variance (N-1) as default over population variance
 
+**From 02-02:**
+- Clamp correlation to [-1, 1] for floating point edge cases
+- Return null from Cholesky when not positive-definite (graceful handling)
+- Box-Muller transform for normal distribution sampling
+- Math module barrel export for clean API
+
 ### Pending Todos
 
 None yet.
@@ -76,5 +82,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 02-01-PLAN.md, ready for 02-02
+Stopped at: Completed 02-02-PLAN.md, Phase 2 complete
 Resume file: None
