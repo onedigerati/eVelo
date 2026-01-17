@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 3 of 10 (Simulation Engine)
-Plan: 1 of 4 complete
+Plan: 2 of 4 complete
 Status: In progress
-Last activity: 2026-01-17 — Completed 03-01-PLAN.md (Worker Infrastructure)
+Last activity: 2026-01-17 — Completed 03-02-PLAN.md (Bootstrap Resampling)
 
-Progress: ██▓░░░░░░░ 25%
+Progress: ██████▓░░░ 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 2.8 min
-- Total execution time: 14 min
+- Total plans completed: 6
+- Average duration: 2.7 min
+- Total execution time: 16 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: ██▓░░░░░░░ 25%
 |-------|-------|-------|----------|
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
-| 03-simulation-engine | 1/4 | 4 min | 4 min |
+| 03-simulation-engine | 2/4 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 02-01 (3 min), 02-02 (2 min), 03-01 (4 min)
+- Last 5 plans: 02-01 (3 min), 02-02 (2 min), 03-01 (4 min), 03-02 (2 min)
 - Trend: Consistent velocity
 
 ## Accumulated Context
@@ -80,6 +80,13 @@ Recent decisions affecting current work:
 - MarketRegime union type: 'bull' | 'bear' | 'crash'
 - Percentile conventions: p10, p25, p50, p75, p90 as standard buckets
 
+**From 03-02:**
+- Seeded RNG pattern: accept rng function parameter for reproducibility
+- Auto-calculation with override: optional parameter with smart default (blockSize)
+- Politis-White (2004) rule for block length: clamp to [3, n/4] range
+- Guard against perfect autocorrelation (rhoSquared >= 1) and short series (n < 12)
+- Math.floor for index calculation to avoid out-of-bounds
+
 ### Pending Todos
 
 None yet.
@@ -91,5 +98,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 03-01-PLAN.md (Worker Infrastructure and Simulation Types)
+Stopped at: Completed 03-02-PLAN.md (Bootstrap Resampling)
 Resume file: None
