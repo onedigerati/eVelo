@@ -180,8 +180,8 @@ Which phases cover which requirements. Updated by create-roadmap.
 | THEME-03 | Phase 9 | Pending |
 | BUILD-01 | Phase 10 | Pending |
 | BUILD-02 | Phase 10 | Pending |
-| BUILD-03 | Phase 1 | Pending |
-| BUILD-04 | Phase 1 | Pending |
+| BUILD-03 | Phase 1 | Complete |
+| BUILD-04 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 53 total
