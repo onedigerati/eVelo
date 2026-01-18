@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 4 of 10 (SBLOC Engine)
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-01-18 — Completed 04-02-PLAN.md (LTV and Margin Call)
+Last activity: 2026-01-18 — Completed 04-03-PLAN.md (Forced Liquidation and SBLOC Engine)
 
-Progress: ██░░░░░░░░ 50% (Phase 4)
+Progress: ███░░░░░░░ 75% (Phase 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 3.2 min
-- Total execution time: 32 min
+- Total execution time: 35 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: ██░░░░░░░░ 50% (Phase 4)
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
-| 04-sbloc-engine | 2/4 | 10 min | 5 min |
+| 04-sbloc-engine | 3/4 | 13 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (3 min), 03-04 (3 min), 04-01 (7 min), 04-02 (3 min)
-- Trend: Stabilizing around 3-5 min for SBLOC engine plans
+- Last 5 plans: 03-04 (3 min), 04-01 (7 min), 04-02 (3 min), 04-03 (3 min)
+- Trend: Consistently around 3-4 min for SBLOC plans (04-01 was anomaly)
 
 ## Accumulated Context
 
@@ -119,6 +119,14 @@ Recent decisions affecting current work:
 - calculateDropToMarginCall returns negative when already past margin call threshold
 - Threshold calculation pattern: threshold_portfolio = loan / target_ltv
 
+**From 04-03:**
+- Target LTV after liquidation = maintenanceMargin * 0.8 (safety buffer)
+- Haircut formula: assetsToSell = excessLoan / (1 - haircutRate)
+- Interest applied inline in stepSBLOC (not via accrueInterest) for step order control
+- Portfolio failure = net worth <= 0 (portfolio - loan)
+- Step function increments yearsSinceStart automatically
+- SBLOCYearResult type: newState, marginCallTriggered, liquidationEvent, portfolioFailed, interestCharged, withdrawalMade
+
 ### Pending Todos
 
 None yet.
@@ -130,5 +138,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 04-02-PLAN.md (LTV and Margin Call)
+Stopped at: Completed 04-03-PLAN.md (Forced Liquidation and SBLOC Engine)
 Resume file: None
