@@ -8,7 +8,7 @@
  */
 import { BaseComponent } from '../base-component';
 import type { SimulationOutput, YearlyPercentiles, SimulationStatistics } from '../../simulation/types';
-import type { ProbabilityConeData, HistogramData, HistogramBin } from '../../charts/types';
+import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData } from '../../charts/types';
 // Import chart components to register them
 import '../../charts';
 
@@ -29,6 +29,12 @@ export class ResultsDashboard extends BaseComponent {
   /** Stored simulation result data */
   private _data: SimulationOutput | null = null;
 
+  /** Portfolio weights for donut chart */
+  private _portfolioWeights: { symbol: string; weight: number }[] | null = null;
+
+  /** Correlation matrix for heatmap */
+  private _correlationMatrix: { labels: string[]; matrix: number[][] } | null = null;
+
   /**
    * Set simulation data and update all charts/stats.
    */
@@ -42,6 +48,36 @@ export class ResultsDashboard extends BaseComponent {
    */
   get data(): SimulationOutput | null {
     return this._data;
+  }
+
+  /**
+   * Set portfolio weights for donut chart.
+   */
+  set portfolioWeights(value: { symbol: string; weight: number }[] | null) {
+    this._portfolioWeights = value;
+    this.updateCharts();
+  }
+
+  /**
+   * Get portfolio weights.
+   */
+  get portfolioWeights(): { symbol: string; weight: number }[] | null {
+    return this._portfolioWeights;
+  }
+
+  /**
+   * Set correlation matrix for heatmap.
+   */
+  set correlationMatrix(value: { labels: string[]; matrix: number[][] } | null) {
+    this._correlationMatrix = value;
+    this.updateCharts();
+  }
+
+  /**
+   * Get correlation matrix.
+   */
+  get correlationMatrix(): { labels: string[]; matrix: number[][] } | null {
+    return this._correlationMatrix;
   }
 
   protected template(): string {
@@ -80,6 +116,20 @@ export class ResultsDashboard extends BaseComponent {
               <span class="stat-label">Std Deviation</span>
               <span class="stat-value" id="stat-stddev">-</span>
             </div>
+          </div>
+        </section>
+
+        <section class="chart-section">
+          <h3>Portfolio Composition</h3>
+          <div class="chart-container square">
+            <donut-chart id="donut-chart"></donut-chart>
+          </div>
+        </section>
+
+        <section class="chart-section">
+          <h3>Asset Correlations</h3>
+          <div class="chart-container square">
+            <correlation-heatmap id="heatmap-chart"></correlation-heatmap>
           </div>
         </section>
       </div>
@@ -127,8 +177,16 @@ export class ResultsDashboard extends BaseComponent {
         position: relative;
       }
 
+      .chart-container.square {
+        aspect-ratio: 1;
+        height: auto;
+        min-height: 300px;
+      }
+
       .chart-container probability-cone-chart,
-      .chart-container histogram-chart {
+      .chart-container histogram-chart,
+      .chart-container donut-chart,
+      .chart-container correlation-heatmap {
         position: absolute;
         inset: 0;
         width: 100%;
@@ -233,6 +291,23 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update summary statistics
     this.updateStats(this._data.statistics);
+
+    // Update donut chart (portfolio composition)
+    const donut = this.$('#donut-chart') as HTMLElement & { data: DonutChartData | null };
+    if (donut && this._portfolioWeights) {
+      donut.data = {
+        segments: this._portfolioWeights.map(p => ({
+          label: p.symbol,
+          value: p.weight
+        }))
+      };
+    }
+
+    // Update correlation heatmap
+    const heatmap = this.$('#heatmap-chart') as HTMLElement & { data: HeatmapData | null };
+    if (heatmap && this._correlationMatrix) {
+      heatmap.data = this._correlationMatrix;
+    }
   }
 
   /**
