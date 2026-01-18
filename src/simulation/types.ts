@@ -154,6 +154,13 @@ export interface SimulationStatistics {
   stddev: number;
   /** Percentage of iterations ending above initial value (0-100) */
   successRate: number;
+  // Extended metrics (computed post-simulation in UI layer)
+  /** Compound Annual Growth Rate from initial to median terminal value */
+  cagr?: number;
+  /** Time-Weighted Rate of Return from median yearly path */
+  twrr?: number;
+  /** Annualized volatility from terminal value returns */
+  annualizedVolatility?: number;
 }
 
 // ============================================================================
