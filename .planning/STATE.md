@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 8 of 10 (Data Layer)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-01-18 — Completed 08-01-PLAN.md (Database Setup)
+Last activity: 2026-01-18 — Completed 08-02-PLAN.md (Bundled Presets)
 
-Progress: ███████████████████░ 92% (23/25 plans)
+Progress: ████████████████████ 96% (24/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: 3.2 min
-- Total execution time: 74 min
+- Total execution time: 77 min
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: ███████████████████░ 92% (23/2
 | 05-financial-calculations | 3/3 | 7 min | 2.3 min |
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
-| 08-data-layer | 1/3 | 3 min | 3.0 min |
+| 08-data-layer | 2/3 | 6 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-02 (4 min), 07-03 (3 min), 07-04 (8 min), 08-01 (3 min)
+- Last 5 plans: 07-03 (3 min), 07-04 (8 min), 08-01 (3 min), 08-02 (3 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -217,6 +217,13 @@ Recent decisions affecting current work:
 - Version field in records for future schema migrations
 - getDefaultSettings() helper for settings initialization
 
+**From 08-02:**
+- Static JSON imports for Vite build-time inlining (no network requests)
+- PresetData interface for typed access to bundled market data
+- Symbol-keyed BUNDLED_PRESETS record for O(1) lookup
+- Case-insensitive symbol lookup via toUpperCase()
+- Sample data includes crisis periods (dot-com, 2008, COVID) for testing extremes
+
 ### Pending Todos
 
 None yet.
@@ -228,5 +235,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 08-01-PLAN.md (Database Setup) — ready for 08-02
+Stopped at: Completed 08-02-PLAN.md (Bundled Presets) — ready for 08-03
 Resume file: None
