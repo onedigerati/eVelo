@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 3 Complete — Ready for Phase 4
+**Current focus:** Phase 4 In Progress — SBLOC Engine
 
 ## Current Position
 
-Phase: 3 of 10 (Simulation Engine)
-Plan: 4 of 4 complete
-Status: Phase complete
-Last activity: 2026-01-17 — Completed 03-04-PLAN.md (Monte Carlo Simulation)
+Phase: 4 of 10 (SBLOC Engine)
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-01-18 — Completed 04-01-PLAN.md (SBLOC Types and Interest)
 
-Progress: ██████████ 100% (Phase 3)
+Progress: █░░░░░░░░░ 25% (Phase 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 2.75 min
-- Total execution time: 22 min
+- Total plans completed: 9
+- Average duration: 3.2 min
+- Total execution time: 29 min
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: ██████████ 100% (Phase 3)
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
+| 04-sbloc-engine | 1/4 | 7 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (4 min), 03-02 (2 min), 03-03 (3 min), 03-04 (3 min)
-- Trend: Consistent velocity
+- Last 5 plans: 03-02 (2 min), 03-03 (3 min), 03-04 (3 min), 04-01 (7 min)
+- Trend: Slightly longer due to financial formula verification
 
 ## Accumulated Context
 
@@ -102,6 +103,14 @@ Recent decisions affecting current work:
 - Lazy worker initialization (created on first use)
 - Comlink.proxy() wraps progress callback for cross-thread calls
 
+**From 04-01:**
+- Pure function pattern for state updates (accrueInterest returns new state, never mutates)
+- Configurable compounding frequency (annual/monthly) for realistic modeling
+- Warning zone tracking via inWarningZone boolean in SBLOCState
+- Optional capitalGainsTax field in LiquidationEvent for future tax-aware simulation
+- effectiveAnnualRate helper for comparing compounding scenarios
+- SBLOC module structure: types.ts for interfaces, interest.ts for calculations, index.ts barrel
+
 ### Pending Todos
 
 None yet.
@@ -112,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-17
-Stopped at: Completed 03-04-PLAN.md (Monte Carlo Simulation) - Phase 3 complete
+Last session: 2026-01-18
+Stopped at: Completed 04-01-PLAN.md (SBLOC Types and Interest)
 Resume file: None
