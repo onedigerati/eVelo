@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 11 (Complete Results Dashboard)
-Plan: 1 of 1 complete
+Plan: 2 of 2 complete
 Status: Phase complete
-Last activity: 2026-01-18 — Completed 11-01-PLAN.md (Donut Chart & Correlation Heatmap)
+Last activity: 2026-01-18 — Completed 11-02-PLAN.md (Extended Financial Statistics)
 
-Progress: █████████████████████████ 92% (33/36 plans total)
+Progress: █████████████████████████ 94% (34/36 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
+- Total plans completed: 34
 - Average duration: 3.4 min
-- Total execution time: 111 min
+- Total execution time: 115 min
 
 **By Phase:**
 
@@ -36,10 +36,10 @@ Progress: ███████████████████████�
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
-| 11-complete-results-dashboard | 1/1 | 4 min | 4.0 min |
+| 11-complete-results-dashboard | 2/2 | 8 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.1-03 (4 min), 07.1-04 (4 min), 07.1-05 (3 min), 11-01 (4 min)
+- Last 5 plans: 07.1-04 (4 min), 07.1-05 (3 min), 11-01 (4 min), 11-02 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -280,6 +280,12 @@ Recent decisions affecting current work:
 - Weights passed as percent (0-100) to donut chart for display
 - Identity correlation matrix from simulation config passed to heatmap
 
+**From 11-02:**
+- Extended SimulationStatistics fields are optional (computed in UI, not worker)
+- Statistics grid uses repeat(4, 1fr) on desktop with 2-column mobile override
+- computeExtendedStats() derives metrics from simulation data and configuration
+- Configuration setters pattern: initialValue, timeHorizon, annualWithdrawal, effectiveTaxRate
+
 ### Roadmap Evolution
 
 - Phase 7.1 inserted after Phase 7: Application Integration (URGENT)
@@ -296,6 +302,7 @@ Recent decisions affecting current work:
   - Missing statistics: CAGR, TWRR, margin call probability, salary equivalent
   - Chart components exist (Phase 6) but not integrated into dashboard
   - **Plan 01 complete:** Added donut chart and correlation heatmap
+  - **Plan 02 complete:** Added 8 financial statistics (CAGR, TWRR, volatility, salary equivalent)
 
 ### Pending Todos
 
@@ -308,5 +315,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 11-01-PLAN.md (Donut Chart & Correlation Heatmap) - Phase 11 Complete
+Stopped at: Completed 11-02-PLAN.md (Extended Financial Statistics) - Phase 11 Complete
 Resume file: None (Phase 11 complete, ready for Phase 9 Theming & Polish)
