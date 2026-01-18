@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 7 In Progress — UI Components
+**Current focus:** Phase 7 Complete — UI Components
 
 ## Current Position
 
 Phase: 7 of 10 (UI Components)
-Plan: 3 of 4 complete
-Status: In progress
-Last activity: 2026-01-18 — Completed 07-03-PLAN.md
+Plan: 4 of 4 complete
+Status: Complete
+Last activity: 2026-01-18 — Completed Phase 7 (UI Components)
 
-Progress: ████████████████░░░░ 84% (21/25 plans)
+Progress: ██████████████████░░ 88% (22/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 2.9 min
-- Total execution time: 63 min
+- Total plans completed: 22
+- Average duration: 3.1 min
+- Total execution time: 71 min
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: ████████████████░░░░ 84% (21/2
 | 04-sbloc-engine | 3/3 | 13 min | 4.3 min |
 | 05-financial-calculations | 3/3 | 7 min | 2.3 min |
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
-| 07-ui-components | 3/4 | 9 min | 3.0 min |
+| 07-ui-components | 4/4 | 17 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-03 (3 min), 06-04 (2 min), 07-01 (3 min), 07-02 (3 min), 07-03 (3 min)
-- Trend: Consistent fast execution
+- Last 5 plans: 07-01 (3 min), 07-02 (4 min), 07-03 (3 min), 07-04 (8 min)
+- Trend: 07-04 longer due to checkpoint fixes
 
 ## Accumulated Context
 
@@ -200,6 +200,14 @@ Recent decisions affecting current work:
 - Max 3 visible toasts (removes oldest when exceeded)
 - ARIA live region for screen reader accessibility
 
+**From 07-04:**
+- CSS Grid for main-layout: `grid-template-columns: var(--sidebar-width) 1fr`
+- Mobile breakpoint at 768px: sidebar becomes fixed overlay with backdrop
+- CSS class toggle instead of inline display:none for components needing shadow DOM
+- attributeChangedCallback required for components that update dynamically
+- Object format support in weight-editor for richer asset metadata `{id, name, weight}`
+- All custom elements MUST have `customElements.define()` registration
+
 ### Pending Todos
 
 None yet.
@@ -211,5 +219,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 07-03-PLAN.md — ready for 07-04
+Stopped at: Completed Phase 7 (UI Components) — ready for Phase 8
 Resume file: None
