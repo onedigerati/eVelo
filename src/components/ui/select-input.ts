@@ -167,3 +167,6 @@ export class SelectInput extends BaseComponent {
     this.setAttribute('options', JSON.stringify(opts));
   }
 }
+
+// Register the custom element
+customElements.define('select-input', SelectInput);

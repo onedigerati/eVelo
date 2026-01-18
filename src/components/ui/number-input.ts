@@ -153,3 +153,6 @@ export class NumberInput extends BaseComponent {
     }
   }
 }
+
+// Register the custom element
+customElements.define('number-input', NumberInput);

@@ -173,7 +173,11 @@ export class RangeSlider extends BaseComponent {
     }
     const valueDisplay = this.$('.value-display');
     if (valueDisplay) {
-      valueDisplay.textContent = String(val);
+      const suffix = this.getAttribute('suffix') ?? '';
+      valueDisplay.textContent = `${val}${suffix}`;
     }
   }
 }
+
+// Register the custom element
+customElements.define('range-slider', RangeSlider);

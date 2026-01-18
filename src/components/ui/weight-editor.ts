@@ -28,6 +28,7 @@ export class WeightEditor extends BaseComponent {
 
   private weights: Map<string, number> = new Map();
   private assetNames: Map<string, string> = new Map();
+  private initializedFromJson = false;
 
   protected template(): string {
     const total = this.calculateTotal();
@@ -203,7 +204,8 @@ export class WeightEditor extends BaseComponent {
         if (asset.name) {
           this.assetNames.set(asset.id, asset.name);
         }
-        if (asset.weight !== undefined && !this.weights.has(asset.id)) {
+        // Initialize weights from JSON only on first parse
+        if (!this.initializedFromJson && asset.weight !== undefined) {
           this.weights.set(asset.id, asset.weight);
         }
         return asset.id;
@@ -223,7 +225,10 @@ export class WeightEditor extends BaseComponent {
 
     const assets = this.getAssets();
 
-    // Initialize weights for new assets
+    // Mark as initialized after first parse
+    this.initializedFromJson = true;
+
+    // Initialize weights for new assets (that weren't in JSON)
     assets.forEach((asset) => {
       if (!this.weights.has(asset)) {
         this.weights.set(asset, 0);
