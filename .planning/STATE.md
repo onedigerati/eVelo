@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 8 of 10 (Data Layer)
-Plan: 3 of 3 complete
+Plan: 5 of 5 complete
 Status: Phase complete
-Last activity: 2026-01-18 — Completed 08-04-PLAN.md (Portfolio Service)
+Last activity: 2026-01-18 — Completed 08-05-PLAN.md (CORS Proxy, Yahoo API, Settings)
 
-Progress: ████████████████████ 100% (25/25 plans)
+Progress: ████████████████████ 100% (27/27 plans through phase 8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
-- Average duration: 3.2 min
-- Total execution time: 80 min
+- Total plans completed: 27
+- Average duration: 3.1 min
+- Total execution time: 84 min
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: ████████████████████ 100% (25/
 | 05-financial-calculations | 3/3 | 7 min | 2.3 min |
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
-| 08-data-layer | 3/3 | 9 min | 3.0 min |
+| 08-data-layer | 5/5 | 13 min | 2.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-04 (8 min), 08-01 (3 min), 08-02 (3 min), 08-04 (3 min)
+- Last 5 plans: 08-01 (3 min), 08-02 (3 min), 08-03 (3 min), 08-04 (3 min), 08-05 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -238,6 +238,13 @@ Recent decisions affecting current work:
 - Preserve original created timestamp on import, update modified
 - EXPORT_VERSION constant for future format compatibility
 
+**From 08-05:**
+- CORS proxy abstraction with 4 modes (none, allorigins, corsproxy, custom)
+- Yahoo API as last-resort fallback with conservative rate limiting (1 req/2s)
+- Settings as singleton in IndexedDB with fixed 'settings' key
+- API keys stored in IndexedDB (not localStorage) for security
+- Type-safe ApiSource -> ApiKeys field mapping
+
 ### Pending Todos
 
 None yet.
@@ -249,5 +256,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 08-04-PLAN.md (Portfolio Service) — Phase 8 complete
+Stopped at: Completed 08-05-PLAN.md (CORS Proxy, Yahoo API, Settings) — Phase 8 fully complete
 Resume file: None
