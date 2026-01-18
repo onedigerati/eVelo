@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 7 Complete — UI Components
+**Current focus:** Phase 8 In Progress — Data Layer
 
 ## Current Position
 
-Phase: 7 of 10 (UI Components)
-Plan: 4 of 4 complete
-Status: Complete
-Last activity: 2026-01-18 — Completed Phase 7 (UI Components)
+Phase: 8 of 10 (Data Layer)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-01-18 — Completed 08-01-PLAN.md (Database Setup)
 
-Progress: ██████████████████░░ 88% (22/25 plans)
+Progress: ███████████████████░ 92% (23/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 3.1 min
-- Total execution time: 71 min
+- Total plans completed: 23
+- Average duration: 3.2 min
+- Total execution time: 74 min
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: ██████████████████░░ 88% (22/2
 | 05-financial-calculations | 3/3 | 7 min | 2.3 min |
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
+| 08-data-layer | 1/3 | 3 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (3 min), 07-02 (4 min), 07-03 (3 min), 07-04 (8 min)
-- Trend: 07-04 longer due to checkpoint fixes
+- Last 5 plans: 07-02 (4 min), 07-03 (3 min), 07-04 (8 min), 08-01 (3 min)
+- Trend: Steady execution pace
 
 ## Accumulated Context
 
@@ -208,6 +209,14 @@ Recent decisions affecting current work:
 - Object format support in weight-editor for richer asset metadata `{id, name, weight}`
 - All custom elements MUST have `customElements.define()` registration
 
+**From 08-01:**
+- Dexie.js 4.x EntityTable pattern for typed IndexedDB tables
+- Store dates as ISO strings for JSON serialization (not Date objects)
+- Safari IndexedDB lazy-load workaround at module level
+- Compound index [symbol+source] for multi-field market data lookups
+- Version field in records for future schema migrations
+- getDefaultSettings() helper for settings initialization
+
 ### Pending Todos
 
 None yet.
@@ -219,5 +228,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed Phase 7 (UI Components) — ready for Phase 8
+Stopped at: Completed 08-01-PLAN.md (Database Setup) — ready for 08-02
 Resume file: None
