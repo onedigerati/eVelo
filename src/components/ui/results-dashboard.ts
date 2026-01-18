@@ -9,6 +9,12 @@
 import { BaseComponent } from '../base-component';
 import type { SimulationOutput, YearlyPercentiles, SimulationStatistics } from '../../simulation/types';
 import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData } from '../../charts/types';
+import {
+  calculateCAGR,
+  calculateAnnualizedVolatility,
+  calculateTWRR,
+  calculateSalaryEquivalent,
+} from '../../calculations';
 // Import chart components to register them
 import '../../charts';
 
@@ -34,6 +40,16 @@ export class ResultsDashboard extends BaseComponent {
 
   /** Correlation matrix for heatmap */
   private _correlationMatrix: { labels: string[]; matrix: number[][] } | null = null;
+
+  // Extended statistics configuration (set by app-root from simulation config)
+  /** Initial portfolio value for CAGR calculation */
+  private _initialValue: number = 1000000;
+  /** Time horizon in years for CAGR calculation */
+  private _timeHorizon: number = 30;
+  /** Annual SBLOC withdrawal for salary equivalent */
+  private _annualWithdrawal: number = 50000;
+  /** Effective tax rate for salary equivalent */
+  private _effectiveTaxRate: number = 0.37;
 
   /**
    * Set simulation data and update all charts/stats.
@@ -78,6 +94,34 @@ export class ResultsDashboard extends BaseComponent {
    */
   get correlationMatrix(): { labels: string[]; matrix: number[][] } | null {
     return this._correlationMatrix;
+  }
+
+  /**
+   * Set initial portfolio value for CAGR calculation.
+   */
+  set initialValue(value: number) {
+    this._initialValue = value;
+  }
+
+  /**
+   * Set time horizon for CAGR calculation.
+   */
+  set timeHorizon(value: number) {
+    this._timeHorizon = value;
+  }
+
+  /**
+   * Set annual withdrawal for salary equivalent calculation.
+   */
+  set annualWithdrawal(value: number) {
+    this._annualWithdrawal = value;
+  }
+
+  /**
+   * Set effective tax rate for salary equivalent calculation.
+   */
+  set effectiveTaxRate(value: number) {
+    this._effectiveTaxRate = value;
   }
 
   protected template(): string {
@@ -369,6 +413,55 @@ export class ResultsDashboard extends BaseComponent {
     }
 
     return { bins, binWidth };
+  }
+
+  /**
+   * Compute extended financial statistics from simulation data.
+   *
+   * Calculates CAGR, TWRR, annualized volatility, and salary equivalent
+   * from the simulation output and configuration values.
+   */
+  private computeExtendedStats(): {
+    cagr: number;
+    twrr: number;
+    volatility: number;
+    salaryEquivalent: { equivalent: number; taxSavings: number };
+  } | null {
+    if (!this._data) return null;
+
+    const terminalValues = Array.from(this._data.terminalValues);
+    const { median } = this._data.statistics;
+
+    // CAGR from median terminal value
+    const cagr = calculateCAGR(this._initialValue, median, this._timeHorizon);
+
+    // Annualized volatility from terminal value returns
+    // Convert terminal values to annualized returns for volatility calculation
+    const annualizedReturns = terminalValues.map(tv => {
+      const totalReturn = (tv - this._initialValue) / this._initialValue;
+      return Math.pow(1 + totalReturn, 1 / this._timeHorizon) - 1;
+    });
+    const volatility = calculateAnnualizedVolatility(annualizedReturns);
+
+    // TWRR from yearly percentiles (median path)
+    const twrrResult = calculateTWRR(this._data.yearlyPercentiles);
+    const twrr = twrrResult.twrr;
+
+    // Salary equivalent for tax-free SBLOC withdrawal
+    const salaryResult = calculateSalaryEquivalent(
+      this._annualWithdrawal,
+      this._effectiveTaxRate
+    );
+
+    return {
+      cagr,
+      twrr,
+      volatility,
+      salaryEquivalent: {
+        equivalent: salaryResult.salaryEquivalent,
+        taxSavings: salaryResult.taxSavings
+      }
+    };
   }
 
   /**
