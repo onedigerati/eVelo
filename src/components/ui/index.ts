@@ -3,6 +3,14 @@
  * Import this module to register all UI components.
  */
 
+// Layout Components
+export { SidebarPanel } from './sidebar-panel';
+export { ParamSection } from './param-section';
+
+// Portfolio Configuration Components
+export { AssetSelector } from './asset-selector';
+export { WeightEditor } from './weight-editor';
+
 // Input Components
 export { RangeSlider } from './range-slider';
 export { NumberInput } from './number-input';
@@ -12,12 +20,3 @@ export { SelectInput, type SelectOption } from './select-input';
 export { ProgressIndicator } from './progress-indicator';
 export { ToastNotification, type ToastType } from './toast-notification';
 export { ToastContainer } from './toast-container';
-
-// Register all UI components
-import { RangeSlider } from './range-slider';
-import { NumberInput } from './number-input';
-import { SelectInput } from './select-input';
-
-customElements.define('range-slider', RangeSlider);
-customElements.define('number-input', NumberInput);
-customElements.define('select-input', SelectInput);
