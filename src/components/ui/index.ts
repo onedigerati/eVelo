@@ -22,3 +22,10 @@ export { SelectInput, type SelectOption } from './select-input';
 export { ProgressIndicator } from './progress-indicator';
 export { ToastNotification, type ToastType } from './toast-notification';
 export { ToastContainer } from './toast-container';
+
+// Settings Components
+export { SettingsPanel } from './settings-panel';
+
+// Portfolio Management Components
+export { PortfolioManager } from './portfolio-manager';
+export { PortfolioList } from './portfolio-list';

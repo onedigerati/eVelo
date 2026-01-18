@@ -94,7 +94,15 @@ export class AppRoot extends BaseComponent {
           </param-section>
         </sidebar-panel>
 
-        <h1 slot="header">eVelo Portfolio Simulator</h1>
+        <div slot="header" class="header-content">
+          <h1>eVelo Portfolio Simulator</h1>
+          <button id="btn-settings" class="header-btn" aria-label="Settings" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </div>
 
         <div class="dashboard">
           <help-section title="What is Buy-Borrow-Die?">
@@ -124,6 +132,7 @@ export class AppRoot extends BaseComponent {
         </div>
       </main-layout>
       <toast-container position="bottom-right"></toast-container>
+      <settings-panel id="settings-panel"></settings-panel>
     `;
   }
 
@@ -200,6 +209,40 @@ export class AppRoot extends BaseComponent {
 
       progress-indicator.hidden {
         display: none;
+      }
+
+      .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .header-content h1 {
+        margin: 0;
+      }
+
+      .header-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: var(--spacing-xs, 4px);
+        border-radius: var(--radius-sm, 4px);
+        color: var(--text-secondary, #475569);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .header-btn:hover {
+        background: var(--surface-hover, rgba(0, 0, 0, 0.05));
+        color: var(--color-primary, #0d9488);
+      }
+
+      .header-btn:focus-visible {
+        outline: 2px solid var(--color-primary, #0d9488);
+        outline-offset: 2px;
       }
     `;
   }
@@ -292,6 +335,14 @@ export class AppRoot extends BaseComponent {
     const runBtn = this.$('#run-sim') as HTMLButtonElement;
     const progress = this.$('#sim-progress') as HTMLElement;
     const toastContainer = this.$('toast-container') as any;
+
+    // Settings button handler
+    const settingsBtn = this.$('#btn-settings');
+    const settingsPanel = this.$('#settings-panel') as any;
+
+    settingsBtn?.addEventListener('click', () => {
+      settingsPanel?.toggle();
+    });
 
     runBtn?.addEventListener('click', async () => {
       // Prevent double-runs
