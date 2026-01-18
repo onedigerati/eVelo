@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 5 of 10 (Financial Calculations)
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-01-17 — Completed 05-02-PLAN.md (TWRR and Margin Call Probability)
+Last activity: 2026-01-17 — Completed 05-03-PLAN.md (Estate Calculations and Module Export)
 
-Progress: █████████░░░░░░░░░░░ 52% (13/25 plans)
+Progress: ██████████░░░░░░░░░░ 56% (14/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 3.1 min
-- Total execution time: 40 min
+- Total plans completed: 14
+- Average duration: 3.0 min
+- Total execution time: 42 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: █████████░░░░░░░░░░░ 52% (13/2
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
 | 04-sbloc-engine | 3/3 | 13 min | 4.3 min |
-| 05-financial-calculations | 2/4 | 5 min | 2.5 min |
+| 05-financial-calculations | 3/4 | 7 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (3 min), 04-03 (3 min), 05-01 (2 min), 05-02 (3 min)
+- Last 5 plans: 04-03 (3 min), 05-01 (2 min), 05-02 (3 min), 05-03 (2 min)
 - Trend: Fast execution for calculation-focused plans
 
 ## Accumulated Context
@@ -144,6 +144,14 @@ Recent decisions affecting current work:
 - Iteration-based counting for margin calls (not event-based)
 - First-call-year tracking for accurate cumulative probability
 
+**From 05-03:**
+- Stepped-up basis savings = embedded gains * capital gains rate (23.8% default)
+- BBD advantage = BBD net estate - Sell net estate (positive means BBD is better)
+- Return 0 for embedded gains in loss scenarios (no negative gains)
+- Salary equivalent = withdrawal / (1 - taxRate)
+- Handle 100% tax rate edge case by returning Infinity
+- Barrel export pattern for calculations module (index.ts re-exports all)
+
 ### Pending Todos
 
 None yet.
@@ -155,5 +163,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 05-02-PLAN.md (TWRR and Margin Call Probability)
+Stopped at: Completed 05-03-PLAN.md (Estate Calculations and Module Export)
 Resume file: None
