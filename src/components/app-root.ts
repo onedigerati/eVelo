@@ -90,9 +90,15 @@ export class AppRoot extends BaseComponent {
           </param-section>
 
           <param-section title="Asset Allocation">
+            <asset-selector
+              id="asset-selector"
+              assets='["SPY","QQQ","IWM","AGG"]'
+              selected='["SPY","AGG"]'
+              max-selection="5"
+            ></asset-selector>
             <weight-editor
               id="weight-editor"
-              assets='[{"id":"SPY","name":"S&P 500","weight":60},{"id":"BND","name":"Total Bond","weight":30},{"id":"GLD","name":"Gold","weight":10}]'
+              assets='[{"id":"SPY","name":"S&P 500","weight":70},{"id":"AGG","name":"Aggregate Bond","weight":30}]'
             ></weight-editor>
           </param-section>
 
