@@ -5,6 +5,8 @@ import './ui';
 import { runSimulation, SimulationConfig, PortfolioConfig, SimulationOutput, AssetConfig } from '../simulation';
 // Import preset service for historical returns
 import { getPresetData } from '../data/services/preset-service';
+// Import portfolio types
+import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
 
 // UI component types for type casting
 type RangeSlider = import('./ui/range-slider').RangeSlider;
@@ -89,8 +91,13 @@ export class AppRoot extends BaseComponent {
 
           <param-section title="Asset Allocation">
             <weight-editor
+              id="weight-editor"
               assets='[{"id":"SPY","name":"S&P 500","weight":60},{"id":"BND","name":"Total Bond","weight":30},{"id":"GLD","name":"Gold","weight":10}]'
             ></weight-editor>
+          </param-section>
+
+          <param-section title="Portfolio Management">
+            <portfolio-manager id="portfolio-manager"></portfolio-manager>
           </param-section>
         </sidebar-panel>
 
@@ -412,6 +419,37 @@ export class AppRoot extends BaseComponent {
       } finally {
         this._isRunning = false;
         runBtn.disabled = false;
+      }
+    });
+
+    // Handle request for current portfolio state (from portfolio-manager)
+    this.addEventListener('request-portfolio-state', (e: Event) => {
+      const weightEditor = this.$('#weight-editor') as (WeightEditor & {
+        getWeights(): Record<string, number>;
+      }) | null;
+      const weights = weightEditor?.getWeights() || {};
+      const assets: AssetRecord[] = Object.entries(weights).map(([symbol, weight]) => ({
+        id: symbol,
+        symbol,
+        name: symbol, // Could be enhanced with lookup
+        assetClass: 'equity' as const, // Default, can be refined later
+        weight: weight / 100 // Convert percent to decimal
+      }));
+      (e as CustomEvent).detail.assets = assets;
+    });
+
+    // Handle portfolio loaded (from portfolio-manager)
+    this.addEventListener('portfolio-loaded', (e: Event) => {
+      const { portfolio } = (e as CustomEvent).detail as { portfolio: PortfolioRecord };
+      const weightEditor = this.$('#weight-editor') as HTMLElement | null;
+      if (weightEditor && portfolio.assets) {
+        // Transform to weight-editor format
+        const assets = portfolio.assets.map((a: AssetRecord) => ({
+          id: a.symbol,
+          name: a.name,
+          weight: a.weight * 100 // Convert decimal to percent
+        }));
+        weightEditor.setAttribute('assets', JSON.stringify(assets));
       }
     });
   }
