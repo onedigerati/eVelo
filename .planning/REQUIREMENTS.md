@@ -29,20 +29,20 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Estate (Die)
 
-- [ ] **ESTATE-01**: System calculates stepped-up basis tax savings at death
-- [ ] **ESTATE-02**: System displays BBD vs Sell strategy comparison
-- [ ] **ESTATE-03**: System calculates embedded capital gains (what would have been taxed)
-- [ ] **ESTATE-04**: System notes estate tax exemption threshold ($13.99M for 2025)
+- [x] **ESTATE-01**: System calculates stepped-up basis tax savings at death
+- [x] **ESTATE-02**: System displays BBD vs Sell strategy comparison
+- [x] **ESTATE-03**: System calculates embedded capital gains (what would have been taxed)
+- [x] **ESTATE-04**: System notes estate tax exemption threshold ($13.99M for 2025)
 
 ### Financial Calculations
 
-- [ ] **CALC-01**: System displays success rate percentage
-- [ ] **CALC-02**: System calculates percentile outcomes (P10, P25, P50, P75, P90)
-- [ ] **CALC-03**: System calculates CAGR and annualized volatility
-- [ ] **CALC-04**: System calculates margin call probability by year
-- [ ] **CALC-05**: System displays salary-equivalent for tax-free SBLOC withdrawals
-- [ ] **CALC-06**: System calculates Pearson correlation coefficients for asset pairs
-- [ ] **CALC-07**: System calculates TWRR (Time-Weighted Rate of Return)
+- [x] **CALC-01**: System displays success rate percentage
+- [x] **CALC-02**: System calculates percentile outcomes (P10, P25, P50, P75, P90)
+- [x] **CALC-03**: System calculates CAGR and annualized volatility
+- [x] **CALC-04**: System calculates margin call probability by year
+- [x] **CALC-05**: System displays salary-equivalent for tax-free SBLOC withdrawals
+- [x] **CALC-06**: System calculates Pearson correlation coefficients for asset pairs
+- [x] **CALC-07**: System calculates TWRR (Time-Weighted Rate of Return)
 
 ### Visualizations
 
@@ -143,17 +143,17 @@ Which phases cover which requirements. Updated by create-roadmap.
 | SBLOC-04 | Phase 4 | Complete |
 | SBLOC-05 | Phase 4 | Complete |
 | SBLOC-06 | Phase 4 | Complete |
-| ESTATE-01 | Phase 5 | Pending |
-| ESTATE-02 | Phase 5 | Pending |
-| ESTATE-03 | Phase 5 | Pending |
-| ESTATE-04 | Phase 5 | Pending |
-| CALC-01 | Phase 5 | Pending |
-| CALC-02 | Phase 5 | Pending |
-| CALC-03 | Phase 5 | Pending |
-| CALC-04 | Phase 5 | Pending |
-| CALC-05 | Phase 5 | Pending |
+| ESTATE-01 | Phase 5 | Complete |
+| ESTATE-02 | Phase 5 | Complete |
+| ESTATE-03 | Phase 5 | Complete |
+| ESTATE-04 | Phase 5 | Complete |
+| CALC-01 | Phase 5 | Complete |
+| CALC-02 | Phase 5 | Complete |
+| CALC-03 | Phase 5 | Complete |
+| CALC-04 | Phase 5 | Complete |
+| CALC-05 | Phase 5 | Complete |
 | CALC-06 | Phase 2 | Complete |
-| CALC-07 | Phase 5 | Pending |
+| CALC-07 | Phase 5 | Complete |
 | VIZ-01 | Phase 6 | Pending |
 | VIZ-02 | Phase 6 | Pending |
 | VIZ-03 | Phase 6 | Pending |

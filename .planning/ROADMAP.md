@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Core Math & Statistics** - Statistical functions, Cholesky decomposition, precision handling
 - [x] **Phase 3: Simulation Engine** - Monte Carlo core, bootstrap resampling, Web Workers
 - [x] **Phase 4: SBLOC Engine** - Securities-backed lending, margin calls, forced liquidation
-- [ ] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
+- [x] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
 - [ ] **Phase 6: Visualizations** - Chart.js components, probability cone, histograms, heatmaps
 - [ ] **Phase 7: UI Components** - Input forms, sidebar, progress indicators, responsive layout
 - [ ] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
@@ -115,9 +115,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 05-01: Core metrics (success rate, percentiles, CAGR, volatility)
-- [ ] 05-02: TWRR and margin call probability
-- [ ] 05-03: Estate calculations (stepped-up basis, BBD vs Sell)
+- [x] 05-01: Core metrics (success rate, percentiles, CAGR, volatility)
+- [x] 05-02: TWRR and margin call probability
+- [x] 05-03: Estate calculations (stepped-up basis, BBD vs Sell)
 
 ### Phase 6: Visualizations
 **Goal**: Chart.js visualizations for simulation results
@@ -228,7 +228,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Core Math & Statistics | 2/2 | Complete | 2026-01-17 |
 | 3. Simulation Engine | 4/4 | Complete | 2026-01-17 |
 | 4. SBLOC Engine | 3/3 | Complete | 2026-01-17 |
-| 5. Financial Calculations | 0/3 | Not started | - |
+| 5. Financial Calculations | 3/3 | Complete | 2026-01-17 |
 | 6. Visualizations | 0/4 | Not started | - |
 | 7. UI Components | 0/4 | Not started | - |
 | 8. Data Layer | 0/5 | Not started | - |
