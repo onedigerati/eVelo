@@ -15,8 +15,10 @@
     "vite-plugin-singlefile": "^2.0.0"
   },
   "dependencies": {
+    "bottleneck": "^2.19.5",
     "chart.js": "^4.5.1",
     "chartjs-chart-matrix": "^3.0.0",
+    "dexie": "^4.2.1",
     "seedrandom": "^3.0.5"
   }
 }
