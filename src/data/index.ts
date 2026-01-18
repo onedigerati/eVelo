@@ -1,7 +1,7 @@
 /**
  * Data layer barrel export
  *
- * Re-exports database instance, schemas, and types for convenient access.
+ * Re-exports database instance, schemas, services, and types for convenient access.
  */
 
 // Database singleton
@@ -16,3 +16,13 @@ export type {
   CorsProxyType
 } from './schemas/settings';
 export { getDefaultSettings } from './schemas/settings';
+
+// Services
+export {
+  BUNDLED_PRESETS,
+  getPresetSymbols,
+  getPresetData,
+  isPresetSymbol,
+  type PresetData,
+  type PresetReturn,
+} from './services';
