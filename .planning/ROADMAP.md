@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Simulation Engine** - Monte Carlo core, bootstrap resampling, Web Workers
 - [x] **Phase 4: SBLOC Engine** - Securities-backed lending, margin calls, forced liquidation
 - [x] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
-- [ ] **Phase 6: Visualizations** - Chart.js components, probability cone, histograms, heatmaps
+- [x] **Phase 6: Visualizations** - Chart.js components, probability cone, histograms, heatmaps
 - [ ] **Phase 7: UI Components** - Input forms, sidebar, progress indicators, responsive layout
 - [ ] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
 - [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
@@ -136,10 +136,10 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 06-01: Chart.js setup and base chart component
-- [ ] 06-02: Probability cone and SBLOC balance charts
-- [ ] 06-03: Histogram and bar charts
-- [ ] 06-04: Donut chart and correlation heatmap
+- [x] 06-01: Chart.js setup and base chart component
+- [x] 06-02: Probability cone and SBLOC balance charts
+- [x] 06-03: Histogram and bar charts
+- [x] 06-04: Donut chart and correlation heatmap
 
 ### Phase 7: UI Components
 **Goal**: Interactive user interface for parameter input and results
@@ -229,7 +229,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Simulation Engine | 4/4 | Complete | 2026-01-17 |
 | 4. SBLOC Engine | 3/3 | Complete | 2026-01-17 |
 | 5. Financial Calculations | 3/3 | Complete | 2026-01-17 |
-| 6. Visualizations | 0/4 | Not started | - |
+| 6. Visualizations | 4/4 | Complete | 2026-01-17 |
 | 7. UI Components | 0/4 | Not started | - |
 | 8. Data Layer | 0/5 | Not started | - |
 | 9. Theming & Polish | 0/3 | Not started | - |

@@ -46,13 +46,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Visualizations
 
-- [ ] **VIZ-01**: User can view probability cone (net worth over time with percentile bands)
-- [ ] **VIZ-02**: User can view terminal net worth distribution histogram
-- [ ] **VIZ-03**: User can view portfolio composition donut chart
-- [ ] **VIZ-04**: User can view asset correlation matrix heatmap
-- [ ] **VIZ-05**: User can view margin call risk by year bar chart
-- [ ] **VIZ-06**: User can view SBLOC balance over time line chart
-- [ ] **VIZ-07**: User can view BBD vs Sell strategy comparison chart
+- [x] **VIZ-01**: User can view probability cone (net worth over time with percentile bands)
+- [x] **VIZ-02**: User can view terminal net worth distribution histogram
+- [x] **VIZ-03**: User can view portfolio composition donut chart
+- [x] **VIZ-04**: User can view asset correlation matrix heatmap
+- [x] **VIZ-05**: User can view margin call risk by year bar chart
+- [x] **VIZ-06**: User can view SBLOC balance over time line chart
+- [x] **VIZ-07**: User can view BBD vs Sell strategy comparison chart
 
 ### Data Management
 
@@ -154,13 +154,13 @@ Which phases cover which requirements. Updated by create-roadmap.
 | CALC-05 | Phase 5 | Complete |
 | CALC-06 | Phase 2 | Complete |
 | CALC-07 | Phase 5 | Complete |
-| VIZ-01 | Phase 6 | Pending |
-| VIZ-02 | Phase 6 | Pending |
-| VIZ-03 | Phase 6 | Pending |
-| VIZ-04 | Phase 6 | Pending |
-| VIZ-05 | Phase 6 | Pending |
-| VIZ-06 | Phase 6 | Pending |
-| VIZ-07 | Phase 6 | Pending |
+| VIZ-01 | Phase 6 | Complete |
+| VIZ-02 | Phase 6 | Complete |
+| VIZ-03 | Phase 6 | Complete |
+| VIZ-04 | Phase 6 | Complete |
+| VIZ-05 | Phase 6 | Complete |
+| VIZ-06 | Phase 6 | Complete |
+| VIZ-07 | Phase 6 | Complete |
 | DATA-01 | Phase 8 | Pending |
 | DATA-02 | Phase 8 | Pending |
 | DATA-03 | Phase 8 | Pending |
