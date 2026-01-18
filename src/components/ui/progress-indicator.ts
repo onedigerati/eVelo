@@ -56,6 +56,30 @@ export class ProgressIndicator extends BaseComponent {
     this.setAttribute('label', val);
   }
 
+  /**
+   * Update the progress bar and text when attributes change.
+   */
+  override attributeChangedCallback(
+    name: string,
+    oldValue: string | null,
+    newValue: string | null
+  ): void {
+    // Only update if rendered and value actually changed
+    if (oldValue === newValue) return;
+
+    const bar = this.$('.progress-bar') as HTMLElement | null;
+    const text = this.$('.progress-text') as HTMLElement | null;
+    const label = this.$('.progress-label') as HTMLElement | null;
+
+    if (name === 'value' && bar && text) {
+      const val = parseInt(newValue || '0', 10);
+      bar.style.width = `${val}%`;
+      text.textContent = `${val}%`;
+    } else if (name === 'label' && label) {
+      label.textContent = newValue || '';
+    }
+  }
+
   protected template(): string {
     const isIndeterminate = this.indeterminate;
     const currentValue = this.value;

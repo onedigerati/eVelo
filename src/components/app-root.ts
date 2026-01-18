@@ -85,8 +85,8 @@ export class AppRoot extends BaseComponent {
             <progress-indicator
               id="sim-progress"
               value="0"
-              max="100"
-              style="display: none;"
+              label="Running simulation..."
+              class="hidden"
             ></progress-indicator>
           </div>
 
@@ -165,6 +165,15 @@ export class AppRoot extends BaseComponent {
         color: var(--text-tertiary, #94a3b8);
         margin-top: var(--spacing-sm, 8px);
       }
+
+      progress-indicator {
+        flex: 1;
+        max-width: 300px;
+      }
+
+      progress-indicator.hidden {
+        display: none;
+      }
     `;
   }
 
@@ -176,15 +185,15 @@ export class AppRoot extends BaseComponent {
     runBtn?.addEventListener('click', () => {
       // Demo: show progress and toast
       if (progress) {
-        progress.style.display = 'flex';
-        progress.setAttribute('status', 'Running simulation...');
+        progress.classList.remove('hidden');
+        progress.setAttribute('value', '0');
         let val = 0;
         const interval = setInterval(() => {
           val += 5;
           progress.setAttribute('value', String(val));
           if (val >= 100) {
             clearInterval(interval);
-            progress.style.display = 'none';
+            progress.classList.add('hidden');
             if (toastContainer && typeof toastContainer.show === 'function') {
               toastContainer.show('Simulation complete! (Demo)', 'success');
             }
