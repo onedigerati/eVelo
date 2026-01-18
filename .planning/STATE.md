@@ -224,6 +224,13 @@ Recent decisions affecting current work:
 - Case-insensitive symbol lookup via toUpperCase()
 - Sample data includes crisis periods (dot-com, 2008, COVID) for testing extremes
 
+**From 08-03:**
+- Pass optional reservoir/minTime as undefined to Bottleneck (ignores undefined values)
+- Calculate returns from adjusted close for EODHD/Alpha Vantage/Tiingo
+- Yahoo API throws explicit error rather than fallback (unreliable API)
+- 7-day cache expiration for historical market data
+- Abstract base class pattern for rate-limited API clients
+
 **From 08-04:**
 - Type assertion (as number) for Dexie put() return on auto-increment tables
 - Weight sum validation with 0.01 tolerance for floating point
