@@ -26,6 +26,19 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+/**
+ * Map asset symbols to display names
+ */
+function getAssetName(symbol: string): string {
+  const names: Record<string, string> = {
+    SPY: 'S&P 500',
+    QQQ: 'Nasdaq 100',
+    IWM: 'Russell 2000',
+    AGG: 'Aggregate Bond',
+  };
+  return names[symbol] || symbol;
+}
+
 export class AppRoot extends BaseComponent {
   /** Stored simulation result for charts */
   private _simulationResult: SimulationOutput | null = null;
@@ -337,6 +350,40 @@ export class AppRoot extends BaseComponent {
 
     settingsBtn?.addEventListener('click', () => {
       settingsPanel?.toggle();
+    });
+
+    // Handle asset selection changes from asset-selector
+    const assetSelector = this.$('#asset-selector') as HTMLElement & { getSelected(): string[] };
+    const weightEditor = this.$('#weight-editor') as HTMLElement;
+
+    assetSelector?.addEventListener('selection-change', (e: Event) => {
+      const { selected } = (e as CustomEvent).detail as { selected: string[] };
+
+      // Get current weights from editor
+      const currentWeights = (weightEditor as any)?.getWeights?.() || {};
+
+      // Build new assets array
+      // - Keep existing weights for assets still selected
+      // - Add new assets with equal distribution of remaining weight
+      const existingTotal = selected
+        .filter((s) => s in currentWeights)
+        .reduce((sum, s) => sum + currentWeights[s], 0);
+
+      const newAssets = selected.filter((s) => !(s in currentWeights));
+      const remainingWeight = 100 - existingTotal;
+      const newWeight = newAssets.length > 0 ? remainingWeight / newAssets.length : 0;
+
+      // Map to weight-editor format
+      const assets = selected.map((symbol) => {
+        const existingWeight = currentWeights[symbol];
+        return {
+          id: symbol,
+          name: getAssetName(symbol),
+          weight: existingWeight !== undefined ? existingWeight : Math.round(newWeight),
+        };
+      });
+
+      weightEditor.setAttribute('assets', JSON.stringify(assets));
     });
 
     runBtn?.addEventListener('click', async () => {
