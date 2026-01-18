@@ -181,6 +181,13 @@ Recent decisions affecting current work:
 - Contrast-aware text color based on background brightness calculation
 - interpolateColor helper exported for reuse
 
+**From 07-01:**
+- CSS custom properties with fallback values in var() calls for component isolation
+- Style native inputs rather than custom implementations for accessibility
+- Custom events with composed:true to cross Shadow DOM boundary
+- Teal primary color (#0d9488) as brand color
+- Dark theme placeholder in tokens for Phase 9
+
 **From 07-03:**
 - Singleton toast-container manages all toast lifecycle
 - Auto-dismiss with configurable duration (default 5s, 0 disables)
