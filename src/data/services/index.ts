@@ -37,3 +37,14 @@ export {
 } from './portfolio-service';
 
 export type { PortfolioExport } from './portfolio-service';
+
+// Market data service
+export {
+  getCachedOrFetch,
+  fetchMarketData,
+  clearCache,
+  getCacheStats,
+  getCachedData
+} from './market-data-service';
+
+export type { CacheStats } from './market-data-service';
