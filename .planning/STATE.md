@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 5 of 10 (Financial Calculations)
-Plan: 1 of 4 complete
+Plan: 2 of 4 complete
 Status: In progress
-Last activity: 2026-01-17 — Completed 05-01-PLAN.md (Core Metrics Module)
+Last activity: 2026-01-17 — Completed 05-02-PLAN.md (TWRR and Margin Call Probability)
 
-Progress: █████████░░░░░░░░░░░ 48% (12/25 plans)
+Progress: █████████░░░░░░░░░░░ 52% (13/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 3.1 min
-- Total execution time: 37 min
+- Total execution time: 40 min
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: █████████░░░░░░░░░░░ 48% (12/2
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
 | 04-sbloc-engine | 3/3 | 13 min | 4.3 min |
-| 05-financial-calculations | 1/4 | 2 min | 2 min |
+| 05-financial-calculations | 2/4 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (7 min), 04-02 (3 min), 04-03 (3 min), 05-01 (2 min)
-- Trend: Fast execution for type-focused plans
+- Last 5 plans: 04-02 (3 min), 04-03 (3 min), 05-01 (2 min), 05-02 (3 min)
+- Trend: Fast execution for calculation-focused plans
 
 ## Accumulated Context
 
@@ -136,6 +136,14 @@ Recent decisions affecting current work:
 - Calculation functions accept Float64Array and convert internally
 - Pre-calculated success rate preference from statistics when available
 
+**From 05-02:**
+- TWRR uses median (p50) for time-weighted return calculation
+- Geometric return linking: (1+R1)(1+R2)...(1+Rn) - 1
+- Return NaN for invalid inputs (zero/negative start values, periods <= 0)
+- Monotonic cumulative probability via Math.max enforcement
+- Iteration-based counting for margin calls (not event-based)
+- First-call-year tracking for accurate cumulative probability
+
 ### Pending Todos
 
 None yet.
@@ -147,5 +155,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 05-01-PLAN.md (Core Metrics Module)
+Stopped at: Completed 05-02-PLAN.md (TWRR and Margin Call Probability)
 Resume file: None
