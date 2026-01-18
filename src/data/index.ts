@@ -24,9 +24,15 @@ export {
   FmpApiClient,
   EodhdApiClient,
   AlphaVantageApiClient,
-  TiingoApiClient
+  TiingoApiClient,
+  YahooApiClient,
+  YAHOO_DISCLAIMER,
+  // CORS proxy utilities
+  CORS_PROXY_OPTIONS,
+  getCorsProxyUrl,
+  wrapUrlWithProxy
 } from './api';
-export type { RateLimitConfig, ApiConfig } from './api';
+export type { RateLimitConfig, ApiConfig, CorsProxyConfig } from './api';
 
 // Services
 export {
@@ -55,7 +61,17 @@ export {
   fetchMarketData,
   clearCache,
   getCacheStats,
-  getCachedData
+  getCachedData,
+  // Settings service
+  SETTINGS_ID,
+  DEFAULT_SETTINGS,
+  getSettings,
+  saveSettings,
+  getApiKey,
+  setApiKey,
+  clearApiKey,
+  getCorsConfig,
+  setCorsConfig
 } from './services';
 
 export type {

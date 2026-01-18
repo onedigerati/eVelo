@@ -48,3 +48,16 @@ export {
 } from './market-data-service';
 
 export type { CacheStats } from './market-data-service';
+
+// Settings service
+export {
+  SETTINGS_ID,
+  DEFAULT_SETTINGS,
+  getSettings,
+  saveSettings,
+  getApiKey,
+  setApiKey,
+  clearApiKey,
+  getCorsConfig,
+  setCorsConfig
+} from './settings-service';
