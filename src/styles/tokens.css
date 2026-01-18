@@ -1,0 +1,69 @@
+/**
+ * Design Tokens for eVelo
+ * CSS custom properties for consistent theming across all components.
+ */
+
+:root {
+  /* Colors (light theme) */
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+
+  /* Surfaces */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #e2e8f0;
+
+  /* Text */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-inverse: #ffffff;
+
+  /* Borders */
+  --border-color: #e2e8f0;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Typography */
+  --font-family: system-ui, -apple-system, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+
+  /* Layout */
+  --sidebar-width: 320px;
+  --sidebar-collapsed-width: 48px;
+}
+
+/* Dark theme placeholder (will be implemented in Phase 9) */
+[data-theme="dark"] {
+  /* Colors */
+  --color-primary: #14b8a6;
+  --color-primary-hover: #2dd4bf;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+
+  /* Surfaces */
+  --surface-primary: #0f172a;
+  --surface-secondary: #1e293b;
+  --surface-tertiary: #334155;
+
+  /* Text */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-inverse: #0f172a;
+
+  /* Borders */
+  --border-color: #334155;
+}
