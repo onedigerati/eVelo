@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 ## Current Position
 
-Phase: 7.1 (Application Integration - INSERTED)
-Plan: 5 of 5 complete (including gap closure)
+Phase: 11 (Complete Results Dashboard)
+Plan: 1 of 1 complete
 Status: Phase complete
-Last activity: 2026-01-18 — Completed 07.1-05-PLAN.md (Asset Selector Integration - Gap Closure)
+Last activity: 2026-01-18 — Completed 11-01-PLAN.md (Donut Chart & Correlation Heatmap)
 
-Progress: ██████████████████████░░░ 89% (32/36 plans total)
+Progress: █████████████████████████ 92% (33/36 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
-- Average duration: 3.3 min
-- Total execution time: 107 min
+- Total plans completed: 33
+- Average duration: 3.4 min
+- Total execution time: 111 min
 
 **By Phase:**
 
@@ -36,9 +36,10 @@ Progress: ██████████████████████░�
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
+| 11-complete-results-dashboard | 1/1 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.1-01 (8 min), 07.1-02 (4 min), 07.1-03 (4 min), 07.1-04 (4 min), 07.1-05 (3 min)
+- Last 5 plans: 07.1-03 (4 min), 07.1-04 (4 min), 07.1-05 (3 min), 11-01 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -273,6 +274,12 @@ Recent decisions affecting current work:
 - Preserve existing weights when assets remain selected on reselection
 - Distribute remaining weight equally among newly added assets
 
+**From 11-01:**
+- Dashboard property pattern: portfolioWeights and correlationMatrix setters trigger updateCharts()
+- CSS aspect-ratio for square chart containers
+- Weights passed as percent (0-100) to donut chart for display
+- Identity correlation matrix from simulation config passed to heatmap
+
 ### Roadmap Evolution
 
 - Phase 7.1 inserted after Phase 7: Application Integration (URGENT)
@@ -281,6 +288,14 @@ Recent decisions affecting current work:
   - Charts exist but don't display results
   - Portfolio/settings services exist but have no UI
   - Must complete before Phase 9 (Theming)
+
+- Phase 11 added: Complete Results Dashboard
+  - Discovered during Phase 7.1 verification review
+  - Results dashboard only shows 2 of 7 charts (probability cone, histogram)
+  - Missing: donut, correlation heatmap, margin call risk, SBLOC balance, BBD comparison
+  - Missing statistics: CAGR, TWRR, margin call probability, salary equivalent
+  - Chart components exist (Phase 6) but not integrated into dashboard
+  - **Plan 01 complete:** Added donut chart and correlation heatmap
 
 ### Pending Todos
 
@@ -293,5 +308,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 07.1-05-PLAN.md (Asset Selector Integration - Gap Closure) - Phase 7.1 Complete
-Resume file: None (Phase 7.1 complete, proceed to Phase 9)
+Stopped at: Completed 11-01-PLAN.md (Donut Chart & Correlation Heatmap) - Phase 11 Complete
+Resume file: None (Phase 11 complete, ready for Phase 9 Theming & Polish)
