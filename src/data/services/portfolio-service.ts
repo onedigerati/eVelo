@@ -203,3 +203,83 @@ export function importPortfolios(json: string): PortfolioRecord[] {
 
   return validated;
 }
+
+// =============================================================================
+// File Helpers
+// =============================================================================
+
+/**
+ * Download content as a file
+ * Creates a temporary anchor element to trigger browser download
+ */
+export function downloadAsFile(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Read file contents as text
+ */
+export function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+// =============================================================================
+// Convenience Functions
+// =============================================================================
+
+/**
+ * Export portfolios and trigger file download
+ * @param portfolios Portfolios to export
+ * @param filename Optional custom filename (default: evelo-portfolios-YYYY-MM-DD.json)
+ */
+export function exportAndDownload(portfolios: PortfolioRecord[], filename?: string): void {
+  const date = new Date().toISOString().split('T')[0];
+  const defaultFilename = `evelo-portfolios-${date}.json`;
+  const json = exportPortfolios(portfolios);
+  downloadAsFile(json, filename || defaultFilename);
+}
+
+/**
+ * Import portfolios from a file
+ * Reads file, parses JSON, and validates
+ * @throws Error with user-friendly message if file is invalid
+ */
+export async function importFromFile(file: File): Promise<PortfolioRecord[]> {
+  let content: string;
+  try {
+    content = await readFileAsText(file);
+  } catch {
+    throw new Error('Failed to read file. Please try again.');
+  }
+
+  try {
+    return importPortfolios(content);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error; // Re-throw validation errors as-is
+    }
+    throw new Error('Failed to parse portfolio file.');
+  }
+}
+
+/**
+ * Bulk import portfolios to database
+ * @returns Array of new portfolio IDs
+ */
+export async function bulkImportPortfolios(portfolios: PortfolioRecord[]): Promise<number[]> {
+  const ids = await db.portfolios.bulkAdd(portfolios, { allKeys: true });
+  return ids as number[];
+}
