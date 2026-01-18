@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 4 Complete — Ready for Phase 5
+**Current focus:** Phase 5 In Progress — Financial Calculations
 
 ## Current Position
 
-Phase: 4 of 10 (SBLOC Engine)
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-01-17 — Completed Phase 4 (SBLOC Engine)
+Phase: 5 of 10 (Financial Calculations)
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-01-17 — Completed 05-01-PLAN.md (Core Metrics Module)
 
-Progress: ██████████ 100% (Phase 4)
+Progress: █████████░░░░░░░░░░░ 48% (12/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 3.2 min
-- Total execution time: 35 min
+- Total plans completed: 12
+- Average duration: 3.1 min
+- Total execution time: 37 min
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: ██████████ 100% (Phase 4)
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
 | 04-sbloc-engine | 3/3 | 13 min | 4.3 min |
+| 05-financial-calculations | 1/4 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (3 min), 04-01 (7 min), 04-02 (3 min), 04-03 (3 min)
-- Trend: Consistently around 3-4 min for SBLOC plans (04-01 was anomaly)
+- Last 5 plans: 04-01 (7 min), 04-02 (3 min), 04-03 (3 min), 05-01 (2 min)
+- Trend: Fast execution for type-focused plans
 
 ## Accumulated Context
 
@@ -127,6 +128,14 @@ Recent decisions affecting current work:
 - Step function increments yearsSinceStart automatically
 - SBLOCYearResult type: newState, marginCallTriggered, liquidationEvent, portfolioFailed, interestCharged, withdrawalMade
 
+**From 05-01:**
+- CAGR uses median (p50) terminal value as representative outcome
+- Volatility calculated from annualized returns derived from terminal values
+- Return -1 for CAGR when end value is zero or negative (total loss)
+- PercentileDistribution type: p10, p25, p50, p75, p90 structure
+- Calculation functions accept Float64Array and convert internally
+- Pre-calculated success rate preference from statistics when available
+
 ### Pending Todos
 
 None yet.
@@ -138,5 +147,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed Phase 4 (SBLOC Engine) — All plans verified
+Stopped at: Completed 05-01-PLAN.md (Core Metrics Module)
 Resume file: None
