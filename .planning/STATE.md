@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 8 Complete — Data Layer
+**Current focus:** Phase 7.1 — Application Integration (INSERTED)
 
 ## Current Position
 
-Phase: 8 of 10 (Data Layer)
-Plan: 5 of 5 complete
-Status: Phase complete
-Last activity: 2026-01-18 — Completed 08-05-PLAN.md (CORS Proxy, Yahoo API, Settings)
+Phase: 7.1 (Application Integration - INSERTED)
+Plan: 1 of 4 complete
+Status: In progress
+Last activity: 2026-01-18 — Completed 07.1-01-PLAN.md (Wire Simulation Button)
 
-Progress: ████████████████████ 100% (27/27 plans through phase 8)
+Progress: ████████████████████░░░░ 87.5% (28/32 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
-- Average duration: 3.1 min
-- Total execution time: 84 min
+- Total plans completed: 28
+- Average duration: 3.2 min
+- Total execution time: 92 min
 
 **By Phase:**
 
@@ -35,9 +35,10 @@ Progress: ████████████████████ 100% (27/
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
+| 07.1-application-integration | 1/4 | 8 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-01 (3 min), 08-02 (3 min), 08-03 (3 min), 08-04 (3 min), 08-05 (4 min)
+- Last 5 plans: 08-03 (3 min), 08-04 (3 min), 08-05 (4 min), 07.1-01 (8 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -245,6 +246,22 @@ Recent decisions affecting current work:
 - API keys stored in IndexedDB (not localStorage) for security
 - Type-safe ApiSource -> ApiKeys field mapping
 
+**From 07.1-01:**
+- Identity correlation matrix (diagonal=1, off-diagonal=0) as placeholder for Phase 9
+- Fallback returns with console warning when preset data unavailable
+- simulation-complete event pattern for component communication
+- collectSimulationParams() method for gathering UI state
+- isRunning state to prevent double-execution
+
+### Roadmap Evolution
+
+- Phase 7.1 inserted after Phase 7: Application Integration (URGENT)
+  - Discovered during Phase 8 execution review
+  - UI components exist but aren't wired to simulation engine
+  - Charts exist but don't display results
+  - Portfolio/settings services exist but have no UI
+  - Must complete before Phase 9 (Theming)
+
 ### Pending Todos
 
 None yet.
@@ -256,5 +273,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 08-05-PLAN.md (CORS Proxy, Yahoo API, Settings) — Phase 8 fully complete
-Resume file: None
+Stopped at: Completed 07.1-01-PLAN.md (Wire Simulation Button)
+Resume file: .planning/phases/07.1-application-integration/07.1-02-PLAN.md
