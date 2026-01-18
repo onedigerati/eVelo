@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 5 In Progress — Financial Calculations
+**Current focus:** Phase 6 In Progress — Visualizations
 
 ## Current Position
 
-Phase: 5 of 10 (Financial Calculations)
-Plan: 3 of 4 complete
+Phase: 6 of 10 (Visualizations)
+Plan: 1 of 5 complete
 Status: In progress
-Last activity: 2026-01-17 — Completed 05-03-PLAN.md (Estate Calculations and Module Export)
+Last activity: 2026-01-17 — Completed 06-01-PLAN.md (Chart.js Infrastructure)
 
-Progress: ██████████░░░░░░░░░░ 56% (14/25 plans)
+Progress: ████████████░░░░░░░░ 60% (15/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 3.0 min
-- Total execution time: 42 min
+- Total execution time: 45 min
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: ██████████░░░░░░░░░░ 56% (14/2
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
 | 04-sbloc-engine | 3/3 | 13 min | 4.3 min |
 | 05-financial-calculations | 3/4 | 7 min | 2.3 min |
+| 06-visualizations | 1/5 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-03 (3 min), 05-01 (2 min), 05-02 (3 min), 05-03 (2 min)
-- Trend: Fast execution for calculation-focused plans
+- Last 5 plans: 05-01 (2 min), 05-02 (3 min), 05-03 (2 min), 06-01 (3 min)
+- Trend: Consistent fast execution
 
 ## Accumulated Context
 
@@ -152,6 +153,15 @@ Recent decisions affecting current work:
 - Handle 100% tax rate edge case by returning Infinity
 - Barrel export pattern for calculations module (index.ts re-exports all)
 
+**From 06-01:**
+- Chart.js 4.x with tree-shaking via chart.js/auto import
+- Matrix plugin registration at module level for heatmaps
+- Canvas created in template, chart instantiated in afterRender
+- Percentile color scheme: green(optimistic)->blue(median)->red(pessimistic)
+- BaseChart pattern: extend for specific chart types
+- updateData method for efficient data-only updates
+- disconnectedCallback destroys chart to prevent memory leaks
+
 ### Pending Todos
 
 None yet.
@@ -163,5 +173,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-17
-Stopped at: Completed 05-03-PLAN.md (Estate Calculations and Module Export)
+Stopped at: Completed 06-01-PLAN.md (Chart.js Infrastructure)
 Resume file: None
