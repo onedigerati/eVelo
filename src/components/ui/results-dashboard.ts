@@ -141,9 +141,10 @@ export class ResultsDashboard extends BaseComponent {
           </div>
         </section>
 
-        <section class="stats-section">
+        <section class="stats-section full-width">
           <h3>Summary Statistics</h3>
           <div class="stats-grid" id="stats-grid">
+            <!-- Row 1: Core stats -->
             <div class="stat-item">
               <span class="stat-label">Median Value</span>
               <span class="stat-value" id="stat-median">-</span>
@@ -153,12 +154,29 @@ export class ResultsDashboard extends BaseComponent {
               <span class="stat-value" id="stat-success">-</span>
             </div>
             <div class="stat-item">
+              <span class="stat-label">CAGR</span>
+              <span class="stat-value" id="stat-cagr">-</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">TWRR</span>
+              <span class="stat-value" id="stat-twrr">-</span>
+            </div>
+            <!-- Row 2: Additional stats -->
+            <div class="stat-item">
               <span class="stat-label">Mean Value</span>
               <span class="stat-value" id="stat-mean">-</span>
             </div>
             <div class="stat-item">
+              <span class="stat-label">Volatility</span>
+              <span class="stat-value" id="stat-volatility">-</span>
+            </div>
+            <div class="stat-item">
               <span class="stat-label">Std Deviation</span>
               <span class="stat-value" id="stat-stddev">-</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Salary Equiv.</span>
+              <span class="stat-value" id="stat-salary">-</span>
             </div>
           </div>
         </section>
@@ -239,7 +257,7 @@ export class ResultsDashboard extends BaseComponent {
 
       .stats-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(4, 1fr);
         gap: var(--spacing-md, 16px);
       }
 
@@ -295,6 +313,10 @@ export class ResultsDashboard extends BaseComponent {
 
         .chart-container {
           height: 300px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
       }
     `;
@@ -475,6 +497,7 @@ export class ResultsDashboard extends BaseComponent {
       maximumFractionDigits: 1
     }).format(n);
 
+    // Core stats
     const median = this.$('#stat-median');
     const success = this.$('#stat-success');
     const mean = this.$('#stat-mean');
@@ -484,6 +507,20 @@ export class ResultsDashboard extends BaseComponent {
     if (success) success.textContent = `${stats.successRate.toFixed(1)}%`;
     if (mean) mean.textContent = format(stats.mean);
     if (stddev) stddev.textContent = format(stats.stddev);
+
+    // Extended stats
+    const extended = this.computeExtendedStats();
+    const cagr = this.$('#stat-cagr');
+    const twrr = this.$('#stat-twrr');
+    const volatility = this.$('#stat-volatility');
+    const salary = this.$('#stat-salary');
+
+    if (extended) {
+      if (cagr) cagr.textContent = `${(extended.cagr * 100).toFixed(1)}%`;
+      if (twrr) twrr.textContent = `${(extended.twrr * 100).toFixed(1)}%`;
+      if (volatility) volatility.textContent = `${(extended.volatility * 100).toFixed(1)}%`;
+      if (salary) salary.textContent = format(extended.salaryEquivalent.equivalent);
+    }
   }
 }
 
