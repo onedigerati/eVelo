@@ -20,3 +20,22 @@ export {
   projectLoanBalance,
   effectiveAnnualRate,
 } from './interest';
+
+// LTV calculations
+export type { AssetHolding, Portfolio } from './ltv';
+export {
+  calculateLTV,
+  calculateMaxBorrowing,
+  getEffectiveLTV,
+  isWithinBorrowingLimit,
+  calculateAvailableCredit,
+} from './ltv';
+
+// Margin call detection
+export type { MarginBuffer } from './margin-call';
+export {
+  detectMarginCall,
+  isInWarningZone,
+  calculateMarginBuffer,
+  calculateDropToMarginCall,
+} from './margin-call';
