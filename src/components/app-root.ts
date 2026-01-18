@@ -171,12 +171,12 @@ export class AppRoot extends BaseComponent {
   protected override afterRender(): void {
     const runBtn = this.$('#run-sim');
     const progress = this.$('#sim-progress') as HTMLElement;
-    const toastContainer = document.querySelector('toast-container') as any;
+    const toastContainer = this.$('toast-container') as any;
 
     runBtn?.addEventListener('click', () => {
       // Demo: show progress and toast
       if (progress) {
-        progress.style.display = 'block';
+        progress.style.display = 'flex';
         progress.setAttribute('status', 'Running simulation...');
         let val = 0;
         const interval = setInterval(() => {
@@ -185,7 +185,9 @@ export class AppRoot extends BaseComponent {
           if (val >= 100) {
             clearInterval(interval);
             progress.style.display = 'none';
-            toastContainer?.show('Simulation complete! (Demo)', 'success');
+            if (toastContainer && typeof toastContainer.show === 'function') {
+              toastContainer.show('Simulation complete! (Demo)', 'success');
+            }
           }
         }, 100);
       }

@@ -1,15 +1,25 @@
 import { BaseComponent } from '../base-component';
 
 /**
+ * Represents an asset in the weight editor.
+ */
+interface AssetItem {
+  id: string;
+  name?: string;
+  weight?: number;
+}
+
+/**
  * Weight distribution component for portfolio allocation.
  * Allows setting weights per asset with validation that total equals 100%.
  *
  * @element weight-editor
- * @attr {string} assets - JSON array of asset tickers to show weights for
+ * @attr {string} assets - JSON array of assets (strings or objects with id/name/weight)
  * @fires weights-change - Dispatched when weights change
  *
  * @example
  * <weight-editor assets='["SPY","QQQ","VTI"]'></weight-editor>
+ * <weight-editor assets='[{"id":"SPY","name":"S&P 500","weight":60}]'></weight-editor>
  */
 export class WeightEditor extends BaseComponent {
   static override get observedAttributes(): string[] {
@@ -17,6 +27,7 @@ export class WeightEditor extends BaseComponent {
   }
 
   private weights: Map<string, number> = new Map();
+  private assetNames: Map<string, string> = new Map();
 
   protected template(): string {
     const total = this.calculateTotal();
@@ -180,10 +191,30 @@ export class WeightEditor extends BaseComponent {
 
   private getAssets(): string[] {
     try {
-      return JSON.parse(this.getAttribute('assets') || '[]') as string[];
+      const parsed = JSON.parse(this.getAttribute('assets') || '[]');
+
+      // Handle array of strings or array of objects
+      return parsed.map((item: string | AssetItem) => {
+        if (typeof item === 'string') {
+          return item;
+        }
+        // Object format: { id, name?, weight? }
+        const asset = item as AssetItem;
+        if (asset.name) {
+          this.assetNames.set(asset.id, asset.name);
+        }
+        if (asset.weight !== undefined && !this.weights.has(asset.id)) {
+          this.weights.set(asset.id, asset.weight);
+        }
+        return asset.id;
+      });
     } catch {
       return [];
     }
+  }
+
+  private getAssetDisplayName(assetId: string): string {
+    return this.assetNames.get(assetId) || assetId;
   }
 
   private renderWeights(): void {
@@ -209,16 +240,17 @@ export class WeightEditor extends BaseComponent {
     list.innerHTML = assets
       .map((asset) => {
         const weight = this.weights.get(asset) || 0;
+        const displayName = this.getAssetDisplayName(asset);
         return `
           <div class="weight-row" data-asset="${asset}">
-            <span class="asset-name">${asset}</span>
+            <span class="asset-name">${displayName}</span>
             <input type="number"
                    min="0"
                    max="100"
                    step="0.1"
                    value="${weight}"
                    class="weight-input"
-                   aria-label="Weight for ${asset}" />
+                   aria-label="Weight for ${displayName}" />
             <span class="percent">%</span>
           </div>
         `;

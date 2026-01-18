@@ -9,16 +9,17 @@ import { BaseComponent } from '../base-component';
  */
 export class RangeSlider extends BaseComponent {
   static override get observedAttributes(): string[] {
-    return ['min', 'max', 'step', 'value', 'label', 'show-value'];
+    return ['min', 'max', 'step', 'value', 'label', 'show-value', 'suffix'];
   }
 
   protected template(): string {
     const label = this.getAttribute('label');
-    const showValue = this.hasAttribute('show-value');
+    const showValue = this.hasAttribute('show-value') || this.hasAttribute('suffix');
     const value = this.getAttribute('value') ?? '0';
     const min = this.getAttribute('min') ?? '0';
     const max = this.getAttribute('max') ?? '100';
     const step = this.getAttribute('step') ?? '1';
+    const suffix = this.getAttribute('suffix') ?? '';
 
     return `
       <div class="range-wrapper">
@@ -31,7 +32,7 @@ export class RangeSlider extends BaseComponent {
             step="${step}"
             value="${value}"
           />
-          ${showValue ? `<span class="value-display">${value}</span>` : ''}
+          ${showValue ? `<span class="value-display">${value}${suffix}</span>` : ''}
         </div>
       </div>
     `;
@@ -135,11 +136,12 @@ export class RangeSlider extends BaseComponent {
   private handleInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const value = parseFloat(input.value);
+    const suffix = this.getAttribute('suffix') ?? '';
 
     // Update value display if present
     const valueDisplay = this.$('.value-display');
     if (valueDisplay) {
-      valueDisplay.textContent = input.value;
+      valueDisplay.textContent = `${input.value}${suffix}`;
     }
 
     // Dispatch change event
