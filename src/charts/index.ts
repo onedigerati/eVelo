@@ -14,3 +14,5 @@ export * from './sbloc-balance-chart';
 export * from './histogram-chart';
 export * from './margin-call-chart';
 export * from './bbd-comparison-chart';
+export * from './donut-chart';
+export * from './correlation-heatmap';
