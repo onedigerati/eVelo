@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 4 of 10 (SBLOC Engine)
-Plan: 1 of 4 complete
+Plan: 2 of 4 complete
 Status: In progress
-Last activity: 2026-01-18 — Completed 04-01-PLAN.md (SBLOC Types and Interest)
+Last activity: 2026-01-18 — Completed 04-02-PLAN.md (LTV and Margin Call)
 
-Progress: █░░░░░░░░░ 25% (Phase 4)
+Progress: ██░░░░░░░░ 50% (Phase 4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 3.2 min
-- Total execution time: 29 min
+- Total execution time: 32 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: █░░░░░░░░░ 25% (Phase 4)
 | 01-foundation | 2/2 | 5 min | 2.5 min |
 | 02-core-math | 2/2 | 5 min | 2.5 min |
 | 03-simulation-engine | 4/4 | 12 min | 3 min |
-| 04-sbloc-engine | 1/4 | 7 min | 7 min |
+| 04-sbloc-engine | 2/4 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (2 min), 03-03 (3 min), 03-04 (3 min), 04-01 (7 min)
-- Trend: Slightly longer due to financial formula verification
+- Last 5 plans: 03-03 (3 min), 03-04 (3 min), 04-01 (7 min), 04-02 (3 min)
+- Trend: Stabilizing around 3-5 min for SBLOC engine plans
 
 ## Accumulated Context
 
@@ -111,6 +111,14 @@ Recent decisions affecting current work:
 - effectiveAnnualRate helper for comparing compounding scenarios
 - SBLOC module structure: types.ts for interfaces, interest.ts for calculations, index.ts barrel
 
+**From 04-02:**
+- Recalculate LTV in margin call functions rather than trusting cached currentLTV
+- Return Infinity for LTV when collateral is zero but loan exists
+- Clamp available credit to 0 (never negative available credit)
+- MarginBuffer type with both dollar and percent metrics for UI flexibility
+- calculateDropToMarginCall returns negative when already past margin call threshold
+- Threshold calculation pattern: threshold_portfolio = loan / target_ltv
+
 ### Pending Todos
 
 None yet.
@@ -122,5 +130,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 04-01-PLAN.md (SBLOC Types and Interest)
+Stopped at: Completed 04-02-PLAN.md (LTV and Margin Call)
 Resume file: None
