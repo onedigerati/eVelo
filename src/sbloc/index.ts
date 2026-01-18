@@ -2,7 +2,16 @@
  * SBLOC Module
  *
  * Securities-Backed Line of Credit simulation for Buy-Borrow-Die strategy.
- * Provides types, interest calculations, and state management.
+ * Provides types, interest calculations, LTV monitoring, margin call detection,
+ * forced liquidation, and the main simulation step function.
+ *
+ * Key exports:
+ * - Types: SBLOCConfig, SBLOCState, MarginCallEvent, LiquidationEvent
+ * - Engine: stepSBLOC, initializeSBLOCState (main simulation functions)
+ * - Interest: accrueInterest, projectLoanBalance
+ * - LTV: calculateLTV, calculateMaxBorrowing, calculateAvailableCredit
+ * - Margin: detectMarginCall, isInWarningZone, calculateMarginBuffer
+ * - Liquidation: executeForcedLiquidation, canRecoverFromMarginCall
  */
 
 // Types
@@ -39,3 +48,16 @@ export {
   calculateMarginBuffer,
   calculateDropToMarginCall,
 } from './margin-call';
+
+// Forced liquidation
+export type { LiquidationAmounts, LiquidationResult } from './liquidation';
+export {
+  calculateLiquidationAmount,
+  calculateHaircutLoss,
+  executeForcedLiquidation,
+  canRecoverFromMarginCall,
+} from './liquidation';
+
+// Engine (main simulation step function)
+export type { SBLOCYearResult } from './engine';
+export { initializeSBLOCState, stepSBLOC } from './engine';
