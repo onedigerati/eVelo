@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 8 In Progress — Data Layer
+**Current focus:** Phase 8 Complete — Data Layer
 
 ## Current Position
 
 Phase: 8 of 10 (Data Layer)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-01-18 — Completed 08-02-PLAN.md (Bundled Presets)
+Plan: 3 of 3 complete
+Status: Phase complete
+Last activity: 2026-01-18 — Completed 08-04-PLAN.md (Portfolio Service)
 
-Progress: ████████████████████ 96% (24/25 plans)
+Progress: ████████████████████ 100% (25/25 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
+- Total plans completed: 25
 - Average duration: 3.2 min
-- Total execution time: 77 min
+- Total execution time: 80 min
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: ████████████████████ 96% (24/2
 | 05-financial-calculations | 3/3 | 7 min | 2.3 min |
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
-| 08-data-layer | 2/3 | 6 min | 3.0 min |
+| 08-data-layer | 3/3 | 9 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (3 min), 07-04 (8 min), 08-01 (3 min), 08-02 (3 min)
+- Last 5 plans: 07-04 (8 min), 08-01 (3 min), 08-02 (3 min), 08-04 (3 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -224,6 +224,13 @@ Recent decisions affecting current work:
 - Case-insensitive symbol lookup via toUpperCase()
 - Sample data includes crisis periods (dot-com, 2008, COVID) for testing extremes
 
+**From 08-04:**
+- Type assertion (as number) for Dexie put() return on auto-increment tables
+- Weight sum validation with 0.01 tolerance for floating point
+- Strip IDs on export for portability between databases
+- Preserve original created timestamp on import, update modified
+- EXPORT_VERSION constant for future format compatibility
+
 ### Pending Todos
 
 None yet.
@@ -235,5 +242,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 08-02-PLAN.md (Bundled Presets) — ready for 08-03
+Stopped at: Completed 08-04-PLAN.md (Portfolio Service) — Phase 8 complete
 Resume file: None
