@@ -188,6 +188,12 @@ Recent decisions affecting current work:
 - Teal primary color (#0d9488) as brand color
 - Dark theme placeholder in tokens for Phase 9
 
+**From 07-02:**
+- Native details/summary for param-section (zero JS toggle, accessible by default)
+- CSS attribute selector `:host([collapsed])` for sidebar collapse styling
+- JSON string attributes for asset arrays (simple serialization)
+- Map for weight storage in weight-editor (efficient key-value access)
+
 **From 07-03:**
 - Singleton toast-container manages all toast lifecycle
 - Auto-dismiss with configurable duration (default 5s, 0 disables)
