@@ -416,9 +416,28 @@ export class AppRoot extends BaseComponent {
         this._simulationResult = result;
 
         // Update results dashboard with simulation data
-        const dashboard = this.$('#results') as HTMLElement & { data: SimulationOutput | null };
+        const dashboard = this.$('#results') as HTMLElement & {
+          data: SimulationOutput | null;
+          portfolioWeights: { symbol: string; weight: number }[] | null;
+          correlationMatrix: { labels: string[]; matrix: number[][] } | null;
+        };
         if (dashboard) {
           dashboard.data = this._simulationResult;
+
+          // Set portfolio composition for donut chart
+          const weightEditorTyped = this.$('#weight-editor') as (WeightEditor & { getWeights(): Record<string, number> }) | null;
+          const currentWeights = weightEditorTyped?.getWeights() ?? {};
+          const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
+            symbol,
+            weight: weight as number
+          }));
+          dashboard.portfolioWeights = portfolioWeights;
+
+          // Set correlation matrix for heatmap
+          dashboard.correlationMatrix = {
+            labels: portfolioWeights.map(w => w.symbol),
+            matrix: portfolio.correlationMatrix
+          };
         }
 
         // Hide progress
