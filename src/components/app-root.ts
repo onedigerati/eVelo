@@ -1,8 +1,35 @@
 import { BaseComponent } from './base-component';
 // Import UI components to register them
 import './ui';
+// Import simulation module
+import { runSimulation, SimulationConfig, PortfolioConfig, SimulationOutput, AssetConfig } from '../simulation';
+// Import preset service for historical returns
+import { getPresetData } from '../data/services/preset-service';
+
+// UI component types for type casting
+type RangeSlider = import('./ui/range-slider').RangeSlider;
+type NumberInput = import('./ui/number-input').NumberInput;
+type SelectInput = import('./ui/select-input').SelectInput;
+type WeightEditor = import('./ui/weight-editor').WeightEditor;
+
+/**
+ * Format currency values for display
+ */
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export class AppRoot extends BaseComponent {
+  /** Stored simulation result for charts */
+  private _simulationResult: SimulationOutput | null = null;
+
+  /** Track if simulation is running */
+  private _isRunning = false;
   protected template(): string {
     return `
       <main-layout>
@@ -177,28 +204,163 @@ export class AppRoot extends BaseComponent {
     `;
   }
 
+  /**
+   * Get the current simulation result (null if no simulation run yet)
+   */
+  get simulationResult(): SimulationOutput | null {
+    return this._simulationResult;
+  }
+
+  /**
+   * Check if a simulation is currently running
+   */
+  get isRunning(): boolean {
+    return this._isRunning;
+  }
+
+  /**
+   * Collect simulation parameters from UI components
+   */
+  private collectSimulationParams(): { config: SimulationConfig; portfolio: PortfolioConfig } {
+    // Query UI components directly from shadow DOM
+    // Portfolio Settings section
+    const investmentInput = this.$('number-input') as (NumberInput & { value: number | null }) | null;
+    const horizonSlider = this.$('range-slider[suffix=" years"]') as (RangeSlider & { value: number }) | null;
+    const iterationsSelect = this.$('select-input') as (SelectInput & { value: string }) | null;
+    const weightEditor = this.$('weight-editor') as (WeightEditor & { getWeights(): Record<string, number> }) | null;
+
+    // Extract values with fallbacks
+    const initialValue = investmentInput?.value ?? 1000000;
+    const timeHorizon = horizonSlider?.value ?? 30;
+    const iterations = parseInt(iterationsSelect?.value ?? '10000', 10);
+
+    // Build SimulationConfig
+    const config: SimulationConfig = {
+      iterations,
+      timeHorizon,
+      initialValue,
+      inflationRate: 0.03,
+      inflationAdjusted: false,
+      resamplingMethod: 'simple',
+      seed: undefined,
+    };
+
+    // Build PortfolioConfig from weight-editor assets
+    const weights: Record<string, number> = weightEditor?.getWeights() ?? { SPY: 60, BND: 30, GLD: 10 };
+    const assets: AssetConfig[] = [];
+
+    for (const [symbol, weightPercent] of Object.entries(weights)) {
+      // Get historical returns from preset data
+      const preset = getPresetData(symbol);
+      let historicalReturns: number[];
+
+      if (preset) {
+        // Extract return values from preset data
+        historicalReturns = preset.returns.map((r) => r.return);
+      } else {
+        // Fallback: use placeholder returns with warning
+        console.warn(`No preset data for ${symbol}, using placeholder returns`);
+        // Generate 20 years of placeholder returns (roughly 8% annual with 15% vol)
+        historicalReturns = Array.from({ length: 20 }, () =>
+          0.08 + (Math.random() - 0.5) * 0.30
+        );
+      }
+
+      assets.push({
+        id: symbol,
+        weight: weightPercent / 100, // Convert percentage to decimal
+        historicalReturns,
+      });
+    }
+
+    // Build identity correlation matrix (diagonal = 1, off-diagonal = 0)
+    // Phase 9 can refine this with actual correlations
+    const n = assets.length;
+    const correlationMatrix: number[][] = Array.from({ length: n }, (_, i) =>
+      Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
+    );
+
+    const portfolio: PortfolioConfig = {
+      assets,
+      correlationMatrix,
+    };
+
+    return { config, portfolio };
+  }
+
   protected override afterRender(): void {
-    const runBtn = this.$('#run-sim');
+    const runBtn = this.$('#run-sim') as HTMLButtonElement;
     const progress = this.$('#sim-progress') as HTMLElement;
     const toastContainer = this.$('toast-container') as any;
 
-    runBtn?.addEventListener('click', () => {
-      // Demo: show progress and toast
-      if (progress) {
-        progress.classList.remove('hidden');
-        progress.setAttribute('value', '0');
-        let val = 0;
-        const interval = setInterval(() => {
-          val += 5;
-          progress.setAttribute('value', String(val));
-          if (val >= 100) {
-            clearInterval(interval);
-            progress.classList.add('hidden');
-            if (toastContainer && typeof toastContainer.show === 'function') {
-              toastContainer.show('Simulation complete! (Demo)', 'success');
-            }
+    runBtn?.addEventListener('click', async () => {
+      // Prevent double-runs
+      if (this._isRunning) {
+        return;
+      }
+
+      try {
+        this._isRunning = true;
+        runBtn.disabled = true;
+
+        // Show progress indicator
+        if (progress) {
+          progress.classList.remove('hidden');
+          progress.setAttribute('value', '0');
+        }
+
+        // Collect parameters from UI
+        const { config, portfolio } = this.collectSimulationParams();
+
+        // Run the real Monte Carlo simulation
+        const result = await runSimulation(config, portfolio, (percent) => {
+          if (progress) {
+            progress.setAttribute('value', String(percent));
           }
-        }, 100);
+        });
+
+        // Store result for charts
+        this._simulationResult = result;
+
+        // Hide progress
+        if (progress) {
+          progress.classList.add('hidden');
+        }
+
+        // Show success toast
+        if (toastContainer && typeof toastContainer.show === 'function') {
+          toastContainer.show(
+            `Simulation complete: ${config.iterations.toLocaleString()} iterations, median ${formatCurrency(result.statistics.median)}`,
+            'success'
+          );
+        }
+
+        // Dispatch custom event for other components (e.g., charts)
+        this.dispatchEvent(
+          new CustomEvent('simulation-complete', {
+            detail: { result: this._simulationResult },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      } catch (error) {
+        console.error('Simulation failed:', error);
+
+        // Hide progress on error
+        if (progress) {
+          progress.classList.add('hidden');
+        }
+
+        // Show error toast
+        if (toastContainer && typeof toastContainer.show === 'function') {
+          toastContainer.show(
+            `Simulation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            'error'
+          );
+        }
+      } finally {
+        this._isRunning = false;
+        runBtn.disabled = false;
       }
     });
   }
