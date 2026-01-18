@@ -253,6 +253,13 @@ Recent decisions affecting current work:
 - collectSimulationParams() method for gathering UI state
 - isRunning state to prevent double-execution
 
+**From 07.1-03:**
+- Portfolio weights stored as decimal (0-1) in storage, percent (0-100) in UI
+- request-portfolio-state event for collecting current weight-editor state
+- portfolio-loaded event for updating weight-editor from stored data
+- Default assetClass to 'equity' when saving portfolios
+- XSS prevention via escapeHtml helper in portfolio-list
+
 **From 07.1-04:**
 - SVG gear icon instead of emoji for better cross-platform rendering
 - Bullet masking for existing API keys with clear-on-focus behavior
