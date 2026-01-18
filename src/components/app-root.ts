@@ -132,10 +132,7 @@ export class AppRoot extends BaseComponent {
             ></progress-indicator>
           </div>
 
-          <div class="charts-placeholder">
-            <p>Charts will appear here after running a simulation.</p>
-            <p class="hint">Configure parameters in the sidebar and click "Run Simulation"</p>
-          </div>
+          <results-dashboard id="results"></results-dashboard>
         </div>
       </main-layout>
       <toast-container position="bottom-right"></toast-container>
@@ -192,21 +189,6 @@ export class AppRoot extends BaseComponent {
       .btn-primary:focus-visible {
         outline: 2px solid var(--color-primary, #0d9488);
         outline-offset: 2px;
-      }
-
-      .charts-placeholder {
-        background: var(--surface-secondary, #f8fafc);
-        border: 2px dashed var(--border-color, #e2e8f0);
-        border-radius: var(--radius-lg, 8px);
-        padding: var(--spacing-2xl, 48px);
-        text-align: center;
-        color: var(--text-secondary, #475569);
-      }
-
-      .charts-placeholder .hint {
-        font-size: var(--font-size-sm, 0.875rem);
-        color: var(--text-tertiary, #94a3b8);
-        margin-top: var(--spacing-sm, 8px);
       }
 
       progress-indicator {
@@ -379,6 +361,12 @@ export class AppRoot extends BaseComponent {
 
         // Store result for charts
         this._simulationResult = result;
+
+        // Update results dashboard with simulation data
+        const dashboard = this.$('#results') as HTMLElement & { data: SimulationOutput | null };
+        if (dashboard) {
+          dashboard.data = this._simulationResult;
+        }
 
         // Hide progress
         if (progress) {

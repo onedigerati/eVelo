@@ -29,3 +29,6 @@ export { SettingsPanel } from './settings-panel';
 // Portfolio Management Components
 export { PortfolioManager } from './portfolio-manager';
 export { PortfolioList } from './portfolio-list';
+
+// Results Display Components
+export { ResultsDashboard } from './results-dashboard';
