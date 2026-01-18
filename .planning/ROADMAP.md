@@ -19,7 +19,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
 - [x] **Phase 6: Visualizations** - Chart.js components, probability cone, histograms, heatmaps
 - [x] **Phase 7: UI Components** - Input forms, sidebar, progress indicators, responsive layout
-- [ ] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
+- [x] **Phase 7.1: Application Integration** - Wire UI to simulation, results dashboard, portfolio management (INSERTED)
+- [x] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
 - [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
 
@@ -162,6 +163,27 @@ Plans:
 - [x] 07-03: Progress indicator and toast notifications
 - [x] 07-04: Responsive layout and mobile adjustments
 
+### Phase 7.1: Application Integration (INSERTED)
+**Goal**: Wire UI components to simulation engine, display results in charts, add portfolio management UI and settings panel
+**Depends on**: Phase 7, Phase 8
+**Requirements**: UI-01, UI-02, UI-03, UI-04, VIZ-01, VIZ-02, VIZ-03, VIZ-04, VIZ-05, VIZ-06, VIZ-07, DATA-02
+**Success Criteria** (what must be TRUE):
+  1. "Run Simulation" button triggers actual simulation with parameters from UI
+  2. Simulation results display in probability cone, histogram, and other charts
+  3. Portfolio save/load UI allows users to persist configurations
+  4. Portfolio export/import UI allows JSON file download/upload
+  5. Settings panel allows API key configuration
+  6. Asset selector is integrated into the workflow
+**Research**: Unlikely (wiring existing components)
+**Plans**: TBD
+
+Plans:
+- [x] 07.1-01: Simulation orchestration and app-root wiring
+- [x] 07.1-02: Results dashboard integration
+- [x] 07.1-03: Portfolio management UI
+- [x] 07.1-04: Settings panel UI
+- [x] 07.1-05: Asset selector integration (gap closure)
+
 ### Phase 8: Data Layer
 **Goal**: Data persistence, API integrations, and bundled presets
 **Depends on**: Phase 7
@@ -220,7 +242,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
+Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -231,8 +253,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Financial Calculations | 3/3 | Complete | 2026-01-17 |
 | 6. Visualizations | 4/4 | Complete | 2026-01-17 |
 | 7. UI Components | 4/4 | Complete | 2026-01-18 |
-| 8. Data Layer | 0/5 | Not started | - |
+| 7.1. Application Integration | 5/5 | Complete | 2026-01-18 |
+| 8. Data Layer | 5/5 | Complete | 2026-01-18 |
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
 
-**Total Plans**: 32
+**Total Plans**: 36

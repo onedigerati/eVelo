@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 7.1 — Application Integration (INSERTED)
+**Current focus:** Phase 9 — Theming & Polish (next up)
 
 ## Current Position
 
@@ -14,14 +14,14 @@ Plan: 5 of 5 complete (including gap closure)
 Status: Phase complete
 Last activity: 2026-01-18 — Completed 07.1-05-PLAN.md (Asset Selector Integration - Gap Closure)
 
-Progress: █████████████████████████ 100% (32/32 plans total)
+Progress: ██████████████████████░░░ 89% (32/36 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
-- Average duration: 3.2 min
-- Total execution time: 104 min
+- Total plans completed: 32
+- Average duration: 3.3 min
+- Total execution time: 107 min
 
 **By Phase:**
 
