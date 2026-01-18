@@ -12,5 +12,11 @@ export type { SBLOCConfig, SBLOCState, MarginCallEvent, LiquidationEvent, LTVByA
 // Constants and utilities
 export { DEFAULT_SBLOC_CONFIG, DEFAULT_LTV_BY_ASSET_CLASS, createInitialSBLOCState } from './types';
 
-// Interest calculations (to be added in Task 2)
-// export { accrueInterest, calculateAnnualInterest, calculateMonthlyInterest, projectLoanBalance } from './interest';
+// Interest calculations
+export {
+  accrueInterest,
+  calculateAnnualInterest,
+  calculateMonthlyInterest,
+  projectLoanBalance,
+  effectiveAnnualRate,
+} from './interest';
