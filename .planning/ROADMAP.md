@@ -23,6 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
 - [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
+- [ ] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
 
 ## Phase Details
 
@@ -239,10 +240,33 @@ Plans:
 - [ ] 10-01: Service worker and PWA manifest
 - [ ] 10-02: Single-file HTML export with vite-plugin-singlefile
 
+### Phase 11: Complete Results Dashboard
+**Goal**: Integrate all chart components and statistics into the results dashboard
+**Depends on**: Phase 7.1
+**Requirements**: VIZ-03, VIZ-04, VIZ-05, VIZ-06, VIZ-07, CALC-03, CALC-04, CALC-05, CALC-07
+**Success Criteria** (what must be TRUE):
+  1. Portfolio composition donut chart displays asset weights
+  2. Correlation matrix heatmap displays asset correlations
+  3. Margin call risk bar chart shows probability by year
+  4. SBLOC balance line chart shows loan trajectory
+  5. BBD vs Sell comparison chart displays both strategies
+  6. CAGR and annualized volatility displayed in statistics
+  7. TWRR displayed in statistics
+  8. Margin call probability displayed
+  9. Salary-equivalent for tax-free withdrawals displayed
+**Research**: Unlikely (wiring existing components)
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: Portfolio donut chart and correlation heatmap
+- [ ] 11-02: Extended statistics (CAGR, TWRR, volatility, salary-equivalent)
+- [ ] 11-03: SBLOC integration into simulation engine
+- [ ] 11-04: SBLOC charts (margin call, balance, BBD comparison)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 10
+Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 10 → 11
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -257,5 +281,6 @@ Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 1
 | 8. Data Layer | 5/5 | Complete | 2026-01-18 |
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
+| 11. Complete Results Dashboard | 0/? | Not started | - |
 
-**Total Plans**: 36
+**Total Plans**: 37+
