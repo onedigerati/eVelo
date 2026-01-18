@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Build System** - Project scaffolding, TypeScript, Web Components, Vite
 - [x] **Phase 2: Core Math & Statistics** - Statistical functions, Cholesky decomposition, precision handling
 - [x] **Phase 3: Simulation Engine** - Monte Carlo core, bootstrap resampling, Web Workers
-- [ ] **Phase 4: SBLOC Engine** - Securities-backed lending, margin calls, forced liquidation
+- [x] **Phase 4: SBLOC Engine** - Securities-backed lending, margin calls, forced liquidation
 - [ ] **Phase 5: Financial Calculations** - CAGR, TWRR, percentiles, tax calculations
 - [ ] **Phase 6: Visualizations** - Chart.js components, probability cone, histograms, heatmaps
 - [ ] **Phase 7: UI Components** - Input forms, sidebar, progress indicators, responsive layout
@@ -97,7 +97,6 @@ Plans:
 - [x] 04-01: SBLOC terms and interest accrual
 - [x] 04-02: LTV tracking and margin call detection
 - [x] 04-03: Forced liquidation and SBLOC engine
-- [ ] 04-04: Integration tests and edge cases
 
 ### Phase 5: Financial Calculations
 **Goal**: Industry-standard financial metrics (CFA formulas)
@@ -228,7 +227,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Foundation & Build System | 2/2 | Complete | 2026-01-17 |
 | 2. Core Math & Statistics | 2/2 | Complete | 2026-01-17 |
 | 3. Simulation Engine | 4/4 | Complete | 2026-01-17 |
-| 4. SBLOC Engine | 3/4 | In progress | - |
+| 4. SBLOC Engine | 3/3 | Complete | 2026-01-17 |
 | 5. Financial Calculations | 0/3 | Not started | - |
 | 6. Visualizations | 0/4 | Not started | - |
 | 7. UI Components | 0/4 | Not started | - |
@@ -236,4 +235,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
 
-**Total Plans**: 33
+**Total Plans**: 32
