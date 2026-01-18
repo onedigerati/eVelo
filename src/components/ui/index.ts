@@ -6,6 +6,8 @@
 // Layout Components
 export { SidebarPanel } from './sidebar-panel';
 export { ParamSection } from './param-section';
+export { MainLayout } from './main-layout';
+export { HelpSection } from './help-section';
 
 // Portfolio Configuration Components
 export { AssetSelector } from './asset-selector';
