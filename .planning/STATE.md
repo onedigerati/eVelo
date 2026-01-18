@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 7.1 (Application Integration - INSERTED)
-Plan: 4 of 4 complete
+Plan: 5 of 5 complete (including gap closure)
 Status: Phase complete
-Last activity: 2026-01-18 — Completed 07.1-04-PLAN.md (Settings Panel UI)
+Last activity: 2026-01-18 — Completed 07.1-05-PLAN.md (Asset Selector Integration - Gap Closure)
 
-Progress: █████████████████████████ 100% (31/32 plans total)
+Progress: █████████████████████████ 100% (32/32 plans total)
 
 ## Performance Metrics
 
@@ -35,10 +35,10 @@ Progress: ███████████████████████�
 | 06-visualizations | 4/4 | 12 min | 3.0 min |
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
-| 07.1-application-integration | 4/4 | 20 min | 5 min |
+| 07.1-application-integration | 5/5 | 23 min | 4.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-05 (4 min), 07.1-01 (8 min), 07.1-02 (4 min), 07.1-03 (4 min), 07.1-04 (4 min)
+- Last 5 plans: 07.1-01 (8 min), 07.1-02 (4 min), 07.1-03 (4 min), 07.1-04 (4 min), 07.1-05 (3 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -267,6 +267,12 @@ Recent decisions affecting current work:
 - Modal overlay pattern: settings-overlay with flexbox centering
 - Settings panel API: show()/hide()/toggle() methods for external control
 
+**From 07.1-05:**
+- Static asset list from bundled presets (SPY, QQQ, IWM, AGG)
+- Default selection SPY + AGG with 70/30 split
+- Preserve existing weights when assets remain selected on reselection
+- Distribute remaining weight equally among newly added assets
+
 ### Roadmap Evolution
 
 - Phase 7.1 inserted after Phase 7: Application Integration (URGENT)
@@ -287,5 +293,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 07.1-04-PLAN.md (Settings Panel UI) - Phase 7.1 Complete
+Stopped at: Completed 07.1-05-PLAN.md (Asset Selector Integration - Gap Closure) - Phase 7.1 Complete
 Resume file: None (Phase 7.1 complete, proceed to Phase 9)
