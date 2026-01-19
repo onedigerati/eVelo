@@ -8,7 +8,8 @@
  */
 import { BaseComponent } from '../base-component';
 import type { SimulationOutput, YearlyPercentiles, SimulationStatistics } from '../../simulation/types';
-import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData } from '../../charts/types';
+import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData, BarChartData, LineChartData } from '../../charts/types';
+import type { BBDComparisonChartData } from '../../charts/bbd-comparison-chart';
 import {
   calculateCAGR,
   calculateAnnualizedVolatility,
@@ -194,6 +195,13 @@ export class ResultsDashboard extends BaseComponent {
             <correlation-heatmap id="heatmap-chart"></correlation-heatmap>
           </div>
         </section>
+
+        <section class="chart-section sbloc-section" id="margin-call-section">
+          <h3>Margin Call Risk by Year</h3>
+          <div class="chart-container">
+            <margin-call-chart id="margin-call-chart"></margin-call-chart>
+          </div>
+        </section>
       </div>
 
       <div class="no-data" id="no-data">
@@ -305,6 +313,15 @@ export class ResultsDashboard extends BaseComponent {
         display: none;
       }
 
+      /* SBLOC sections hidden by default (show when SBLOC data available) */
+      .sbloc-section {
+        display: none;
+      }
+
+      .sbloc-section.visible {
+        display: block;
+      }
+
       /* Mobile responsive: single column on small screens */
       @media (max-width: 768px) {
         .dashboard-grid {
@@ -373,6 +390,26 @@ export class ResultsDashboard extends BaseComponent {
     const heatmap = this.$('#heatmap-chart') as HTMLElement & { data: HeatmapData | null };
     if (heatmap && this._correlationMatrix) {
       heatmap.data = this._correlationMatrix;
+    }
+
+    // Update margin call risk chart (SBLOC section)
+    const marginSection = this.$('#margin-call-section');
+    const marginChart = this.$('#margin-call-chart') as HTMLElement & {
+      setData(data: BarChartData, cumulative?: number[]): void
+    };
+
+    if (this._data?.marginCallStats && marginSection && marginChart) {
+      marginSection.classList.add('visible');
+      const stats = this._data.marginCallStats;
+      marginChart.setData(
+        {
+          labels: stats.map(s => `Year ${s.year}`),
+          values: stats.map(s => s.probability),
+        },
+        stats.map(s => s.cumulativeProbability)
+      );
+    } else {
+      marginSection?.classList.remove('visible');
     }
   }
 
