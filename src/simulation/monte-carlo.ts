@@ -15,12 +15,20 @@ import seedrandom from 'seedrandom';
 import { mean, stddev, percentile } from '../math';
 import { simpleBootstrap, blockBootstrap } from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
+import {
+  initializeSBLOCState,
+  stepSBLOC,
+  type SBLOCConfig as SBLOCEngineConfig,
+  type SBLOCState,
+} from '../sbloc';
 import type {
   SimulationConfig,
   PortfolioConfig,
   SimulationOutput,
   YearlyPercentiles,
   SimulationStatistics,
+  SBLOCTrajectory,
+  MarginCallStats,
 } from './types';
 
 /** Batch size for progress reporting */
@@ -74,6 +82,15 @@ export async function runMonteCarlo(
   const numAssets = portfolio.assets.length;
   const weights = portfolio.assets.map(a => a.weight);
 
+  // Track SBLOC state per iteration per year (only if sbloc config provided)
+  let sblocStates: SBLOCState[][] | null = null;
+  let marginCallYears: number[] | null = null; // First margin call year per iteration (-1 if none)
+
+  if (config.sbloc) {
+    sblocStates = Array.from({ length: iterations }, () => []);
+    marginCallYears = new Array(iterations).fill(-1);
+  }
+
   // Run iterations in batches
   for (let batch = 0; batch < iterations; batch += BATCH_SIZE) {
     // Check for cancellation
@@ -109,6 +126,52 @@ export async function runMonteCarlo(
         // Apply inflation adjustment if enabled
         if (inflationAdjusted) {
           portfolioValue /= (1 + inflationRate);
+        }
+
+        // SBLOC simulation step (if enabled)
+        if (config.sbloc && sblocStates && marginCallYears) {
+          // Get current SBLOC state or initialize
+          const prevState = year === 0
+            ? initializeSBLOCState(
+                {
+                  annualInterestRate: config.sbloc.interestRate,
+                  maxLTV: config.sbloc.maintenanceMargin, // Use maintenance as max for margin call
+                  maintenanceMargin: config.sbloc.maintenanceMargin,
+                  liquidationHaircut: 0.05,
+                  annualWithdrawal: config.sbloc.annualWithdrawal,
+                  compoundingFrequency: 'annual',
+                  startYear: 0,
+                },
+                initialValue
+              )
+            : sblocStates[i][year - 1];
+
+          // Convert to SBLOC engine config
+          const sblocConfig: SBLOCEngineConfig = {
+            annualInterestRate: config.sbloc.interestRate,
+            maxLTV: config.sbloc.maintenanceMargin,
+            maintenanceMargin: config.sbloc.maintenanceMargin,
+            liquidationHaircut: 0.05,
+            annualWithdrawal: config.sbloc.annualWithdrawal,
+            compoundingFrequency: 'annual',
+            startYear: 0,
+          };
+
+          // Step SBLOC forward one year
+          // Note: portfolioReturn is the portfolio return this year (before being applied)
+          // The SBLOC engine expects the portfolio return as a decimal
+          const yearResult = stepSBLOC(prevState, sblocConfig, portfolioReturn, year);
+          sblocStates[i].push(yearResult.newState);
+
+          // Track first margin call year
+          if (yearResult.marginCallTriggered && marginCallYears[i] === -1) {
+            marginCallYears[i] = year + 1;
+          }
+
+          // Adjust portfolio value for forced liquidation if any
+          if (yearResult.portfolioFailed) {
+            portfolioValue = 0;
+          }
         }
 
         // Store yearly value
