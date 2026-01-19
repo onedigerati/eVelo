@@ -285,6 +285,21 @@ export class AppRoot extends BaseComponent {
     const timeHorizon = horizonSlider?.value ?? 30;
     const iterations = parseInt(iterationsSelect?.value ?? '10000', 10);
 
+    // Get SBLOC settings from sidebar
+    // Find the SBLOC section and get sliders within it
+    const sblocSection = this.$('param-section[title="SBLOC Settings"]');
+    const sblocSliders = sblocSection?.querySelectorAll('range-slider');
+    const ltvSlider = sblocSliders?.[0] as (RangeSlider & { value: number }) | undefined;
+    const interestSlider = sblocSliders?.[1] as (RangeSlider & { value: number }) | undefined;
+
+    // Build SBLOC config
+    const sblocConfig = {
+      targetLTV: (ltvSlider?.value ?? 50) / 100, // Convert % to decimal
+      interestRate: (interestSlider?.value ?? 6.5) / 100, // Convert % to decimal
+      annualWithdrawal: 50000, // Fixed for now, could add slider
+      maintenanceMargin: 0.70, // 70% margin call threshold
+    };
+
     // Build SimulationConfig
     const config: SimulationConfig = {
       iterations,
@@ -294,6 +309,7 @@ export class AppRoot extends BaseComponent {
       inflationAdjusted: false,
       resamplingMethod: 'simple',
       seed: undefined,
+      sbloc: sblocConfig,
     };
 
     // Build PortfolioConfig from weight-editor assets
@@ -420,8 +436,19 @@ export class AppRoot extends BaseComponent {
           data: SimulationOutput | null;
           portfolioWeights: { symbol: string; weight: number }[] | null;
           correlationMatrix: { labels: string[]; matrix: number[][] } | null;
+          initialValue: number;
+          timeHorizon: number;
+          annualWithdrawal: number;
+          effectiveTaxRate: number;
         };
         if (dashboard) {
+          // Set configuration values for extended stats calculation
+          dashboard.initialValue = config.initialValue;
+          dashboard.timeHorizon = config.timeHorizon;
+          dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
+          dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
+
+          // Set simulation data (triggers chart updates)
           dashboard.data = this._simulationResult;
 
           // Set portfolio composition for donut chart
