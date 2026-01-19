@@ -202,6 +202,13 @@ export class ResultsDashboard extends BaseComponent {
             <margin-call-chart id="margin-call-chart"></margin-call-chart>
           </div>
         </section>
+
+        <section class="chart-section sbloc-section" id="sbloc-balance-section">
+          <h3>SBLOC Balance Over Time</h3>
+          <div class="chart-container">
+            <sbloc-balance-chart id="sbloc-balance-chart"></sbloc-balance-chart>
+          </div>
+        </section>
       </div>
 
       <div class="no-data" id="no-data">
@@ -410,6 +417,35 @@ export class ResultsDashboard extends BaseComponent {
       );
     } else {
       marginSection?.classList.remove('visible');
+    }
+
+    // Update SBLOC balance trajectory chart
+    const sblocSection = this.$('#sbloc-balance-section');
+    const sblocChart = this.$('#sbloc-balance-chart') as HTMLElement & { data: LineChartData | null };
+
+    if (this._data?.sblocTrajectory && sblocSection && sblocChart) {
+      sblocSection.classList.add('visible');
+      const traj = this._data.sblocTrajectory;
+
+      sblocChart.data = {
+        labels: traj.years.map(y => `Year ${y}`),
+        datasets: [
+          {
+            label: 'Loan Balance (Median)',
+            data: traj.loanBalance.p50,
+          },
+          {
+            label: 'Cumulative Withdrawals',
+            data: traj.cumulativeWithdrawals,
+          },
+          {
+            label: 'Cumulative Interest',
+            data: traj.cumulativeInterest.p50,
+          },
+        ],
+      };
+    } else {
+      sblocSection?.classList.remove('visible');
     }
   }
 
