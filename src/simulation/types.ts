@@ -10,6 +10,20 @@
 // ============================================================================
 
 /**
+ * SBLOC configuration for Monte Carlo simulation
+ */
+export interface SBLOCSimConfig {
+  /** Target LTV ratio for borrowing (e.g., 0.5 for 50%) */
+  targetLTV: number;
+  /** Interest rate (e.g., 0.065 for 6.5%) */
+  interestRate: number;
+  /** Annual withdrawal amount */
+  annualWithdrawal: number;
+  /** Maintenance margin (triggers margin call above this) */
+  maintenanceMargin: number;
+}
+
+/**
  * Simulation configuration - controls how Monte Carlo runs
  */
 export interface SimulationConfig {
@@ -29,6 +43,8 @@ export interface SimulationConfig {
   blockSize?: number;
   /** Random seed for reproducibility */
   seed?: string;
+  /** SBLOC configuration (optional - if omitted, no SBLOC simulation) */
+  sbloc?: SBLOCSimConfig;
 }
 
 /**
@@ -113,6 +129,52 @@ export interface SimulationProgress {
 // ============================================================================
 
 /**
+ * Aggregated SBLOC trajectory data (percentiles across iterations)
+ */
+export interface SBLOCTrajectory {
+  /** Years array (1-indexed) */
+  years: number[];
+  /** Loan balance percentiles by year */
+  loanBalance: {
+    p10: number[];
+    p25: number[];
+    p50: number[];
+    p75: number[];
+    p90: number[];
+  };
+  /** Cumulative withdrawals by year */
+  cumulativeWithdrawals: number[];
+  /** Cumulative interest paid (median) by year */
+  cumulativeInterest: {
+    p50: number[];
+  };
+}
+
+/**
+ * Margin call statistics by year
+ */
+export interface MarginCallStats {
+  /** Simulation year (1-based) */
+  year: number;
+  /** Probability of margin call in this year (0-100) */
+  probability: number;
+  /** Cumulative probability by this year (0-100) */
+  cumulativeProbability: number;
+}
+
+/**
+ * Estate analysis data for BBD comparison
+ */
+export interface EstateAnalysis {
+  /** Median BBD net estate (portfolio - loan) */
+  bbdNetEstate: number;
+  /** Median sell strategy net estate (portfolio - taxes) */
+  sellNetEstate: number;
+  /** BBD advantage (positive means BBD is better) */
+  bbdAdvantage: number;
+}
+
+/**
  * Complete simulation output from worker
  */
 export interface SimulationOutput {
@@ -122,6 +184,12 @@ export interface SimulationOutput {
   yearlyPercentiles: YearlyPercentiles[];
   /** Aggregate statistics across all iterations */
   statistics: SimulationStatistics;
+  /** SBLOC trajectory data (only present if sbloc config provided) */
+  sblocTrajectory?: SBLOCTrajectory;
+  /** Margin call statistics by year */
+  marginCallStats?: MarginCallStats[];
+  /** Estate analysis data for BBD comparison */
+  estateAnalysis?: EstateAnalysis;
 }
 
 /**
