@@ -209,6 +209,13 @@ export class ResultsDashboard extends BaseComponent {
             <sbloc-balance-chart id="sbloc-balance-chart"></sbloc-balance-chart>
           </div>
         </section>
+
+        <section class="chart-section full-width sbloc-section" id="bbd-comparison-section">
+          <h3>BBD Strategy vs Sell Assets Comparison</h3>
+          <div class="chart-container bbd-container">
+            <bbd-comparison-chart id="bbd-comparison-chart"></bbd-comparison-chart>
+          </div>
+        </section>
       </div>
 
       <div class="no-data" id="no-data">
@@ -329,6 +336,11 @@ export class ResultsDashboard extends BaseComponent {
         display: block;
       }
 
+      /* BBD comparison chart container (shorter height for bar chart) */
+      .bbd-container {
+        height: 300px;
+      }
+
       /* Mobile responsive: single column on small screens */
       @media (max-width: 768px) {
         .dashboard-grid {
@@ -446,6 +458,23 @@ export class ResultsDashboard extends BaseComponent {
       };
     } else {
       sblocSection?.classList.remove('visible');
+    }
+
+    // Update BBD vs Sell comparison chart
+    const bbdSection = this.$('#bbd-comparison-section');
+    const bbdChart = this.$('#bbd-comparison-chart') as HTMLElement & {
+      setData(data: BBDComparisonChartData): void
+    };
+
+    if (this._data?.estateAnalysis && bbdSection && bbdChart) {
+      bbdSection.classList.add('visible');
+      bbdChart.setData({
+        bbdNetEstate: this._data.estateAnalysis.bbdNetEstate,
+        sellNetEstate: this._data.estateAnalysis.sellNetEstate,
+        bbdAdvantage: this._data.estateAnalysis.bbdAdvantage,
+      });
+    } else {
+      bbdSection?.classList.remove('visible');
     }
   }
 
