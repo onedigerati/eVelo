@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 11 (Complete Results Dashboard)
-Plan: 2 of 2 complete
+Plan: 3 of 3 complete
 Status: Phase complete
-Last activity: 2026-01-18 — Completed 11-02-PLAN.md (Extended Financial Statistics)
+Last activity: 2026-01-19 — Completed 11-03-PLAN.md (SBLOC Integration)
 
-Progress: █████████████████████████ 94% (34/36 plans total)
+Progress: █████████████████████████ 97% (35/36 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 3.4 min
-- Total execution time: 115 min
+- Total execution time: 119 min
 
 **By Phase:**
 
@@ -36,10 +36,10 @@ Progress: ███████████████████████�
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
-| 11-complete-results-dashboard | 2/2 | 8 min | 4.0 min |
+| 11-complete-results-dashboard | 3/3 | 12 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 07.1-04 (4 min), 07.1-05 (3 min), 11-01 (4 min), 11-02 (4 min)
+- Last 5 plans: 07.1-05 (3 min), 11-01 (4 min), 11-02 (4 min), 11-03 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -286,6 +286,14 @@ Recent decisions affecting current work:
 - computeExtendedStats() derives metrics from simulation data and configuration
 - Configuration setters pattern: initialValue, timeHorizon, annualWithdrawal, effectiveTaxRate
 
+**From 11-03:**
+- Optional sbloc field in SimulationConfig for backward compatibility
+- Track first margin call year per iteration for cumulative probability
+- SBLOCTrajectory with loan balance percentiles (p10-p90) by year
+- MarginCallStats with per-year probability and cumulative probability
+- EstateAnalysis with simplified 23.8% tax calculation for BBD comparison
+- computeMarginCallStats helper function in monte-carlo.ts
+
 ### Roadmap Evolution
 
 - Phase 7.1 inserted after Phase 7: Application Integration (URGENT)
@@ -303,6 +311,7 @@ Recent decisions affecting current work:
   - Chart components exist (Phase 6) but not integrated into dashboard
   - **Plan 01 complete:** Added donut chart and correlation heatmap
   - **Plan 02 complete:** Added 8 financial statistics (CAGR, TWRR, volatility, salary equivalent)
+  - **Plan 03 complete:** Integrated SBLOC engine into Monte Carlo with margin call stats and estate analysis
 
 ### Pending Todos
 
@@ -314,6 +323,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18
-Stopped at: Completed 11-02-PLAN.md (Extended Financial Statistics) - Phase 11 Complete
+Last session: 2026-01-19
+Stopped at: Completed 11-03-PLAN.md (SBLOC Integration) - Phase 11 Complete
 Resume file: None (Phase 11 complete, ready for Phase 9 Theming & Polish)
