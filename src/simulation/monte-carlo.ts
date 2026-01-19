@@ -196,10 +196,67 @@ export async function runMonteCarlo(
   const statistics = calculateStatistics(terminalArray, initialValue);
   const yearlyPercentiles = calculateYearlyPercentiles(yearlyValues);
 
+  // Compute SBLOC trajectory and margin call stats (if enabled)
+  let sblocTrajectory: SBLOCTrajectory | undefined;
+  let marginCallStats: MarginCallStats[] | undefined;
+  let estateAnalysis: SimulationOutput['estateAnalysis'] | undefined;
+
+  if (config.sbloc && sblocStates && marginCallYears) {
+    // Aggregate loan balances by year
+    const loanBalancesByYear = sblocStates[0].map((_, yearIdx) =>
+      sblocStates!.map(iterStates => iterStates[yearIdx]?.loanBalance ?? 0)
+    );
+
+    sblocTrajectory = {
+      years: Array.from({ length: timeHorizon }, (_, i) => i + 1),
+      loanBalance: {
+        p10: loanBalancesByYear.map(yv => percentile(yv, 0.1)),
+        p25: loanBalancesByYear.map(yv => percentile(yv, 0.25)),
+        p50: loanBalancesByYear.map(yv => percentile(yv, 0.5)),
+        p75: loanBalancesByYear.map(yv => percentile(yv, 0.75)),
+        p90: loanBalancesByYear.map(yv => percentile(yv, 0.9)),
+      },
+      cumulativeWithdrawals: Array.from(
+        { length: timeHorizon },
+        (_, i) => (i + 1) * config.sbloc!.annualWithdrawal
+      ),
+      cumulativeInterest: {
+        p50: loanBalancesByYear.map((yv, idx) => {
+          const cumWithdrawal = (idx + 1) * config.sbloc!.annualWithdrawal;
+          const medianLoan = percentile(yv, 0.5);
+          return Math.max(0, medianLoan - cumWithdrawal);
+        }),
+      },
+    };
+
+    // Compute margin call statistics
+    marginCallStats = computeMarginCallStats(marginCallYears, timeHorizon, iterations);
+
+    // Compute estate analysis (median case)
+    const finalStates = sblocStates.map(iterStates => iterStates[timeHorizon - 1]);
+    const medianLoan = percentile(finalStates.map(s => s?.loanBalance ?? 0), 0.5);
+    const medianPortfolio = statistics.median;
+    const bbdNetEstate = medianPortfolio - medianLoan;
+
+    // Estimate taxes if sold (simplified: assume all gains above initial, 23.8% tax rate)
+    const embeddedGains = Math.max(0, medianPortfolio - initialValue);
+    const taxesIfSold = embeddedGains * 0.238;
+    const sellNetEstate = medianPortfolio - taxesIfSold;
+
+    estateAnalysis = {
+      bbdNetEstate,
+      sellNetEstate,
+      bbdAdvantage: bbdNetEstate - sellNetEstate,
+    };
+  }
+
   return {
     terminalValues,
     yearlyPercentiles,
     statistics,
+    sblocTrajectory,
+    marginCallStats,
+    estateAnalysis,
   };
 }
 
@@ -278,4 +335,28 @@ function calculateYearlyPercentiles(
     p75: percentile(values, 0.75),
     p90: percentile(values, 0.9),
   }));
+}
+
+/**
+ * Compute margin call statistics by year
+ */
+function computeMarginCallStats(
+  marginCallYears: number[],
+  timeHorizon: number,
+  iterations: number
+): MarginCallStats[] {
+  const stats: MarginCallStats[] = [];
+
+  for (let year = 1; year <= timeHorizon; year++) {
+    const callsThisYear = marginCallYears.filter(y => y === year).length;
+    const callsByYear = marginCallYears.filter(y => y > 0 && y <= year).length;
+
+    stats.push({
+      year,
+      probability: (callsThisYear / iterations) * 100,
+      cumulativeProbability: (callsByYear / iterations) * 100,
+    });
+  }
+
+  return stats;
 }
