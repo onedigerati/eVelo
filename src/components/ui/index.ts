@@ -36,3 +36,12 @@ export { PercentileSpectrum, type PercentileSpectrumProps } from './percentile-s
 export { KeyMetricsBanner, type KeyMetricsData } from './key-metrics-banner';
 export { ParamSummary, type ParamSummaryData } from './param-summary';
 export { SalaryEquivalentSection, type SalaryEquivalentProps } from './salary-equivalent-section';
+export {
+  StrategyAnalysis,
+  type StrategyAnalysisProps,
+  type BBDMetrics,
+  type SellMetrics,
+  type StrategyVerdict,
+  type WealthDifferential,
+  type StrategyInsights,
+} from './strategy-analysis';

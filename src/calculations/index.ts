@@ -105,3 +105,13 @@ export type { EstateAnalysisParams, BBDComparisonParams } from './estate';
 // ============================================================================
 
 export { calculateSalaryEquivalent } from './salary-equivalent';
+
+// ============================================================================
+// Sell Strategy
+// ============================================================================
+
+export {
+  calculateSellStrategy,
+  type SellStrategyResult,
+  type SellStrategyConfig,
+} from './sell-strategy';
