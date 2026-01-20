@@ -54,3 +54,7 @@ export {
 } from './yearly-analysis-table';
 export { PerformanceTable } from './performance-table';
 export { ReturnProbabilityTable } from './return-probability-table';
+export {
+  RecommendationsSection,
+  type RecommendationsSectionProps,
+} from './recommendations-section';
