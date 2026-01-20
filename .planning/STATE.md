@@ -294,6 +294,12 @@ Recent decisions affecting current work:
 - EstateAnalysis with simplified 23.8% tax calculation for BBD comparison
 - computeMarginCallStats helper function in monte-carlo.ts
 
+**From 11-04:**
+- SBLOC sections hidden by default with CSS class toggle for visibility
+- Query SBLOC sliders via parent param-section element for reliable DOM traversal
+- Fixed 50K annual withdrawal with 70% maintenance margin as defaults
+- Chart type assertion pattern for setData/data property access
+
 **From 11-05:**
 - KeyMetricsData interface with computed metrics from simulation output
 - ParamSummaryData uses simulation config with sensible defaults
@@ -328,6 +334,7 @@ Recent decisions affecting current work:
   - **Plan 01 complete:** Added donut chart and correlation heatmap
   - **Plan 02 complete:** Added 8 financial statistics (CAGR, TWRR, volatility, salary equivalent)
   - **Plan 03 complete:** Integrated SBLOC engine into Monte Carlo with margin call stats and estate analysis
+  - **Plan 04 complete:** Integrated SBLOC charts (margin call risk, balance trajectory, BBD comparison) with conditional visibility
   - **Plan 05 complete:** Added executive summary banner (3 hero cards + parameter summary grid)
   - **Plan 06 complete:** Added percentile spectrum visualizations (terminal net worth, total debt)
   - **Plan 07 complete:** Added strategy analysis section (BBD vs Sell comparison with verdict)
