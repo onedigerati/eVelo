@@ -45,3 +45,10 @@ export {
   type WealthDifferential,
   type StrategyInsights,
 } from './strategy-analysis';
+export {
+  YearlyAnalysisTable,
+  type YearlyAnalysisTableProps,
+  type YearlyPercentileData,
+  type WithdrawalData,
+  calculateWithdrawals,
+} from './yearly-analysis-table';
