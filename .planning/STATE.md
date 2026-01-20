@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 11 — Complete Results Dashboard (gap closure)
+**Current focus:** Phase 11 Complete - Results Dashboard gap closure finished
 
 ## Current Position
 
 Phase: 11 (Complete Results Dashboard)
 Plan: 13 of 13 complete
-Status: In progress - executing gap closure plans
-Last activity: 2026-01-20 — Completed 11-12-PLAN.md (Recommendations Section)
+Status: Phase complete
+Last activity: 2026-01-20 — Completed 11-13-PLAN.md (Enhanced Correlation Heatmap)
 
-Progress: █████████████████████░░░░ 94% (45/47 plans total)
+Progress: ██████████████████████████ 100% (47/47 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 45
-- Average duration: 3.5 min
-- Total execution time: 156 min
+- Total plans completed: 47
+- Average duration: 3.4 min
+- Total execution time: 161 min
 
 **By Phase:**
 
@@ -39,7 +39,7 @@ Progress: █████████████████████░░�
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-08 (3 min), 11-09 (5 min), 11-10 (4 min), 11-11 (5 min), 11-12 (6 min)
+- Last 5 plans: 11-09 (5 min), 11-10 (4 min), 11-11 (5 min), 11-12 (6 min), 11-13 (5 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -343,6 +343,7 @@ Recent decisions affecting current work:
   - **Plan 10 complete:** Added year-by-year analysis table (withdrawals and net worth percentiles)
   - **Plan 11 complete:** Added enhanced strategy comparison charts (4 visual charts for BBD vs Sell)
   - **Plan 12 complete:** Added recommendations section with actionable insights and standard considerations
+  - **Plan 13 complete:** Enhanced correlation heatmap with per-asset return/volatility statistics
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -392,16 +393,23 @@ Recent decisions affecting current work:
 - RecommendationsSection component with collapsible considerations
 - updateRecommendationsSection() integrates insights into dashboard
 
+**From 11-13:**
+- HTML table-based correlation heatmap for flexible column layout
+- Annualized return from daily mean: (1 + dailyMean)^252 - 1
+- Annualized volatility from daily stddev * sqrt(252)
+- calculateAssetStatistics helper for computing metrics from preset data
+- Fallback to market average estimates (8% return, 16% vol)
+
 ### Pending Todos
 
-None yet.
+None - Phase 11 complete.
 
 ### Blockers/Concerns
 
-None yet.
+None.
 
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 11-12-PLAN.md (Recommendations Section)
-Resume file: None - ready to continue with 11-13
+Stopped at: Completed 11-13-PLAN.md (Enhanced Correlation Heatmap)
+Resume file: None - Phase 11 complete, ready for next phase
