@@ -241,7 +241,7 @@ Plans:
 - [ ] 10-02: Single-file HTML export with vite-plugin-singlefile
 
 ### Phase 11: Complete Results Dashboard
-**Goal**: Integrate all chart components and statistics into the results dashboard
+**Goal**: Full-featured results dashboard matching reference application
 **Depends on**: Phase 7.1
 **Requirements**: VIZ-03, VIZ-04, VIZ-05, VIZ-06, VIZ-07, CALC-03, CALC-04, CALC-05, CALC-07
 **Success Criteria** (what must be TRUE):
@@ -254,14 +254,29 @@ Plans:
   7. TWRR displayed in statistics
   8. Margin call probability displayed
   9. Salary-equivalent for tax-free withdrawals displayed
+  10. Key metrics banner with hero cards at top
+  11. Percentile spectrum visualizations (P10/P50/P90)
+  12. Strategy analysis section with BBD vs Sell comparison
+  13. Performance tables with percentile breakdown
+  14. Year-by-year analysis table
+  15. Recommendations and actionable insights
 **Research**: Unlikely (wiring existing components)
-**Plans**: TBD
+**Plans**: 13 total
 
 Plans:
-- [ ] 11-01: Portfolio donut chart and correlation heatmap
-- [ ] 11-02: Extended statistics (CAGR, TWRR, volatility, salary-equivalent)
-- [ ] 11-03: SBLOC integration into simulation engine
+- [x] 11-01: Portfolio donut chart and correlation heatmap
+- [x] 11-02: Extended statistics (CAGR, TWRR, volatility, salary-equivalent)
+- [x] 11-03: SBLOC integration into simulation engine
 - [ ] 11-04: SBLOC charts (margin call, balance, BBD comparison)
+- [ ] 11-05: Executive summary banner (key metrics + param summary)
+- [ ] 11-06: Percentile spectrum visualizations
+- [ ] 11-07: Strategy analysis section (BBD vs Sell verdict)
+- [ ] 11-08: Salary equivalent section (prominent banner)
+- [ ] 11-09: Performance tables (metrics across percentiles)
+- [ ] 11-10: Year-by-year analysis table
+- [ ] 11-11: Enhanced strategy comparison charts
+- [ ] 11-12: Recommendations and actionable insights
+- [ ] 11-13: Asset-level statistics in correlation heatmap
 
 ## Progress
 
@@ -281,6 +296,6 @@ Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 1
 | 8. Data Layer | 5/5 | Complete | 2026-01-18 |
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
-| 11. Complete Results Dashboard | 0/? | Not started | - |
+| 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
 
-**Total Plans**: 37+
+**Total Plans**: 46
