@@ -16,3 +16,7 @@ export * from './margin-call-chart';
 export * from './bbd-comparison-chart';
 export * from './donut-chart';
 export * from './correlation-heatmap';
+export * from './comparison-line-chart';
+export * from './cumulative-costs-chart';
+export * from './terminal-comparison-chart';
+export * from './sbloc-utilization-chart';
