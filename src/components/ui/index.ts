@@ -32,3 +32,4 @@ export { PortfolioList } from './portfolio-list';
 
 // Results Display Components
 export { ResultsDashboard } from './results-dashboard';
+export { PercentileSpectrum, type PercentileSpectrumProps } from './percentile-spectrum';
