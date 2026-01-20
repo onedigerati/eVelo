@@ -37,6 +37,10 @@ import type { YearlyAnalysisTable, YearlyAnalysisTableProps } from './yearly-ana
 import type { PerformanceTable } from './performance-table';
 import type { ReturnProbabilityTable } from './return-probability-table';
 import { calculateWithdrawals } from './yearly-analysis-table';
+import type { RecommendationsSection, RecommendationsSectionProps } from './recommendations-section';
+import { generateInsights, generateConsiderations } from '../../utils/insight-generator';
+import { getPresetData } from '../../data/services/preset-service';
+import { mean, stddev } from '../../math';
 // Import chart components to register them
 import '../../charts';
 // Import percentile spectrum component
@@ -53,6 +57,8 @@ import './yearly-analysis-table';
 // Import performance tables
 import './performance-table';
 import './return-probability-table';
+// Import recommendations section
+import './recommendations-section';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -373,6 +379,10 @@ export class ResultsDashboard extends BaseComponent {
           </div>
         </section>
 
+        <section class="recommendations-section full-width" id="recommendations-section">
+          <recommendations-section id="recommendations"></recommendations-section>
+        </section>
+
         <section class="table-section full-width" id="performance-table-section">
           <performance-table id="performance-table"></performance-table>
         </section>
@@ -531,6 +541,11 @@ export class ResultsDashboard extends BaseComponent {
 
       /* Yearly analysis table section styling */
       .table-section {
+        /* Component provides its own styling */
+      }
+
+      /* Recommendations section styling */
+      .recommendations-section {
         /* Component provides its own styling */
       }
 
@@ -759,10 +774,18 @@ export class ResultsDashboard extends BaseComponent {
       };
     }
 
-    // Update correlation heatmap
+    // Update correlation heatmap with per-asset statistics
     const heatmap = this.$('#heatmap-chart') as HTMLElement & { data: HeatmapData | null };
     if (heatmap && this._correlationMatrix) {
-      heatmap.data = this._correlationMatrix;
+      // Calculate expected returns and volatilities from preset data
+      const assetStats = this.calculateAssetStatistics(this._correlationMatrix.labels);
+
+      heatmap.data = {
+        labels: this._correlationMatrix.labels,
+        matrix: this._correlationMatrix.matrix,
+        expectedReturns: assetStats.expectedReturns,
+        volatilities: assetStats.volatilities,
+      };
     }
 
     // Update terminal net worth spectrum
@@ -845,6 +868,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update visual comparison charts
     this.updateVisualComparisonCharts();
+
+    // Update recommendations section with insights and considerations
+    this.updateRecommendationsSection();
 
     // Update performance tables
     this.updatePerformanceTable();
@@ -1602,6 +1628,90 @@ export class ResultsDashboard extends BaseComponent {
 
     table.expectedReturns = expectedReturns;
     table.probabilities = probabilities;
+  }
+
+  /**
+   * Update recommendations section with insights and considerations.
+   * Generates dynamic insights based on simulation results.
+   */
+  private updateRecommendationsSection(): void {
+    const component = this.$('#recommendations') as RecommendationsSection | null;
+
+    if (!component || !this._data || !this._simulationConfig) return;
+
+    // Calculate CAGR for insight generation
+    const extended = this.computeExtendedStats();
+    const cagr = extended?.cagr;
+
+    // Generate insights based on simulation results
+    const insights = generateInsights({
+      statistics: this._data.statistics,
+      marginCallStats: this._data.marginCallStats,
+      config: this._simulationConfig,
+      sblocTrajectory: this._data.sblocTrajectory,
+      cagr,
+    });
+
+    // Get margin call probability for considerations
+    const marginCallProbability = this._data.marginCallStats && this._data.marginCallStats.length > 0
+      ? this._data.marginCallStats[this._data.marginCallStats.length - 1].cumulativeProbability
+      : 0;
+
+    // Get interest rate from config
+    const interestRate = this._simulationConfig.sbloc?.interestRate || 0.07;
+
+    // Generate standard considerations
+    const considerations = generateConsiderations(marginCallProbability, interestRate);
+
+    // Update component
+    component.data = {
+      insights,
+      considerations,
+    };
+  }
+
+  /**
+   * Calculate expected return and volatility for each asset from preset data.
+   * Uses bundled historical returns to compute annualized metrics.
+   *
+   * @param symbols - Array of asset symbols (e.g., ['SPY', 'AGG'])
+   * @returns Object with expectedReturns and volatilities arrays (as decimals)
+   */
+  private calculateAssetStatistics(symbols: string[]): {
+    expectedReturns: number[];
+    volatilities: number[];
+  } {
+    const expectedReturns: number[] = [];
+    const volatilities: number[] = [];
+
+    for (const symbol of symbols) {
+      const presetData = getPresetData(symbol);
+
+      if (presetData && presetData.returns.length > 0) {
+        // Extract daily returns
+        const dailyReturns = presetData.returns.map(r => r.return);
+
+        // Calculate expected annual return from daily returns
+        // Annualize: (1 + daily mean)^252 - 1 (252 trading days)
+        const dailyMean = mean(dailyReturns);
+        const annualReturn = Math.pow(1 + dailyMean, 252) - 1;
+
+        // Calculate annualized volatility
+        // Daily volatility * sqrt(252)
+        const dailyVol = stddev(dailyReturns);
+        const annualVol = dailyVol * Math.sqrt(252);
+
+        expectedReturns.push(annualReturn);
+        volatilities.push(annualVol);
+      } else {
+        // Fallback values if preset data not available
+        // Use market average estimates
+        expectedReturns.push(0.08);  // 8% default expected return
+        volatilities.push(0.16);    // 16% default volatility
+      }
+    }
+
+    return { expectedReturns, volatilities };
   }
 }
 
