@@ -330,7 +330,17 @@ Recent decisions affecting current work:
   - **Plan 03 complete:** Integrated SBLOC engine into Monte Carlo with margin call stats and estate analysis
   - **Plan 05 complete:** Added executive summary banner (3 hero cards + parameter summary grid)
   - **Plan 06 complete:** Added percentile spectrum visualizations (terminal net worth, total debt)
+  - **Plan 07 complete:** Added strategy analysis section (BBD vs Sell comparison with verdict)
   - **Plan 08 complete:** Added salary equivalent section (teal banner showing tax advantage)
+
+**From 11-07:**
+- SellStrategyResult interface with terminal wealth, success rate, taxes
+- calculateSellStrategy uses BBD percentiles for growth rates
+- Multi-path simulation (P10-P90 + interpolated) for success rate
+- StrategyAnalysis component with verdict banner and success dial
+- Side-by-side comparison cards for BBD vs Sell metrics
+- Wealth differential section (BBD vs Sell, Tax Savings, Estate Value)
+- Verdict determined by terminal wealth comparison
 
 **From 11-08:**
 - Teal gradient banner pattern for highlighting key metrics
