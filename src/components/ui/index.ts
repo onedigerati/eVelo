@@ -33,3 +33,5 @@ export { PortfolioList } from './portfolio-list';
 // Results Display Components
 export { ResultsDashboard } from './results-dashboard';
 export { PercentileSpectrum, type PercentileSpectrumProps } from './percentile-spectrum';
+export { KeyMetricsBanner, type KeyMetricsData } from './key-metrics-banner';
+export { ParamSummary, type ParamSummaryData } from './param-summary';
