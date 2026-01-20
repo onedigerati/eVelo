@@ -16,8 +16,12 @@ import {
   calculateTWRR,
   calculateSalaryEquivalent,
 } from '../../calculations';
+import { percentile } from '../../math';
+import type { PercentileSpectrum } from './percentile-spectrum';
 // Import chart components to register them
 import '../../charts';
+// Import percentile spectrum component
+import './percentile-spectrum';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -182,6 +186,13 @@ export class ResultsDashboard extends BaseComponent {
           </div>
         </section>
 
+        <section class="spectrum-section full-width" id="net-worth-spectrum-section">
+          <percentile-spectrum
+            id="net-worth-spectrum"
+            title="TERMINAL NET WORTH DISTRIBUTION">
+          </percentile-spectrum>
+        </section>
+
         <section class="chart-section">
           <h3>Portfolio Composition</h3>
           <div class="chart-container square">
@@ -327,6 +338,11 @@ export class ResultsDashboard extends BaseComponent {
         display: none;
       }
 
+      /* Spectrum sections styling */
+      .spectrum-section {
+        /* Component provides its own styling */
+      }
+
       /* SBLOC sections hidden by default (show when SBLOC data available) */
       .sbloc-section {
         display: none;
@@ -410,6 +426,9 @@ export class ResultsDashboard extends BaseComponent {
     if (heatmap && this._correlationMatrix) {
       heatmap.data = this._correlationMatrix;
     }
+
+    // Update terminal net worth spectrum
+    this.updateNetWorthSpectrum();
 
     // Update margin call risk chart (SBLOC section)
     const marginSection = this.$('#margin-call-section');
@@ -623,6 +642,29 @@ export class ResultsDashboard extends BaseComponent {
       if (volatility) volatility.textContent = `${(extended.volatility * 100).toFixed(1)}%`;
       if (salary) salary.textContent = format(extended.salaryEquivalent.equivalent);
     }
+  }
+
+  /**
+   * Update Terminal Net Worth Distribution spectrum.
+   * Calculates P10/P50/P90 from terminal values.
+   */
+  private updateNetWorthSpectrum(): void {
+    const spectrum = this.$('#net-worth-spectrum') as PercentileSpectrum | null;
+
+    if (!spectrum || !this._data) return;
+
+    const values = Array.from(this._data.terminalValues);
+
+    // Calculate percentiles
+    const p10 = percentile(values, 10);
+    const p50 = percentile(values, 50);
+    const p90 = percentile(values, 90);
+
+    // Update spectrum component
+    spectrum.p10 = p10;
+    spectrum.p50 = p50;
+    spectrum.p90 = p90;
+    spectrum.formatter = 'currency';
   }
 }
 
