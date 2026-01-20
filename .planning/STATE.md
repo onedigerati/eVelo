@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 11 (Complete Results Dashboard)
-Plan: 8 of 13 complete
+Plan: 10 of 13 complete
 Status: In progress - executing gap closure plans
-Last activity: 2026-01-20 — Completed 11-08-PLAN.md (Salary Equivalent Section)
+Last activity: 2026-01-20 — Completed 11-10-PLAN.md (Year-by-Year Analysis Table)
 
-Progress: ████████████████████░░░░░ 83% (40/47 plans total)
+Progress: █████████████████████░░░░ 87% (42/47 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 40
-- Average duration: 3.4 min
-- Total execution time: 136 min
+- Total plans completed: 42
+- Average duration: 3.3 min
+- Total execution time: 140 min
 
 **By Phase:**
 
@@ -36,10 +36,10 @@ Progress: ████████████████████░░░�
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
-| 11-complete-results-dashboard | 8/13 | 29 min | 3.6 min |
+| 11-complete-results-dashboard | 10/13 | 33 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-04 (4 min), 11-05 (7 min), 11-06 (7 min), 11-07 (N/A), 11-08 (3 min)
+- Last 5 plans: 11-05 (7 min), 11-06 (7 min), 11-07 (N/A), 11-08 (3 min), 11-10 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -339,6 +339,7 @@ Recent decisions affecting current work:
   - **Plan 06 complete:** Added percentile spectrum visualizations (terminal net worth, total debt)
   - **Plan 07 complete:** Added strategy analysis section (BBD vs Sell comparison with verdict)
   - **Plan 08 complete:** Added salary equivalent section (teal banner showing tax advantage)
+  - **Plan 10 complete:** Added year-by-year analysis table (withdrawals and net worth percentiles)
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -355,6 +356,13 @@ Recent decisions affecting current work:
 - Conditional section visibility based on config values (withdrawal > 0)
 - clamp() for responsive font sizing without media queries
 
+**From 11-10:**
+- YearlyAnalysisTable component with sticky headers and scrollable body
+- calculateWithdrawals helper for annual/cumulative withdrawal projections
+- Color-coded values (green positive, red negative, teal median)
+- Compact currency notation for values >= $1M
+- 3% default annual withdrawal growth
+
 ### Pending Todos
 
 None yet.
@@ -366,5 +374,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 11-08-PLAN.md (Salary Equivalent Section)
-Resume file: None - ready to continue with 11-09
+Stopped at: Completed 11-10-PLAN.md (Year-by-Year Analysis Table)
+Resume file: None - ready to continue with 11-11
