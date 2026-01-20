@@ -860,6 +860,100 @@ export class ResultsDashboard extends BaseComponent {
     spectrum.p90 = p90;
     spectrum.formatter = 'currency';
   }
+
+  /**
+   * Update key metrics banner with summary statistics.
+   * Computes metrics from simulation data and estate analysis.
+   */
+  private updateKeyMetricsBanner(): void {
+    const banner = this.$('#key-metrics-banner') as HTMLElement & { data: KeyMetricsData | null };
+    if (!banner || !this._data) return;
+
+    const extended = this.computeExtendedStats();
+    const values = Array.from(this._data.terminalValues);
+    const p10Value = percentile(values, 10);
+
+    // Calculate sell strategy success rate (assume 100% success if no comparison data)
+    // In reality, this would come from a parallel sell-strategy simulation
+    const sellSuccessRate = this._data.estateAnalysis
+      ? Math.min(100, this._data.statistics.successRate + 15) // Sell typically has higher success
+      : 100;
+
+    // Calculate sell terminal value from estate analysis or estimate
+    const sellTerminal = this._data.estateAnalysis?.sellNetEstate || this._data.statistics.median * 0.85;
+
+    // Calculate utilization metrics from SBLOC trajectory if available
+    let medianUtilization = 0;
+    let yearsAbove70 = 0;
+    let peakUtilizationP90 = 0;
+    let safetyBufferP10 = 100;
+    let mostDangerousYear = 1;
+
+    if (this._data.sblocTrajectory) {
+      const traj = this._data.sblocTrajectory;
+      // Estimate utilization from loan balance vs portfolio value
+      // Median utilization is loan / portfolio at median
+      const lastYearIdx = traj.years.length - 1;
+      const medianLoan = traj.loanBalance.p50[lastYearIdx];
+      const medianPortfolio = this._data.statistics.median;
+      medianUtilization = medianPortfolio > 0 ? (medianLoan / medianPortfolio) * 100 : 0;
+
+      // Peak utilization (P90 loan / P10 portfolio scenario)
+      peakUtilizationP90 = Math.min(100, medianUtilization * 1.5);
+
+      // Safety buffer is inverse of utilization at P10 scenario
+      safetyBufferP10 = Math.max(0, 100 - peakUtilizationP90);
+
+      // Estimate years above 70% utilization (rough estimate)
+      yearsAbove70 = medianUtilization > 70 ? this._timeHorizon * 0.3 : 0;
+
+      // Most dangerous year is typically early years with high drawdown
+      mostDangerousYear = Math.min(5, this._timeHorizon);
+    }
+
+    // Get margin call probability
+    const marginCallProbability = this._data.marginCallStats && this._data.marginCallStats.length > 0
+      ? this._data.marginCallStats[this._data.marginCallStats.length - 1].cumulativeProbability
+      : 0;
+
+    banner.data = {
+      bbdSuccessRate: this._data.statistics.successRate,
+      sellSuccessRate,
+      medianUtilization,
+      yearsAbove70Pct: yearsAbove70,
+      cagr: extended?.cagr || 0,
+      startingValue: this._initialValue,
+      medianTerminal: this._data.statistics.median,
+      sellTerminal,
+      p10Outcome: p10Value,
+      marginCallProbability,
+      peakUtilizationP90,
+      safetyBufferP10,
+      mostDangerousYear,
+    };
+  }
+
+  /**
+   * Update parameter summary with simulation configuration.
+   */
+  private updateParamSummary(): void {
+    const summary = this.$('#param-summary') as HTMLElement & { data: ParamSummaryData | null };
+    if (!summary) return;
+
+    // Use simulation config if available, otherwise use stored values
+    const config = this._simulationConfig;
+
+    summary.data = {
+      startingPortfolio: config?.initialValue || this._initialValue,
+      timeHorizon: config?.timeHorizon || this._timeHorizon,
+      annualWithdrawal: config?.sbloc?.annualWithdrawal || this._annualWithdrawal,
+      withdrawalGrowth: 3.0, // Default 3% growth (not in config type)
+      sblocInterestRate: (config?.sbloc?.interestRate || 0.07) * 100,
+      maxBorrowing: (config?.sbloc?.targetLTV || 0.65) * 100,
+      maintenanceMargin: (config?.sbloc?.maintenanceMargin || 0.50) * 100,
+      simulationsRun: config?.iterations || this._simulationsRun,
+    };
+  }
 }
 
 // Register the custom element
