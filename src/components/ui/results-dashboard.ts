@@ -20,6 +20,7 @@ import {
 } from '../../calculations';
 import { percentile } from '../../math';
 import type { PercentileSpectrum } from './percentile-spectrum';
+import type { SalaryEquivalentSection, SalaryEquivalentProps } from './salary-equivalent-section';
 // Import chart components to register them
 import '../../charts';
 // Import percentile spectrum component
@@ -27,6 +28,8 @@ import './percentile-spectrum';
 // Import summary components to register them
 import './key-metrics-banner';
 import './param-summary';
+// Import salary equivalent section
+import './salary-equivalent-section';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -249,6 +252,10 @@ export class ResultsDashboard extends BaseComponent {
           </div>
         </section>
 
+        <section class="salary-section full-width" id="salary-equivalent-section">
+          <salary-equivalent-section id="salary-equivalent"></salary-equivalent-section>
+        </section>
+
         <section class="spectrum-section full-width sbloc-section" id="debt-spectrum-section">
           <div class="debt-spectrum-wrapper">
             <p class="debt-intro">Understanding your debt accumulation from two perspectives:</p>
@@ -427,6 +434,15 @@ export class ResultsDashboard extends BaseComponent {
         display: block;
       }
 
+      /* Salary equivalent section hidden by default (show when withdrawal > 0) */
+      .salary-section {
+        display: none;
+      }
+
+      .salary-section.visible {
+        display: block;
+      }
+
       /* BBD comparison chart container (shorter height for bar chart) */
       .bbd-container {
         height: 300px;
@@ -587,6 +603,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update debt spectrum (SBLOC section)
     this.updateDebtSpectrum();
+
+    // Update salary equivalent section (show only when withdrawal > 0)
+    this.updateSalaryEquivalentSection();
 
     // Update margin call risk chart (SBLOC section)
     const marginSection = this.$('#margin-call-section');
@@ -859,6 +878,38 @@ export class ResultsDashboard extends BaseComponent {
     spectrum.p50 = p50;
     spectrum.p90 = p90;
     spectrum.formatter = 'currency';
+  }
+
+  /**
+   * Update salary equivalent section with tax advantage information.
+   * Shows only when withdrawal > 0.
+   */
+  private updateSalaryEquivalentSection(): void {
+    const section = this.$('#salary-equivalent-section');
+    const salaryComponent = this.$('#salary-equivalent') as SalaryEquivalentSection | null;
+
+    if (!section || !salaryComponent) return;
+
+    // Show only when there's a withdrawal configured
+    if (this._annualWithdrawal <= 0) {
+      section.classList.remove('visible');
+      return;
+    }
+
+    section.classList.add('visible');
+
+    // Use calculateSalaryEquivalent from existing calculation module
+    const result = calculateSalaryEquivalent(
+      this._annualWithdrawal,
+      this._effectiveTaxRate
+    );
+
+    salaryComponent.data = {
+      withdrawal: this._annualWithdrawal,
+      taxableEquivalent: result.salaryEquivalent,
+      taxSavings: result.taxSavings,
+      taxRate: this._effectiveTaxRate,
+    };
   }
 
   /**
