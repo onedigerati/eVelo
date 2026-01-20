@@ -23,6 +23,8 @@ import {
 import { percentile } from '../../math';
 import type { PercentileSpectrum } from './percentile-spectrum';
 import type { SalaryEquivalentSection, SalaryEquivalentProps } from './salary-equivalent-section';
+import type { YearlyAnalysisTable, YearlyAnalysisTableProps } from './yearly-analysis-table';
+import { calculateWithdrawals } from './yearly-analysis-table';
 // Import chart components to register them
 import '../../charts';
 // Import percentile spectrum component
@@ -34,6 +36,8 @@ import './param-summary';
 import './salary-equivalent-section';
 // Import strategy analysis section
 import './strategy-analysis';
+// Import yearly analysis table
+import './yearly-analysis-table';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -311,6 +315,10 @@ export class ResultsDashboard extends BaseComponent {
         <section class="strategy-section full-width sbloc-section" id="strategy-analysis-section">
           <strategy-analysis id="strategy-analysis"></strategy-analysis>
         </section>
+
+        <section class="table-section full-width" id="yearly-analysis-section">
+          <yearly-analysis-table id="yearly-analysis-table"></yearly-analysis-table>
+        </section>
       </div>
 
       <div class="no-data" id="no-data">
@@ -453,6 +461,11 @@ export class ResultsDashboard extends BaseComponent {
 
       /* Strategy analysis section styling */
       .strategy-section {
+        /* Component provides its own styling */
+      }
+
+      /* Yearly analysis table section styling */
+      .table-section {
         /* Component provides its own styling */
       }
 
@@ -688,6 +701,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update strategy analysis section
     this.updateStrategyAnalysis();
+
+    // Update yearly analysis table
+    this.updateYearlyAnalysisTable();
   }
 
   /**
@@ -1133,6 +1149,43 @@ export class ResultsDashboard extends BaseComponent {
       insights,
       simulationsRun: this._simulationsRun,
       timeHorizon: this._timeHorizon,
+    };
+  }
+
+  /**
+   * Update yearly analysis table with year-by-year breakdown.
+   * Displays withdrawals and net worth percentiles for each year.
+   */
+  private updateYearlyAnalysisTable(): void {
+    const table = this.$('#yearly-analysis-table') as YearlyAnalysisTable | null;
+    if (!table || !this._data) return;
+
+    // Calculate start year (current year)
+    const startYear = new Date().getFullYear();
+
+    // Calculate withdrawal data with 3% annual growth
+    const withdrawalGrowth = 0.03;
+    const withdrawals = calculateWithdrawals(
+      this._annualWithdrawal,
+      withdrawalGrowth,
+      this._timeHorizon
+    );
+
+    // Transform yearly percentiles to include calendar year
+    const percentiles = this._data.yearlyPercentiles.map((p, index) => ({
+      year: startYear + index,
+      p10: p.p10,
+      p25: p.p25,
+      p50: p.p50,
+      p75: p.p75,
+      p90: p.p90,
+    }));
+
+    // Set table data
+    table.data = {
+      startYear,
+      withdrawals,
+      percentiles,
     };
   }
 }
