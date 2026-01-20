@@ -10,6 +10,10 @@ import { BaseComponent } from '../base-component';
 import type { SimulationOutput, YearlyPercentiles, SimulationStatistics, SimulationConfig } from '../../simulation/types';
 import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData, BarChartData, LineChartData } from '../../charts/types';
 import type { BBDComparisonChartData } from '../../charts/bbd-comparison-chart';
+import type { ComparisonLineChartData } from '../../charts/comparison-line-chart';
+import type { CumulativeCostsChartData } from '../../charts/cumulative-costs-chart';
+import type { TerminalComparisonChartData } from '../../charts/terminal-comparison-chart';
+import type { SBLOCUtilizationChartData } from '../../charts/sbloc-utilization-chart';
 import type { KeyMetricsData } from './key-metrics-banner';
 import type { ParamSummaryData } from './param-summary';
 import type { StrategyAnalysisProps, StrategyAnalysis } from './strategy-analysis';
@@ -327,6 +331,48 @@ export class ResultsDashboard extends BaseComponent {
           <strategy-analysis id="strategy-analysis"></strategy-analysis>
         </section>
 
+        <!-- Visual Comparison Section -->
+        <section class="visual-comparison-section full-width sbloc-section" id="visual-comparison-section">
+          <div class="comparison-wrapper">
+            <h3>Visual Strategy Comparison</h3>
+            <p class="comparison-intro">Compare BBD vs Sell strategies across multiple dimensions</p>
+
+            <div class="comparison-grid">
+              <!-- Net Worth Over Time -->
+              <div class="comparison-chart-card">
+                <h4>Net Worth Over Time (Median)</h4>
+                <div class="comparison-chart-container">
+                  <comparison-line-chart id="comparison-line-chart"></comparison-line-chart>
+                </div>
+              </div>
+
+              <!-- Cumulative Costs -->
+              <div class="comparison-chart-card">
+                <h4>Cumulative Costs: Taxes vs Interest</h4>
+                <div class="comparison-chart-container">
+                  <cumulative-costs-chart id="cumulative-costs-chart"></cumulative-costs-chart>
+                </div>
+              </div>
+
+              <!-- Terminal Distribution -->
+              <div class="comparison-chart-card full-width">
+                <h4>Terminal Value Distribution (All Percentiles)</h4>
+                <div class="comparison-chart-container short">
+                  <terminal-comparison-chart id="terminal-comparison-chart"></terminal-comparison-chart>
+                </div>
+              </div>
+
+              <!-- SBLOC Utilization -->
+              <div class="comparison-chart-card full-width">
+                <h4>SBLOC Utilization Over Time (%)</h4>
+                <div class="comparison-chart-container">
+                  <sbloc-utilization-chart id="sbloc-utilization-chart"></sbloc-utilization-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="table-section full-width" id="performance-table-section">
           <performance-table id="performance-table"></performance-table>
         </section>
@@ -567,6 +613,74 @@ export class ResultsDashboard extends BaseComponent {
         margin-bottom: 0;
       }
 
+      /* Visual comparison section styling */
+      .visual-comparison-section {
+        /* Inherits sbloc-section visibility rules */
+      }
+
+      .comparison-wrapper {
+        background: var(--surface-primary, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-lg, 8px);
+        padding: var(--spacing-lg, 24px);
+      }
+
+      .comparison-wrapper h3 {
+        margin: 0 0 var(--spacing-xs, 4px) 0;
+        font-size: var(--font-size-xl, 1.25rem);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+      }
+
+      .comparison-intro {
+        margin: 0 0 var(--spacing-lg, 24px) 0;
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #475569);
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg, 24px);
+      }
+
+      .comparison-chart-card {
+        background: var(--surface-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-md, 6px);
+        padding: var(--spacing-md, 16px);
+      }
+
+      .comparison-chart-card.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .comparison-chart-card h4 {
+        margin: 0 0 var(--spacing-md, 16px) 0;
+        font-size: var(--font-size-base, 1rem);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+      }
+
+      .comparison-chart-container {
+        height: 350px;
+        position: relative;
+      }
+
+      .comparison-chart-container.short {
+        height: 280px;
+      }
+
+      .comparison-chart-container comparison-line-chart,
+      .comparison-chart-container cumulative-costs-chart,
+      .comparison-chart-container terminal-comparison-chart,
+      .comparison-chart-container sbloc-utilization-chart {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
       /* Mobile responsive: single column on small screens */
       @media (max-width: 768px) {
         .dashboard-grid {
@@ -579,6 +693,14 @@ export class ResultsDashboard extends BaseComponent {
 
         .stats-grid {
           grid-template-columns: repeat(2, 1fr);
+        }
+
+        .comparison-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .comparison-chart-container {
+          height: 280px;
         }
       }
     `;
@@ -720,6 +842,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update strategy analysis section
     this.updateStrategyAnalysis();
+
+    // Update visual comparison charts
+    this.updateVisualComparisonCharts();
 
     // Update performance tables
     this.updatePerformanceTable();
@@ -1173,6 +1298,229 @@ export class ResultsDashboard extends BaseComponent {
       simulationsRun: this._simulationsRun,
       timeHorizon: this._timeHorizon,
     };
+  }
+
+  /**
+   * Update visual comparison charts section.
+   * Shows BBD vs Sell comparison across multiple perspectives.
+   */
+  private updateVisualComparisonCharts(): void {
+    const section = this.$('#visual-comparison-section');
+
+    if (!section) return;
+
+    // Only show when SBLOC data is available
+    if (!this._data?.sblocTrajectory || !this._data?.estateAnalysis) {
+      section.classList.remove('visible');
+      return;
+    }
+
+    section.classList.add('visible');
+
+    // Calculate sell strategy for comparison
+    const sellResult = calculateSellStrategy(
+      {
+        initialValue: this._initialValue,
+        annualWithdrawal: this._annualWithdrawal,
+        withdrawalGrowth: 0.03,
+        timeHorizon: this._timeHorizon,
+        capitalGainsRate: 0.238,
+        costBasisRatio: 0.4,
+      },
+      this._data.yearlyPercentiles,
+    );
+
+    // Update Comparison Line Chart (Net Worth Over Time)
+    this.updateComparisonLineChart(sellResult);
+
+    // Update Cumulative Costs Chart
+    this.updateCumulativeCostsChart(sellResult);
+
+    // Update Terminal Comparison Chart
+    this.updateTerminalComparisonChart(sellResult);
+
+    // Update SBLOC Utilization Chart
+    this.updateSBLOCUtilizationChart();
+  }
+
+  /**
+   * Update comparison line chart with BBD vs Sell trajectories.
+   */
+  private updateComparisonLineChart(sellResult: ReturnType<typeof calculateSellStrategy>): void {
+    const chart = this.$('#comparison-line-chart') as HTMLElement & {
+      setData(data: ComparisonLineChartData): void;
+    } | null;
+
+    if (!chart || !this._data?.sblocTrajectory) return;
+
+    const traj = this._data.sblocTrajectory;
+    const years = traj.years;
+
+    // BBD net worth = portfolio value - loan balance
+    const bbdValues = years.map((year, idx) => {
+      const portfolio = this._data!.yearlyPercentiles[year]?.p50 || 0;
+      const loan = traj.loanBalance.p50[idx] || 0;
+      return portfolio - loan;
+    });
+
+    // Sell trajectory uses the yearly values from sell calculation
+    const sellValues = sellResult.yearlyValues.slice(0, years.length);
+
+    // Pad if sell values are shorter
+    while (sellValues.length < years.length) {
+      sellValues.push(sellValues[sellValues.length - 1] || 0);
+    }
+
+    chart.setData({
+      labels: years.map(y => `Year ${y}`),
+      bbdValues,
+      sellValues,
+    });
+  }
+
+  /**
+   * Update cumulative costs chart comparing taxes vs interest.
+   */
+  private updateCumulativeCostsChart(sellResult: ReturnType<typeof calculateSellStrategy>): void {
+    const chart = this.$('#cumulative-costs-chart') as HTMLElement & {
+      setData(data: CumulativeCostsChartData): void;
+    } | null;
+
+    if (!chart || !this._data?.sblocTrajectory) return;
+
+    const traj = this._data.sblocTrajectory;
+    const years = traj.years;
+
+    // Cumulative interest from SBLOC trajectory
+    const interest = traj.cumulativeInterest.p50;
+
+    // Calculate cumulative taxes from sell strategy
+    // Since sell strategy gives us total lifetime taxes, we need to estimate yearly
+    // Use a simple linear approximation based on withdrawal pattern
+    const totalTaxes = sellResult.lifetimeTaxes;
+    const taxes = years.map((_, idx) => {
+      // Progressive tax accumulation (roughly linear with compound growth)
+      const progress = (idx + 1) / years.length;
+      return totalTaxes * Math.pow(progress, 1.3);  // Slightly accelerated
+    });
+
+    chart.setData({
+      labels: years.map(y => `Year ${y}`),
+      taxes,
+      interest,
+    });
+  }
+
+  /**
+   * Update terminal comparison chart with percentile bars.
+   */
+  private updateTerminalComparisonChart(sellResult: ReturnType<typeof calculateSellStrategy>): void {
+    const chart = this.$('#terminal-comparison-chart') as HTMLElement & {
+      setData(data: TerminalComparisonChartData): void;
+    } | null;
+
+    if (!chart || !this._data?.sblocTrajectory) return;
+
+    const traj = this._data.sblocTrajectory;
+    const lastIdx = traj.years.length - 1;
+
+    // Get BBD terminal values at each percentile (portfolio - loan)
+    const values = Array.from(this._data.terminalValues);
+    const bbdP10 = percentile(values, 10) - (traj.loanBalance.p90[lastIdx] || 0);
+    const bbdP25 = percentile(values, 25) - (traj.loanBalance.p75[lastIdx] || 0);
+    const bbdP50 = percentile(values, 50) - (traj.loanBalance.p50[lastIdx] || 0);
+    const bbdP75 = percentile(values, 75) - (traj.loanBalance.p25[lastIdx] || 0);
+    const bbdP90 = percentile(values, 90) - (traj.loanBalance.p10[lastIdx] || 0);
+
+    // Sell percentiles - use P10/P90 from result, interpolate others
+    const sellP10 = sellResult.terminalP10;
+    const sellP90 = sellResult.terminalP90;
+    const sellP50 = sellResult.terminalNetWorth;
+    // Linear interpolation for P25/P75
+    const sellP25 = sellP10 + (sellP50 - sellP10) * 0.375;
+    const sellP75 = sellP50 + (sellP90 - sellP50) * 0.5;
+
+    chart.setData({
+      percentiles: ['10th', '25th', '50th', '75th', '90th'],
+      bbdValues: [bbdP10, bbdP25, bbdP50, bbdP75, bbdP90].map(v => Math.max(0, v)),
+      sellValues: [sellP10, sellP25, sellP50, sellP75, sellP90].map(v => Math.max(0, v)),
+    });
+  }
+
+  /**
+   * Update SBLOC utilization chart with percentile bands.
+   */
+  private updateSBLOCUtilizationChart(): void {
+    const chart = this.$('#sbloc-utilization-chart') as HTMLElement & {
+      setData(data: SBLOCUtilizationChartData): void;
+    } | null;
+
+    if (!chart || !this._data?.sblocTrajectory) return;
+
+    const traj = this._data.sblocTrajectory;
+    const years = traj.years;
+
+    // Calculate utilization percentiles (loan balance / portfolio value * 100)
+    // Note: For utilization, P90 means high utilization (bad), P10 means low (good)
+    const p10: number[] = [];
+    const p25: number[] = [];
+    const p50: number[] = [];
+    const p75: number[] = [];
+    const p90: number[] = [];
+
+    for (let idx = 0; idx < years.length; idx++) {
+      const year = years[idx];
+      const yearData = this._data!.yearlyPercentiles[year];
+
+      if (!yearData) {
+        p10.push(0);
+        p25.push(0);
+        p50.push(0);
+        p75.push(0);
+        p90.push(0);
+        continue;
+      }
+
+      // Utilization = loan / portfolio * 100
+      // Best case (P10 utilization): low loan, high portfolio -> p10 loan / p90 portfolio
+      // Worst case (P90 utilization): high loan, low portfolio -> p90 loan / p10 portfolio
+
+      const portfolioP10 = yearData.p10 || 1;
+      const portfolioP25 = yearData.p25 || 1;
+      const portfolioP50 = yearData.p50 || 1;
+      const portfolioP75 = yearData.p75 || 1;
+      const portfolioP90 = yearData.p90 || 1;
+
+      const loanP10 = traj.loanBalance.p10[idx] || 0;
+      const loanP25 = traj.loanBalance.p25?.[idx] || (loanP10 + (traj.loanBalance.p50[idx] || 0)) / 2;
+      const loanP50 = traj.loanBalance.p50[idx] || 0;
+      const loanP75 = traj.loanBalance.p75?.[idx] || (loanP50 + (traj.loanBalance.p90[idx] || 0)) / 2;
+      const loanP90 = traj.loanBalance.p90[idx] || 0;
+
+      // Best case: low loan / high portfolio (optimistic scenario)
+      p10.push((loanP10 / portfolioP90) * 100);
+      // Good case
+      p25.push((loanP25 / portfolioP75) * 100);
+      // Median case
+      p50.push((loanP50 / portfolioP50) * 100);
+      // Bad case
+      p75.push((loanP75 / portfolioP25) * 100);
+      // Worst case: high loan / low portfolio (pessimistic scenario)
+      p90.push((loanP90 / portfolioP10) * 100);
+    }
+
+    // Get max borrowing from config or default
+    const maxBorrowing = (this._simulationConfig?.sbloc?.targetLTV || 0.65) * 100;
+
+    chart.setData({
+      labels: years.map(y => `Year ${y}`),
+      p10,
+      p25,
+      p50,
+      p75,
+      p90,
+      maxBorrowing,
+    });
   }
 
   /**
