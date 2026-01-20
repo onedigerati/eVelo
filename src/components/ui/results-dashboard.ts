@@ -7,9 +7,11 @@
  * - Summary statistics (median, mean, success rate, std deviation)
  */
 import { BaseComponent } from '../base-component';
-import type { SimulationOutput, YearlyPercentiles, SimulationStatistics } from '../../simulation/types';
+import type { SimulationOutput, YearlyPercentiles, SimulationStatistics, SimulationConfig } from '../../simulation/types';
 import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData, BarChartData, LineChartData } from '../../charts/types';
 import type { BBDComparisonChartData } from '../../charts/bbd-comparison-chart';
+import type { KeyMetricsData } from './key-metrics-banner';
+import type { ParamSummaryData } from './param-summary';
 import {
   calculateCAGR,
   calculateAnnualizedVolatility,
@@ -22,6 +24,9 @@ import type { PercentileSpectrum } from './percentile-spectrum';
 import '../../charts';
 // Import percentile spectrum component
 import './percentile-spectrum';
+// Import summary components to register them
+import './key-metrics-banner';
+import './param-summary';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -55,6 +60,12 @@ export class ResultsDashboard extends BaseComponent {
   private _annualWithdrawal: number = 50000;
   /** Effective tax rate for salary equivalent */
   private _effectiveTaxRate: number = 0.37;
+
+  /** Simulation configuration for param summary */
+  private _simulationConfig: SimulationConfig | null = null;
+
+  /** Number of simulations run */
+  private _simulationsRun: number = 10000;
 
   /**
    * Set simulation data and update all charts/stats.
@@ -129,9 +140,40 @@ export class ResultsDashboard extends BaseComponent {
     this._effectiveTaxRate = value;
   }
 
+  /**
+   * Set simulation configuration for parameter summary display.
+   */
+  set simulationConfig(value: SimulationConfig | null) {
+    this._simulationConfig = value;
+    this.updateCharts();
+  }
+
+  /**
+   * Get simulation configuration.
+   */
+  get simulationConfig(): SimulationConfig | null {
+    return this._simulationConfig;
+  }
+
+  /**
+   * Set number of simulations run.
+   */
+  set simulationsRun(value: number) {
+    this._simulationsRun = value;
+  }
+
   protected template(): string {
     return `
       <div class="dashboard-grid">
+        <!-- Executive Summary Section -->
+        <section class="banner-section full-width" id="key-metrics-section">
+          <key-metrics-banner id="key-metrics-banner"></key-metrics-banner>
+        </section>
+
+        <section class="param-section full-width" id="param-summary-section">
+          <param-summary id="param-summary"></param-summary>
+        </section>
+
         <section class="chart-section full-width">
           <h3>Portfolio Projection</h3>
           <div class="chart-container">
@@ -204,6 +246,33 @@ export class ResultsDashboard extends BaseComponent {
           <h3>Asset Correlations</h3>
           <div class="chart-container square">
             <correlation-heatmap id="heatmap-chart"></correlation-heatmap>
+          </div>
+        </section>
+
+        <section class="spectrum-section full-width sbloc-section" id="debt-spectrum-section">
+          <div class="debt-spectrum-wrapper">
+            <p class="debt-intro">Understanding your debt accumulation from two perspectives:</p>
+            <div class="debt-box">
+              <div class="debt-box-header">
+                <span class="debt-icon">&#x1F3E6;</span>
+                <div>
+                  <h4>Actual LOC Balance (By Scenario) after <span id="debt-years">30</span> years</h4>
+                  <p class="debt-subtitle">After margin call liquidations and portfolio dynamics</p>
+                </div>
+              </div>
+              <percentile-spectrum
+                id="debt-spectrum"
+                title="">
+              </percentile-spectrum>
+              <div class="debt-explanation">
+                <p><strong>What this shows:</strong> The actual LOC balance at the end of each simulation path. This varies by percentile because:</p>
+                <ul>
+                  <li><strong>Margin calls trigger asset sales</strong> that pay down debt (reducing the balance)</li>
+                  <li><strong>Failed simulations</strong> (worst cases) may end early, accumulating less total debt</li>
+                  <li><strong>Successful simulations</strong> run the full period without forced liquidations</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -338,6 +407,12 @@ export class ResultsDashboard extends BaseComponent {
         display: none;
       }
 
+      /* Executive summary sections - components provide their own styling */
+      .banner-section,
+      .param-section {
+        /* Component provides its own styling */
+      }
+
       /* Spectrum sections styling */
       .spectrum-section {
         /* Component provides its own styling */
@@ -355,6 +430,80 @@ export class ResultsDashboard extends BaseComponent {
       /* BBD comparison chart container (shorter height for bar chart) */
       .bbd-container {
         height: 300px;
+      }
+
+      /* Debt spectrum section styling */
+      .debt-spectrum-wrapper {
+        background: var(--surface-primary, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-lg, 8px);
+        padding: var(--spacing-lg, 24px);
+      }
+
+      .debt-intro {
+        color: var(--text-secondary, #475569);
+        font-size: var(--font-size-sm, 0.875rem);
+        margin: 0 0 var(--spacing-md, 16px) 0;
+      }
+
+      .debt-box {
+        background: var(--surface-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-left: 4px solid var(--color-primary, #0d9488);
+        border-radius: var(--radius-md, 6px);
+        padding: var(--spacing-md, 16px);
+      }
+
+      .debt-box-header {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-md, 16px);
+        margin-bottom: var(--spacing-md, 16px);
+      }
+
+      .debt-icon {
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+
+      .debt-box-header h4 {
+        margin: 0;
+        font-size: var(--font-size-base, 1rem);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+      }
+
+      .debt-subtitle {
+        margin: var(--spacing-xs, 4px) 0 0 0;
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #475569);
+      }
+
+      .debt-explanation {
+        margin-top: var(--spacing-lg, 24px);
+        padding-top: var(--spacing-md, 16px);
+        border-top: 1px solid var(--border-color, #e2e8f0);
+      }
+
+      .debt-explanation p {
+        margin: 0 0 var(--spacing-sm, 8px) 0;
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #475569);
+      }
+
+      .debt-explanation ul {
+        margin: 0;
+        padding-left: var(--spacing-lg, 24px);
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #475569);
+      }
+
+      .debt-explanation li {
+        margin-bottom: var(--spacing-xs, 4px);
+      }
+
+      .debt-explanation li:last-child {
+        margin-bottom: 0;
       }
 
       /* Mobile responsive: single column on small screens */
@@ -395,6 +544,12 @@ export class ResultsDashboard extends BaseComponent {
     noData?.classList.add('hidden');
     grid?.classList.remove('hidden');
 
+    // Update key metrics banner
+    this.updateKeyMetricsBanner();
+
+    // Update parameter summary
+    this.updateParamSummary();
+
     // Update probability cone chart
     const cone = this.$('#cone-chart') as HTMLElement & { data: ProbabilityConeData | null };
     if (cone) {
@@ -429,6 +584,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update terminal net worth spectrum
     this.updateNetWorthSpectrum();
+
+    // Update debt spectrum (SBLOC section)
+    this.updateDebtSpectrum();
 
     // Update margin call risk chart (SBLOC section)
     const marginSection = this.$('#margin-call-section');
@@ -659,6 +817,42 @@ export class ResultsDashboard extends BaseComponent {
     const p10 = percentile(values, 10);
     const p50 = percentile(values, 50);
     const p90 = percentile(values, 90);
+
+    // Update spectrum component
+    spectrum.p10 = p10;
+    spectrum.p50 = p50;
+    spectrum.p90 = p90;
+    spectrum.formatter = 'currency';
+  }
+
+  /**
+   * Update Total Debt By End of Period spectrum.
+   * Uses loan balance percentiles from SBLOC trajectory data.
+   */
+  private updateDebtSpectrum(): void {
+    const section = this.$('#debt-spectrum-section');
+    const spectrum = this.$('#debt-spectrum') as PercentileSpectrum | null;
+    const yearsSpan = this.$('#debt-years');
+
+    if (!this._data?.sblocTrajectory || !section || !spectrum) {
+      section?.classList.remove('visible');
+      return;
+    }
+
+    section.classList.add('visible');
+
+    const traj = this._data.sblocTrajectory;
+    const lastIdx = traj.years.length - 1;
+
+    // Update years display
+    if (yearsSpan) {
+      yearsSpan.textContent = String(traj.years[lastIdx] || this._timeHorizon);
+    }
+
+    // Get terminal loan balance percentiles
+    const p10 = traj.loanBalance.p10[lastIdx] || 0;
+    const p50 = traj.loanBalance.p50[lastIdx] || 0;
+    const p90 = traj.loanBalance.p90[lastIdx] || 0;
 
     // Update spectrum component
     spectrum.p10 = p10;
