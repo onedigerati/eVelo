@@ -1,14 +1,10 @@
 /**
  * Correlation heatmap component for asset correlation visualization.
- * Shows a matrix of correlation values with color-coded cells.
+ * Shows a matrix of correlation values with color-coded cells,
+ * plus per-asset Expected Annual Return and Annualized Volatility columns.
  */
-import { Chart, ChartConfiguration, ScriptableContext } from 'chart.js';
-import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
-import { BaseChart } from './base-chart';
+import { BaseComponent } from '../components/base-component';
 import { HeatmapData } from './types';
-
-// Ensure matrix components are registered (also done in base-chart, but explicit here)
-Chart.register(MatrixController, MatrixElement);
 
 /**
  * Color scale for correlation values.
@@ -77,16 +73,22 @@ export function interpolateColor(value: number): string {
 }
 
 /**
- * Matrix data point format for chartjs-chart-matrix.
+ * Get text color (white or dark) based on background brightness.
+ * @param bgColor - Background hex color
+ * @returns '#ffffff' or '#1e293b'
  */
-interface MatrixDataPoint {
-  x: number;
-  y: number;
-  v: number;
+function getContrastTextColor(bgColor: string): string {
+  const brightness = parseInt(bgColor.slice(1, 3), 16) * 0.299 +
+                    parseInt(bgColor.slice(3, 5), 16) * 0.587 +
+                    parseInt(bgColor.slice(5, 7), 16) * 0.114;
+  return brightness > 186 ? '#1e293b' : '#ffffff';
 }
 
 /**
  * Correlation Heatmap Web Component.
+ *
+ * Displays a correlation matrix as an HTML table with color-coded cells,
+ * plus optional Expected Annual Return and Annualized Volatility columns.
  *
  * Usage:
  * ```html
@@ -102,11 +104,13 @@ interface MatrixDataPoint {
  *     [1.0, -0.3, 0.6],
  *     [-0.3, 1.0, 0.2],
  *     [0.6, 0.2, 1.0]
- *   ]
+ *   ],
+ *   expectedReturns: [0.10, 0.04, 0.08],  // 10%, 4%, 8%
+ *   volatilities: [0.16, 0.05, 0.12]       // 16%, 5%, 12%
  * };
  * ```
  */
-export class CorrelationHeatmap extends BaseChart {
+export class CorrelationHeatmap extends BaseComponent {
   /** Chart data - set to trigger render */
   private _data: HeatmapData | null = null;
 
@@ -118,186 +122,224 @@ export class CorrelationHeatmap extends BaseChart {
   }
 
   /**
-   * Set chart data and update the chart.
+   * Set chart data and update the display.
    */
   set data(value: HeatmapData | null) {
     this._data = value;
-    if (this.chart && value) {
-      this.updateChartData();
-    } else if (value) {
-      // If chart not yet created, trigger render
-      this.render();
-    }
+    this.updateDisplay();
   }
 
-  /**
-   * Override styles to ensure proper sizing for matrix.
-   */
+  protected template(): string {
+    return `
+      <div class="heatmap-wrapper">
+        <div class="table-container">
+          <table class="correlation-table" id="correlation-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div class="note-section" id="note-section"></div>
+      </div>
+    `;
+  }
+
   protected styles(): string {
     return `
-      ${super.styles()}
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
 
-      .chart-container {
-        min-width: 300px;
-        min-height: 300px;
+      .heatmap-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: var(--spacing-md, 16px);
+      }
+
+      .table-container {
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: auto;
+      }
+
+      .correlation-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--font-size-sm, 0.875rem);
+        table-layout: fixed;
+      }
+
+      .correlation-table th,
+      .correlation-table td {
+        padding: var(--spacing-sm, 8px) var(--spacing-xs, 4px);
+        text-align: center;
+        border: 1px solid var(--border-color, #e2e8f0);
+        min-width: 70px;
+      }
+
+      .correlation-table th {
+        background: var(--surface-secondary, #f8fafc);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        white-space: nowrap;
+      }
+
+      .correlation-table th.stats-header {
+        background: var(--surface-secondary, #f8fafc);
+        border-left: 2px solid var(--border-color, #e2e8f0);
+        min-width: 90px;
+      }
+
+      .correlation-table td.row-label {
+        background: var(--surface-secondary, #f8fafc);
+        font-weight: 500;
+        color: var(--text-primary, #1e293b);
+        text-align: left;
+        padding-left: var(--spacing-md, 16px);
+      }
+
+      .correlation-table td.correlation-cell {
+        font-weight: 600;
+        min-width: 60px;
+      }
+
+      .correlation-table td.return-cell {
+        color: #0d9488;
+        font-weight: 600;
+        border-left: 2px solid var(--border-color, #e2e8f0);
+      }
+
+      .correlation-table td.volatility-cell {
+        color: var(--text-secondary, #475569);
+        font-weight: 500;
+      }
+
+      .note-section {
+        background: var(--surface-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-left: 4px solid var(--color-primary, #0d9488);
+        border-radius: var(--radius-md, 6px);
+        padding: var(--spacing-md, 16px);
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #475569);
+      }
+
+      .note-section p {
+        margin: 0 0 var(--spacing-sm, 8px) 0;
+      }
+
+      .note-section p:last-child {
+        margin-bottom: 0;
+      }
+
+      .note-section strong {
+        color: var(--text-primary, #1e293b);
+      }
+
+      .note-section .note-highlight {
+        color: #0d9488;
+        font-weight: 600;
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 640px) {
+        .correlation-table {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .correlation-table th,
+        .correlation-table td {
+          padding: var(--spacing-xs, 4px) 2px;
+          min-width: 50px;
+        }
+
+        .correlation-table th.stats-header {
+          min-width: 70px;
+        }
       }
     `;
   }
 
-  /**
-   * Update chart data without full re-render.
-   */
-  private updateChartData(): void {
-    if (!this.chart || !this._data) return;
-
-    const matrixData = this.flattenMatrix(this._data.matrix);
-
-    this.updateData({
-      labels: this._data.labels,
-      datasets: [{
-        label: 'Correlation',
-        data: matrixData,
-        backgroundColor: (ctx: ScriptableContext<'matrix'>) => {
-          const point = ctx.dataset.data[ctx.dataIndex] as MatrixDataPoint;
-          return point ? interpolateColor(point.v) : '#ffffff';
-        },
-        borderColor: '#e5e7eb',
-        borderWidth: 1,
-        width: ({ chart }) => (chart.chartArea?.width ?? 300) / this._data!.labels.length - 1,
-        height: ({ chart }) => (chart.chartArea?.height ?? 300) / this._data!.labels.length - 1,
-      }],
-    });
+  protected override afterRender(): void {
+    this.updateDisplay();
   }
 
   /**
-   * Flatten 2D correlation matrix to array of points.
+   * Update the table display with current data.
    */
-  private flattenMatrix(matrix: number[][]): MatrixDataPoint[] {
-    const points: MatrixDataPoint[] = [];
+  private updateDisplay(): void {
+    const thead = this.$('#table-head') as HTMLTableSectionElement | null;
+    const tbody = this.$('#table-body') as HTMLTableSectionElement | null;
+    const noteSection = this.$('#note-section') as HTMLElement | null;
 
-    for (let row = 0; row < matrix.length; row++) {
-      for (let col = 0; col < matrix[row].length; col++) {
-        points.push({
-          x: col,
-          y: row,
-          v: matrix[row][col],
-        });
-      }
+    if (!thead || !tbody || !noteSection) return;
+
+    if (!this._data || this._data.labels.length === 0) {
+      thead.innerHTML = '';
+      tbody.innerHTML = '<tr><td colspan="99">No data available</td></tr>';
+      noteSection.innerHTML = '';
+      return;
     }
 
-    return points;
+    const { labels, matrix, expectedReturns, volatilities } = this._data;
+    const hasStats = expectedReturns && volatilities &&
+                     expectedReturns.length === labels.length &&
+                     volatilities.length === labels.length;
+
+    // Build header row
+    let headerHtml = '<tr><th>Name</th>';
+    for (const label of labels) {
+      headerHtml += `<th>${this.escapeHtml(label)}</th>`;
+    }
+    if (hasStats) {
+      headerHtml += '<th class="stats-header">Expected Annual<br>Return</th>';
+      headerHtml += '<th class="stats-header">Annualized<br>Volatility</th>';
+    }
+    headerHtml += '</tr>';
+    thead.innerHTML = headerHtml;
+
+    // Build body rows
+    let bodyHtml = '';
+    for (let row = 0; row < labels.length; row++) {
+      bodyHtml += '<tr>';
+      bodyHtml += `<td class="row-label">${this.escapeHtml(labels[row])}</td>`;
+
+      for (let col = 0; col < matrix[row].length; col++) {
+        const value = matrix[row][col];
+        const bgColor = interpolateColor(value);
+        const textColor = getContrastTextColor(bgColor);
+        bodyHtml += `<td class="correlation-cell" style="background-color: ${bgColor}; color: ${textColor};">${value.toFixed(2)}</td>`;
+      }
+
+      if (hasStats) {
+        const returnValue = expectedReturns![row];
+        const volValue = volatilities![row];
+        bodyHtml += `<td class="return-cell">${(returnValue * 100).toFixed(2)}%</td>`;
+        bodyHtml += `<td class="volatility-cell">${(volValue * 100).toFixed(2)}%</td>`;
+      }
+
+      bodyHtml += '</tr>';
+    }
+    tbody.innerHTML = bodyHtml;
+
+    // Build note section
+    noteSection.innerHTML = `
+      <p><strong>Correlation Matrix:</strong> Calculated using Pearson correlation coefficient on year-aligned historical returns. Values range from -1.0 (perfect negative correlation) to +1.0 (perfect positive correlation). Diagonal cells (1.00) represent each asset correlated with itself.</p>
+      <p><strong class="note-highlight">Expected Annual Return:</strong> Arithmetic mean of all year-over-year returns from historical data. Formula: <em>mu = (sum r_i) / n</em> where r_i represents each annual return and n is the number of years of data.</p>
+      <p><strong>Annualized Volatility:</strong> Standard deviation of annual returns, measuring return dispersion. Formula: <em>sigma = sqrt(sum(r_i - mu)^2 / n)</em>. Higher volatility indicates greater price fluctuation and risk. Used in modern portfolio theory to assess risk-adjusted returns.</p>
+      <p><strong class="note-highlight">Diversification Insight:</strong> Lower correlations (closer to 0 or negative) provide better diversification benefits. Assets with correlations above 0.90 move very similarly and offer limited diversification value.</p>
+    `;
   }
 
   /**
-   * Returns Chart.js matrix configuration.
+   * Escape HTML special characters to prevent XSS.
    */
-  protected getChartConfig(): ChartConfiguration<'matrix'> {
-    const data = this._data;
-    const labels = data?.labels ?? [];
-    const matrixData = data ? this.flattenMatrix(data.matrix) : [];
-    const numAssets = labels.length || 1;
-
-    // Store reference for plugins
-    const heatmapData = this._data;
-
-    return {
-      type: 'matrix',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Correlation',
-          data: matrixData,
-          backgroundColor: (ctx: ScriptableContext<'matrix'>) => {
-            const point = ctx.dataset.data[ctx.dataIndex] as MatrixDataPoint;
-            return point ? interpolateColor(point.v) : '#ffffff';
-          },
-          borderColor: '#e5e7eb',
-          borderWidth: 1,
-          width: ({ chart }) => (chart.chartArea?.width ?? 300) / numAssets - 1,
-          height: ({ chart }) => (chart.chartArea?.height ?? 300) / numAssets - 1,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-          x: {
-            type: 'category',
-            labels,
-            position: 'top',
-            grid: {
-              display: false,
-            },
-            ticks: {
-              display: true,
-            },
-          },
-          y: {
-            type: 'category',
-            labels,
-            offset: true,
-            grid: {
-              display: false,
-            },
-            ticks: {
-              display: true,
-            },
-          },
-        },
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            callbacks: {
-              title: () => '',
-              label: (context) => {
-                const point = context.raw as MatrixDataPoint;
-                if (!heatmapData) return '';
-                const xLabel = heatmapData.labels[point.x];
-                const yLabel = heatmapData.labels[point.y];
-                return `${yLabel} vs ${xLabel}: ${point.v.toFixed(2)}`;
-              },
-            },
-          },
-        },
-      },
-      plugins: [{
-        id: 'cellLabels',
-        afterDatasetsDraw: (chart) => {
-          const { ctx } = chart;
-          const dataset = chart.data.datasets[0];
-          const meta = chart.getDatasetMeta(0);
-
-          if (!meta.data || !heatmapData) return;
-
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = 'bold 12px sans-serif';
-
-          meta.data.forEach((element, index) => {
-            const point = dataset.data[index] as MatrixDataPoint;
-            if (!point) return;
-
-            // Get element center - cast to access getCenterPoint method
-            const matrixElement = element as unknown as { getCenterPoint: () => { x: number; y: number } };
-            const { x, y } = matrixElement.getCenterPoint();
-
-            // Choose text color based on background brightness
-            const bgColor = interpolateColor(point.v);
-            const brightness = parseInt(bgColor.slice(1, 3), 16) * 0.299 +
-                              parseInt(bgColor.slice(3, 5), 16) * 0.587 +
-                              parseInt(bgColor.slice(5, 7), 16) * 0.114;
-
-            ctx.fillStyle = brightness > 186 ? '#1e293b' : '#ffffff';
-            ctx.fillText(point.v.toFixed(2), x, y);
-          });
-
-          ctx.restore();
-        },
-      }],
-    };
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 
