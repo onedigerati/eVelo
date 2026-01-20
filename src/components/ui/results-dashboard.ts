@@ -20,10 +20,18 @@ import {
   calculateSalaryEquivalent,
   calculateSellStrategy,
 } from '../../calculations';
+import {
+  calculatePerformanceSummary,
+  calculateExpectedReturns,
+  calculateReturnProbabilities,
+} from '../../calculations/return-probabilities';
+import type { PerformanceSummaryData, ExpectedReturns, ReturnProbabilities } from '../../calculations/return-probabilities';
 import { percentile } from '../../math';
 import type { PercentileSpectrum } from './percentile-spectrum';
 import type { SalaryEquivalentSection, SalaryEquivalentProps } from './salary-equivalent-section';
 import type { YearlyAnalysisTable, YearlyAnalysisTableProps } from './yearly-analysis-table';
+import type { PerformanceTable } from './performance-table';
+import type { ReturnProbabilityTable } from './return-probability-table';
 import { calculateWithdrawals } from './yearly-analysis-table';
 // Import chart components to register them
 import '../../charts';
@@ -38,6 +46,9 @@ import './salary-equivalent-section';
 import './strategy-analysis';
 // Import yearly analysis table
 import './yearly-analysis-table';
+// Import performance tables
+import './performance-table';
+import './return-probability-table';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -314,6 +325,14 @@ export class ResultsDashboard extends BaseComponent {
 
         <section class="strategy-section full-width sbloc-section" id="strategy-analysis-section">
           <strategy-analysis id="strategy-analysis"></strategy-analysis>
+        </section>
+
+        <section class="table-section full-width" id="performance-table-section">
+          <performance-table id="performance-table"></performance-table>
+        </section>
+
+        <section class="table-section full-width" id="return-probability-section">
+          <return-probability-table id="return-probability-table"></return-probability-table>
         </section>
 
         <section class="table-section full-width" id="yearly-analysis-section">
@@ -701,6 +720,10 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update strategy analysis section
     this.updateStrategyAnalysis();
+
+    // Update performance tables
+    this.updatePerformanceTable();
+    this.updateReturnProbabilityTable();
 
     // Update yearly analysis table
     this.updateYearlyAnalysisTable();
@@ -1187,6 +1210,50 @@ export class ResultsDashboard extends BaseComponent {
       withdrawals,
       percentiles,
     };
+  }
+
+  /**
+   * Update performance summary table with percentile metrics.
+   * Shows TWRR, portfolio balance, mean return, and volatility across percentiles.
+   */
+  private updatePerformanceTable(): void {
+    const table = this.$('#performance-table') as PerformanceTable | null;
+    if (!table || !this._data) return;
+
+    // Calculate performance summary data
+    const summaryData = calculatePerformanceSummary(
+      this._data.terminalValues,
+      this._initialValue,
+      this._timeHorizon
+    );
+
+    table.data = summaryData;
+  }
+
+  /**
+   * Update return probability table with expected returns and probability matrix.
+   * Shows CAGR by percentile and probability of achieving return thresholds.
+   */
+  private updateReturnProbabilityTable(): void {
+    const table = this.$('#return-probability-table') as ReturnProbabilityTable | null;
+    if (!table || !this._data) return;
+
+    // Calculate expected returns by percentile
+    const expectedReturns = calculateExpectedReturns(
+      this._data.terminalValues,
+      this._initialValue,
+      this._timeHorizon
+    );
+
+    // Calculate return probabilities
+    const probabilities = calculateReturnProbabilities(
+      this._data.terminalValues,
+      this._initialValue,
+      this._timeHorizon
+    );
+
+    table.expectedReturns = expectedReturns;
+    table.probabilities = probabilities;
   }
 }
 
