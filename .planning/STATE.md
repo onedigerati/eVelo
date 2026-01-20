@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 11 (Complete Results Dashboard)
-Plan: 12 of 13 complete
+Plan: 13 of 13 complete
 Status: In progress - executing gap closure plans
-Last activity: 2026-01-20 — Completed 11-11-PLAN.md (Enhanced Strategy Comparison Charts)
+Last activity: 2026-01-20 — Completed 11-12-PLAN.md (Recommendations Section)
 
-Progress: █████████████████████░░░░ 91% (44/47 plans total)
+Progress: █████████████████████░░░░ 94% (45/47 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 44
-- Average duration: 3.4 min
-- Total execution time: 150 min
+- Total plans completed: 45
+- Average duration: 3.5 min
+- Total execution time: 156 min
 
 **By Phase:**
 
@@ -36,10 +36,10 @@ Progress: █████████████████████░░�
 | 07-ui-components | 4/4 | 17 min | 4.3 min |
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
-| 11-complete-results-dashboard | 12/13 | 43 min | 3.6 min |
+| 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-07 (N/A), 11-08 (3 min), 11-09 (5 min), 11-10 (4 min), 11-11 (5 min)
+- Last 5 plans: 11-08 (3 min), 11-09 (5 min), 11-10 (4 min), 11-11 (5 min), 11-12 (6 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -342,6 +342,7 @@ Recent decisions affecting current work:
   - **Plan 09 complete:** Added performance tables (TWRR/balance/volatility across P10-P90, return probabilities)
   - **Plan 10 complete:** Added year-by-year analysis table (withdrawals and net worth percentiles)
   - **Plan 11 complete:** Added enhanced strategy comparison charts (4 visual charts for BBD vs Sell)
+  - **Plan 12 complete:** Added recommendations section with actionable insights and standard considerations
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -383,6 +384,14 @@ Recent decisions affecting current work:
 - Progressive tax accumulation estimation using power curve
 - Visual Comparison section with 2-column responsive grid
 
+**From 11-12:**
+- Insight severity types: warning/note/action/info with colored icons
+- generateInsights() for dynamic insights based on simulation data
+- 6 standard considerations always displayed (margin call, sequence, interest rate, behavioral, regulatory, liquidity)
+- Thresholds: 15% margin call prob, 10% CAGR, 80% success rate
+- RecommendationsSection component with collapsible considerations
+- updateRecommendationsSection() integrates insights into dashboard
+
 ### Pending Todos
 
 None yet.
@@ -394,5 +403,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-20
-Stopped at: Completed 11-11-PLAN.md (Enhanced Strategy Comparison Charts)
-Resume file: None - ready to continue with 11-12
+Stopped at: Completed 11-12-PLAN.md (Recommendations Section)
+Resume file: None - ready to continue with 11-13
