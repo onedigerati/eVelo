@@ -73,6 +73,10 @@ export interface HeatmapData {
   labels: string[];
   /** Correlation matrix values (-1 to 1), row-major order */
   matrix: number[][];
+  /** Optional per-asset expected annual return (as decimal, e.g., 0.10 for 10%) */
+  expectedReturns?: number[];
+  /** Optional per-asset annualized volatility (as decimal, e.g., 0.15 for 15%) */
+  volatilities?: number[];
 }
 
 /**
