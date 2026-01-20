@@ -12,11 +12,13 @@ import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, 
 import type { BBDComparisonChartData } from '../../charts/bbd-comparison-chart';
 import type { KeyMetricsData } from './key-metrics-banner';
 import type { ParamSummaryData } from './param-summary';
+import type { StrategyAnalysisProps, StrategyAnalysis } from './strategy-analysis';
 import {
   calculateCAGR,
   calculateAnnualizedVolatility,
   calculateTWRR,
   calculateSalaryEquivalent,
+  calculateSellStrategy,
 } from '../../calculations';
 import { percentile } from '../../math';
 import type { PercentileSpectrum } from './percentile-spectrum';
@@ -30,6 +32,8 @@ import './key-metrics-banner';
 import './param-summary';
 // Import salary equivalent section
 import './salary-equivalent-section';
+// Import strategy analysis section
+import './strategy-analysis';
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -303,6 +307,10 @@ export class ResultsDashboard extends BaseComponent {
             <bbd-comparison-chart id="bbd-comparison-chart"></bbd-comparison-chart>
           </div>
         </section>
+
+        <section class="strategy-section full-width sbloc-section" id="strategy-analysis-section">
+          <strategy-analysis id="strategy-analysis"></strategy-analysis>
+        </section>
       </div>
 
       <div class="no-data" id="no-data">
@@ -441,6 +449,11 @@ export class ResultsDashboard extends BaseComponent {
 
       .salary-section.visible {
         display: block;
+      }
+
+      /* Strategy analysis section styling */
+      .strategy-section {
+        /* Component provides its own styling */
       }
 
       /* BBD comparison chart container (shorter height for bar chart) */
@@ -672,6 +685,9 @@ export class ResultsDashboard extends BaseComponent {
     } else {
       bbdSection?.classList.remove('visible');
     }
+
+    // Update strategy analysis section
+    this.updateStrategyAnalysis();
   }
 
   /**
@@ -1003,6 +1019,120 @@ export class ResultsDashboard extends BaseComponent {
       maxBorrowing: (config?.sbloc?.targetLTV || 0.65) * 100,
       maintenanceMargin: (config?.sbloc?.maintenanceMargin || 0.50) * 100,
       simulationsRun: config?.iterations || this._simulationsRun,
+    };
+  }
+
+  /**
+   * Update strategy analysis section with BBD vs Sell comparison.
+   * Shows comprehensive analysis only when SBLOC data is present.
+   */
+  private updateStrategyAnalysis(): void {
+    const section = this.$('#strategy-analysis-section');
+    const component = this.$('#strategy-analysis') as StrategyAnalysis | null;
+
+    if (!section || !component) return;
+
+    // Only show when SBLOC data is available (BBD strategy relevant)
+    if (!this._data?.sblocTrajectory || !this._data?.estateAnalysis) {
+      section.classList.remove('visible');
+      return;
+    }
+
+    section.classList.add('visible');
+
+    // Calculate sell strategy metrics
+    const sellResult = calculateSellStrategy(
+      {
+        initialValue: this._initialValue,
+        annualWithdrawal: this._annualWithdrawal,
+        withdrawalGrowth: 0.03, // 3% annual withdrawal growth
+        timeHorizon: this._timeHorizon,
+        capitalGainsRate: 0.238,
+        costBasisRatio: 0.4, // Assume 40% cost basis
+      },
+      this._data.yearlyPercentiles,
+    );
+
+    // Get SBLOC metrics
+    const traj = this._data.sblocTrajectory;
+    const lastIdx = traj.years.length - 1;
+    const terminalLoan = traj.loanBalance.p50[lastIdx] || 0;
+    const cumulativeInterest = traj.cumulativeInterest.p50[lastIdx] || 0;
+
+    // Calculate BBD terminal net worth (portfolio - loan)
+    const bbdTerminalNetWorth = this._data.statistics.median - terminalLoan;
+
+    // Margin call probability
+    const marginCallProbability = this._data.marginCallStats && this._data.marginCallStats.length > 0
+      ? this._data.marginCallStats[this._data.marginCallStats.length - 1].cumulativeProbability
+      : 0;
+
+    // Determine verdict
+    const bbdBetter = bbdTerminalNetWorth > sellResult.terminalNetWorth;
+    const advantage = bbdTerminalNetWorth - sellResult.terminalNetWorth;
+
+    // Calculate tax savings (difference in costs)
+    const taxSavings = sellResult.lifetimeTaxes - cumulativeInterest;
+
+    // BBD metrics
+    const bbdData = {
+      terminalNetWorth: bbdTerminalNetWorth,
+      successRate: this._data.statistics.successRate,
+      lifetimeCost: cumulativeInterest,
+      dividendTaxes: 0, // Dividends not tracked separately in current simulation
+      primaryRisk: marginCallProbability > 0
+        ? `Margin Call (${marginCallProbability.toFixed(1)}%)`
+        : 'Low (0% margin call)',
+      marginCallProbability,
+    };
+
+    // Sell metrics
+    const sellData = {
+      terminalNetWorth: sellResult.terminalNetWorth,
+      successRate: sellResult.successRate,
+      lifetimeCost: sellResult.lifetimeTaxes,
+      primaryRisk: sellResult.primaryRisk,
+      depletionProbability: sellResult.depletionProbability,
+    };
+
+    // Verdict
+    const verdict = {
+      recommendation: bbdBetter ? 'bbd' as const : 'sell' as const,
+      headline: bbdBetter ? 'BBD Recommended' : 'Consider Sell Assets',
+      rationale: bbdBetter
+        ? `Based on ${this._simulationsRun.toLocaleString()} simulations, BBD produces ${((advantage / sellResult.terminalNetWorth) * 100).toFixed(0)}% higher terminal wealth despite margin call risk.`
+        : `Sell Assets provides ${((Math.abs(advantage) / bbdTerminalNetWorth) * 100).toFixed(0)}% higher terminal wealth with lower complexity.`,
+      confidence: this._data.statistics.successRate,
+    };
+
+    // Wealth differential
+    const differential = {
+      bbdVsSell: advantage,
+      taxSavings: Math.max(0, taxSavings),
+      estateValue: this._data.estateAnalysis.bbdNetEstate,
+    };
+
+    // Insights
+    const insights = {
+      quote: bbdBetter
+        ? 'BBD leverages tax deferral and continued compounding to build greater terminal wealth despite interest costs.'
+        : 'Sell Assets provides simpler execution with guaranteed tax treatment and no margin call risk.',
+      explanation: bbdBetter
+        ? `By borrowing against assets instead of selling, you avoid realizing capital gains taxes. The portfolio continues to compound on the full value while interest costs are typically lower than the tax drag from selling.`
+        : `The Sell Assets strategy provides peace of mind through simplicity. You pay taxes as you go, eliminating the risk of margin calls and the complexity of managing a line of credit.`,
+      taxDeferralBenefit: Math.max(0, sellResult.lifetimeTaxes),
+      compoundingAdvantage: Math.max(0, advantage - taxSavings),
+    };
+
+    // Set component data
+    component.data = {
+      bbdData,
+      sellData,
+      verdict,
+      differential,
+      insights,
+      simulationsRun: this._simulationsRun,
+      timeHorizon: this._timeHorizon,
     };
   }
 }
