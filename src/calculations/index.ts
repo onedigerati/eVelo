@@ -115,3 +115,20 @@ export {
   type SellStrategyResult,
   type SellStrategyConfig,
 } from './sell-strategy';
+
+// ============================================================================
+// Return Probabilities
+// ============================================================================
+
+export {
+  calculateReturnProbabilities,
+  calculateExpectedReturns,
+  calculatePerformanceSummary,
+  DEFAULT_THRESHOLDS,
+  DEFAULT_TIME_HORIZONS,
+  DEFAULT_INFLATION_RATE,
+  type ReturnProbabilities,
+  type ExpectedReturns,
+  type PerformanceRow,
+  type PerformanceSummaryData,
+} from './return-probabilities';

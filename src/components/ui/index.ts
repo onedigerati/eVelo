@@ -52,3 +52,5 @@ export {
   type WithdrawalData,
   calculateWithdrawals,
 } from './yearly-analysis-table';
+export { PerformanceTable } from './performance-table';
+export { ReturnProbabilityTable } from './return-probability-table';
