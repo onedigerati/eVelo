@@ -30,6 +30,9 @@ export class SidebarPanel extends BaseComponent {
         <div class="sidebar-content">
           <slot></slot>
         </div>
+        <div class="sidebar-footer">
+          <slot name="footer"></slot>
+        </div>
       </aside>
     `;
   }
@@ -43,7 +46,7 @@ export class SidebarPanel extends BaseComponent {
 
       .sidebar {
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto 1fr auto;
         height: 100%;
         width: var(--sidebar-width, 320px);
         background: var(--surface-secondary, #f8fafc);
@@ -57,6 +60,10 @@ export class SidebarPanel extends BaseComponent {
       }
 
       :host([collapsed]) .sidebar-content {
+        display: none;
+      }
+
+      :host([collapsed]) .sidebar-footer {
         display: none;
       }
 
@@ -95,6 +102,12 @@ export class SidebarPanel extends BaseComponent {
       .sidebar-content {
         overflow-y: auto;
         padding: var(--spacing-sm, 8px);
+      }
+
+      .sidebar-footer {
+        padding: var(--spacing-md, 16px);
+        border-top: 1px solid var(--border-color, #e2e8f0);
+        background: var(--surface-secondary, #f8fafc);
       }
     `;
   }
