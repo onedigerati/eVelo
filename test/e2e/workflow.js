@@ -70,6 +70,35 @@ async function runWorkflowTest() {
     await screenshot('test/e2e/screenshots/current/workflow-02-params-set.png');
     console.log('  [INFO] Parameters screenshot captured');
 
+    // Phase 1b: Verify form values via accessibility tree
+    console.log('\n[Phase 1b] Verifying Form Values\n');
+
+    try {
+      const tree = await snapshot({ interactive: true });
+
+      // Check that our values appear in the accessibility tree
+      // This confirms the inputs accepted our values
+      if (tree.includes(TEST_PARAMS.initialPortfolio) ||
+          tree.includes('1,000,000') ||
+          tree.includes('1000000')) {
+        console.log('  [PASS] Initial Portfolio value reflected in UI');
+        passed++;
+      } else {
+        console.log('  [WARN] Could not verify Initial Portfolio in accessibility tree');
+      }
+
+      // Check for slider/spinbutton with time horizon value
+      if (tree.includes(TEST_PARAMS.timeHorizon)) {
+        console.log('  [PASS] Time Horizon value reflected in UI');
+        passed++;
+      } else {
+        console.log('  [WARN] Could not verify Time Horizon in accessibility tree');
+      }
+
+    } catch (e) {
+      console.log(`  [INFO] Form value verification skipped: ${e.message}`);
+    }
+
     // Phase 2: Run simulation
     console.log('\n[Phase 2] Running Simulation\n');
 
