@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 12 - Monthly Withdrawal Simulation
+**Current focus:** Phase 13 - E2E Testing with Agent-Browser
 
 ## Current Position
 
-Phase: 12 (Monthly Withdrawal Simulation)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-01-22 — Completed 12-02-PLAN.md (Monte Carlo integration)
+Phase: 13 (E2E Testing with Agent-Browser)
+Plan: 0 of 6 complete
+Status: Phase plans revised (ready for execution)
+Last activity: 2026-01-22 — Revised phase 13 plans based on updated research
 
-Progress: ██████████████████████████████ 100% (50/50 plans total)
+Progress: ██████████████████████████████ 100% (50/50 plans for phases 1-12)
 
 ## Performance Metrics
 
@@ -38,9 +38,10 @@ Progress: ███████████████████████�
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
+| 13-e2e-testing-agent-browser | 0/6 | - | - |
 
 **Recent Trend:**
-- Last 5 plans: 11-11 (5 min), 11-12 (6 min), 11-13 (5 min), 12-01 (4 min), 12-02 (3 min)
+- Last 5 plans: 11-12 (6 min), 11-13 (5 min), 12-01 (4 min), 12-02 (3 min), (13 pending)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -57,6 +58,15 @@ Recent decisions affecting current work:
 - Comlink for Web Worker ergonomics (from research)
 - Dexie.js for IndexedDB wrapper (from research)
 - simple-statistics for statistical functions (from research)
+
+**From 13-RESEARCH (E2E Testing):**
+- agent-browser CLI + cross-spawn for Windows compatibility
+- Vite createServer() API for programmatic server control (not npm run dev)
+- pixelmatch with 0.1 threshold for Chart.js visual regression
+- JavaScript test files (not bash scripts) for cross-platform
+- Three helper modules: agent-browser.js, server.js, screenshot.js
+- Port 5174 for test server (avoids conflict with dev on 5173)
+- postinstall script for agent-browser Chromium installation
 
 **From 01-01:**
 - Manual project setup over create-vite template for minimal dependencies
@@ -332,23 +342,11 @@ Recent decisions affecting current work:
 - Phase 12 added: Monthly Withdrawal Simulation
   - Discovered during quick-003: monthlyWithdrawal requires SBLOC engine refactor
   - Currently processes in annual steps; monthly granularity needed for accurate compounding
-  - Results dashboard only shows 2 of 7 charts (probability cone, histogram)
-  - Missing: donut, correlation heatmap, margin call risk, SBLOC balance, BBD comparison
-  - Missing statistics: CAGR, TWRR, margin call probability, salary equivalent
-  - Chart components exist (Phase 6) but not integrated into dashboard
-  - **Plan 01 complete:** Added donut chart and correlation heatmap
-  - **Plan 02 complete:** Added 8 financial statistics (CAGR, TWRR, volatility, salary equivalent)
-  - **Plan 03 complete:** Integrated SBLOC engine into Monte Carlo with margin call stats and estate analysis
-  - **Plan 04 complete:** Integrated SBLOC charts (margin call risk, balance trajectory, BBD comparison) with conditional visibility
-  - **Plan 05 complete:** Added executive summary banner (3 hero cards + parameter summary grid)
-  - **Plan 06 complete:** Added percentile spectrum visualizations (terminal net worth, total debt)
-  - **Plan 07 complete:** Added strategy analysis section (BBD vs Sell comparison with verdict)
-  - **Plan 08 complete:** Added salary equivalent section (teal banner showing tax advantage)
-  - **Plan 09 complete:** Added performance tables (TWRR/balance/volatility across P10-P90, return probabilities)
-  - **Plan 10 complete:** Added year-by-year analysis table (withdrawals and net worth percentiles)
-  - **Plan 11 complete:** Added enhanced strategy comparison charts (4 visual charts for BBD vs Sell)
-  - **Plan 12 complete:** Added recommendations section with actionable insights and standard considerations
-  - **Plan 13 complete:** Enhanced correlation heatmap with per-asset return/volatility statistics
+
+- Phase 13 added: E2E Testing with Agent-Browser
+  - Based on quick-004 research findings
+  - Hybrid approach: semantic locators for Shadow DOM, screenshot comparison for Chart.js
+  - Prioritized use cases: smoke tests, simulation workflow, responsive layouts, form interactions
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -419,7 +417,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None - Phase 12 complete
+None - Ready for Phase 13 execution
 
 ### Blockers/Concerns
 
@@ -437,5 +435,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed quick-004 (agent-browser research)
+Stopped at: Revised Phase 13 plans based on updated research
 Resume file: None
