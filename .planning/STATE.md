@@ -5,23 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 13 - E2E Testing with Agent-Browser
+**Current focus:** Phase 14 - Dashboard Calculations Review
 
 ## Current Position
 
-Phase: 13 (E2E Testing with Agent-Browser)
-Plan: 6 of 6 complete
-Status: Phase complete
-Last activity: 2026-01-22 — Completed 13-06-PLAN.md (CI/CD integration)
+Phase: 14 of 14 (Dashboard Calculations Review)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-01-22 — Completed 14-01-PLAN.md (Calculation Verification)
+**Next:** 14-02-PLAN.md (Visualization Verification)
 
-Progress: ████████████████████████████████████ 100% (56/56 plans total)
+Progress: ████████████████████████████████████░ 98% (57/58 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 56
+- Total plans completed: 57
 - Average duration: 3.4 min
-- Total execution time: 193 min
+- Total execution time: 197 min
 
 **By Phase:**
 
@@ -39,9 +40,10 @@ Progress: ███████████████████████�
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
+| 14-dashboard-calculations-review | 1/2 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 13-03 (3 min), 13-04 (4 min), 13-05 (3 min), 13-06 (4 min)
+- Last 5 plans: 13-04 (4 min), 13-05 (3 min), 13-06 (4 min), 14-01 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -348,6 +350,11 @@ Recent decisions affecting current work:
   - Hybrid approach: semantic locators for Shadow DOM, screenshot comparison for Chart.js
   - Prioritized use cases: smoke tests, simulation workflow, responsive layouts, form interactions
 
+- Phase 14 added: Dashboard Calculations Review
+  - Thorough review of dashboard components and calculations
+  - Verify all calculations display correctly
+  - Create gap findings for any issues identified
+
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
 - calculateSellStrategy uses BBD percentiles for growth rates
@@ -453,13 +460,24 @@ Recent decisions affecting current work:
 - GitHub Actions workflow with npm ci (triggers postinstall for agent-browser install)
 - Upload screenshots/diff as artifacts on failure for debugging
 
+**From 14-01:**
+- Percentile scale mismatch identified in monte-carlo.ts (HIGH severity bug)
+- Success rate inconsistency documented (MEDIUM severity - minimal impact)
+- Verified 5 calculation modules match CFA standards (metrics, twrr, salary-equivalent, margin-call-probability, return-probabilities)
+- Gap documentation template: Requirement, Severity, Component, Description, Evidence, Expected Behavior, Impact, Proposed Resolution
+
 ### Pending Todos
 
 None
 
 ### Blockers/Concerns
 
-None.
+**Critical Bug Identified:**
+- GAP-01: Percentile scale mismatch in monte-carlo.ts affects all dashboard percentile displays
+- Impact: Dashboard shows incorrect percentile values (0.1% instead of 10th percentile)
+- Recommendation: Fix before final deployment
+- Affects: All charts displaying P10/P50/P90 data, SBLOC trajectory, estate analysis
+- See: .planning/phases/14-dashboard-calculations-review/14-GAP-FINDINGS.md
 
 ### Quick Tasks Completed
 
@@ -473,5 +491,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 13-06-PLAN.md (CI/CD integration) - Phase 13 complete
+Stopped at: Completed 14-01-PLAN.md (Calculation Verification) - Phase 14 in progress
 Resume file: None
