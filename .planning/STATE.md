@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 12 (Monthly Withdrawal Simulation)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-01-22 — Completed 12-01-PLAN.md (Monthly step functions)
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-01-22 — Completed 12-02-PLAN.md (Monte Carlo integration)
 
-Progress: ██████████████████████████░░ 96% (48/50 plans total)
+Progress: ██████████████████████████████ 100% (50/50 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48
+- Total plans completed: 50
 - Average duration: 3.4 min
-- Total execution time: 165 min
+- Total execution time: 172 min
 
 **By Phase:**
 
@@ -37,10 +37,10 @@ Progress: ███████████████████████�
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
-| 12-monthly-withdrawal-simulation | 1/2 | 4 min | 4 min |
+| 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-10 (4 min), 11-11 (5 min), 11-12 (6 min), 11-13 (5 min), 12-01 (4 min)
+- Last 5 plans: 11-11 (5 min), 11-12 (6 min), 11-13 (5 min), 12-01 (4 min), 12-02 (3 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -411,9 +411,15 @@ Recent decisions affecting current work:
 - yearsSinceStart only increments at year boundary (month 11)
 - Margin call and liquidation tracking uses first occurrence per year
 
+**From 12-02:**
+- stepSBLOCYear replaces stepSBLOC in Monte Carlo simulation
+- monthlyWithdrawal flag passed from SBLOCSimConfig controls granularity
+- compoundingFrequency 'annual' in base config, adjusted internally by stepSBLOCYear
+- Default monthlyWithdrawal to false for backward compatibility
+
 ### Pending Todos
 
-Plan 12-02: Integration into Monte Carlo simulation
+None - Phase 12 complete
 
 ### Blockers/Concerns
 
@@ -430,5 +436,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 12-01-PLAN.md (Monthly step functions)
-Resume file: .planning/phases/12-monthly-withdrawal-simulation/12-02-PLAN.md
+Stopped at: Completed 12-02-PLAN.md (Monte Carlo integration) - Phase 12 complete
+Resume file: None
