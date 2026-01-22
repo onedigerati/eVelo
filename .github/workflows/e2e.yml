@@ -1,0 +1,62 @@
+# .github/workflows/e2e.yml
+# E2E test workflow using agent-browser
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  e2e:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        # Note: postinstall script runs agent-browser install automatically
+
+      - name: Verify agent-browser installation
+        run: npx agent-browser --version || echo "agent-browser version check failed"
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          # Increase Node memory for simulation
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: |
+            test/e2e/screenshots/current/
+            test/e2e/screenshots/diff/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            *.log
+            test/e2e/*.log
+          retention-days: 7
+          if-no-files-found: ignore
