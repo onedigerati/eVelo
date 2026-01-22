@@ -23,7 +23,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
 - [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
-- [ ] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
+- [x] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
+- [ ] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
 
 ## Phase Details
 
@@ -267,21 +268,39 @@ Plans:
 - [x] 11-01: Portfolio donut chart and correlation heatmap
 - [x] 11-02: Extended statistics (CAGR, TWRR, volatility, salary-equivalent)
 - [x] 11-03: SBLOC integration into simulation engine
-- [ ] 11-04: SBLOC charts (margin call, balance, BBD comparison)
-- [ ] 11-05: Executive summary banner (key metrics + param summary)
-- [ ] 11-06: Percentile spectrum visualizations
-- [ ] 11-07: Strategy analysis section (BBD vs Sell verdict)
-- [ ] 11-08: Salary equivalent section (prominent banner)
-- [ ] 11-09: Performance tables (metrics across percentiles)
-- [ ] 11-10: Year-by-year analysis table
-- [ ] 11-11: Enhanced strategy comparison charts
-- [ ] 11-12: Recommendations and actionable insights
-- [ ] 11-13: Asset-level statistics in correlation heatmap
+- [x] 11-04: SBLOC charts (margin call, balance, BBD comparison)
+- [x] 11-05: Executive summary banner (key metrics + param summary)
+- [x] 11-06: Percentile spectrum visualizations
+- [x] 11-07: Strategy analysis section (BBD vs Sell verdict)
+- [x] 11-08: Salary equivalent section (prominent banner)
+- [x] 11-09: Performance tables (metrics across percentiles)
+- [x] 11-10: Year-by-year analysis table
+- [x] 11-11: Enhanced strategy comparison charts
+- [x] 11-12: Recommendations and actionable insights
+- [x] 11-13: Asset-level statistics in correlation heatmap
+
+### Phase 12: Monthly Withdrawal Simulation
+**Goal**: Refactor SBLOC engine to support monthly time steps and monthly withdrawal compounding
+**Depends on**: Phase 11
+**Requirements**: SBLOC-02 (interest accrual), SIM-03 (time horizon granularity)
+**Success Criteria** (what must be TRUE):
+  1. SBLOC engine processes at monthly granularity (12 steps per year)
+  2. Monthly withdrawals compound correctly (1/12 of annual, applied each month)
+  3. Interest accrues monthly when monthlyWithdrawal is enabled
+  4. Margin call detection works at monthly intervals
+  5. Monte Carlo simulation integrates with monthly SBLOC steps
+  6. Results remain consistent with annual mode when monthlyWithdrawal is disabled
+**Research**: Complete (see 12-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md - Monthly step functions and return distribution
+- [ ] 12-02-PLAN.md - Monte Carlo integration
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 10 → 11
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -297,5 +316,6 @@ Phases execute in numeric order: 1 → 2 → ... → 7 → 7.1 → 8 → 9 → 1
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
 | 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
+| 12. Monthly Withdrawal Simulation | 0/2 | Not started | - |
 
-**Total Plans**: 46
+**Total Plans**: 48
