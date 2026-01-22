@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 11 Complete - Results Dashboard gap closure finished
+**Current focus:** Phase 12 - Monthly Withdrawal Simulation
 
 ## Current Position
 
-Phase: 11 (Complete Results Dashboard)
-Plan: 13 of 13 complete
-Status: Phase complete
-Last activity: 2026-01-22 — Completed quick task 003: Wire missing SBLOC config parameters
+Phase: 12 (Monthly Withdrawal Simulation)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-01-22 — Completed 12-01-PLAN.md (Monthly step functions)
 
-Progress: ██████████████████████████ 100% (47/47 plans total)
+Progress: ██████████████████████████░░ 96% (48/50 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47
+- Total plans completed: 48
 - Average duration: 3.4 min
-- Total execution time: 161 min
+- Total execution time: 165 min
 
 **By Phase:**
 
@@ -37,9 +37,10 @@ Progress: ███████████████████████�
 | 08-data-layer | 5/5 | 13 min | 2.6 min |
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
+| 12-monthly-withdrawal-simulation | 1/2 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 11-09 (5 min), 11-10 (4 min), 11-11 (5 min), 11-12 (6 min), 11-13 (5 min)
+- Last 5 plans: 11-10 (4 min), 11-11 (5 min), 11-12 (6 min), 11-13 (5 min), 12-01 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -327,6 +328,10 @@ Recent decisions affecting current work:
 
 - Phase 11 added: Complete Results Dashboard
   - Discovered during Phase 7.1 verification review
+
+- Phase 12 added: Monthly Withdrawal Simulation
+  - Discovered during quick-003: monthlyWithdrawal requires SBLOC engine refactor
+  - Currently processes in annual steps; monthly granularity needed for accurate compounding
   - Results dashboard only shows 2 of 7 charts (probability cone, histogram)
   - Missing: donut, correlation heatmap, margin call risk, SBLOC balance, BBD comparison
   - Missing statistics: CAGR, TWRR, margin call probability, salary equivalent
@@ -400,9 +405,15 @@ Recent decisions affecting current work:
 - calculateAssetStatistics helper for computing metrics from preset data
 - Fallback to market average estimates (8% return, 16% vol)
 
+**From 12-01:**
+- Monthly compounding calculated by dividing rate by 12 and applying 12 times
+- Backward compatibility via direct delegation when monthlyWithdrawal is false
+- yearsSinceStart only increments at year boundary (month 11)
+- Margin call and liquidation tracking uses first occurrence per year
+
 ### Pending Todos
 
-None - Phase 11 complete.
+Plan 12-02: Integration into Monte Carlo simulation
 
 ### Blockers/Concerns
 
@@ -419,5 +430,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed quick task 003 (Wire missing SBLOC config parameters)
-Resume file: None - Phase 11 complete, ready for next phase
+Stopped at: Completed 12-01-PLAN.md (Monthly step functions)
+Resume file: .planning/phases/12-monthly-withdrawal-simulation/12-02-PLAN.md
