@@ -8,6 +8,7 @@
  * Key exports:
  * - Types: SBLOCConfig, SBLOCState, MarginCallEvent, LiquidationEvent
  * - Engine: stepSBLOC, initializeSBLOCState (main simulation functions)
+ * - Monthly: stepSBLOCYear, stepSBLOCMonth, annualToMonthlyReturns (monthly granularity)
  * - Interest: accrueInterest, projectLoanBalance
  * - LTV: calculateLTV, calculateMaxBorrowing, calculateAvailableCredit
  * - Margin: detectMarginCall, isInWarningZone, calculateMarginBuffer
@@ -61,3 +62,10 @@ export {
 // Engine (main simulation step function)
 export type { SBLOCYearResult } from './engine';
 export { initializeSBLOCState, stepSBLOC } from './engine';
+
+// Monthly step functions (monthly withdrawal granularity)
+export {
+  annualToMonthlyReturns,
+  stepSBLOCMonth,
+  stepSBLOCYear,
+} from './monthly';
