@@ -5,10 +5,21 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node test/e2e/run-all.js",
+    "test:e2e:smoke": "node test/e2e/smoke.js",
+    "test:e2e:workflow": "node test/e2e/workflow.js",
+    "test:e2e:responsive": "node test/e2e/responsive.js",
+    "test:e2e:charts": "node test/e2e/charts.js",
+    "test:e2e:charts:capture": "node test/e2e/charts.js --capture",
+    "postinstall": "agent-browser install || echo 'agent-browser install skipped'"
   },
   "devDependencies": {
     "@types/seedrandom": "^3.0.8",
+    "agent-browser": "^0.6.0",
+    "cross-spawn": "^7.0.6",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0",
     "vite-plugin-comlink": "^5.3.0",
