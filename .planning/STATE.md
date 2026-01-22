@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 11 (Complete Results Dashboard)
 Plan: 13 of 13 complete
 Status: Phase complete
-Last activity: 2026-01-21 — Completed quick task 001: Expand left panel sections by default
+Last activity: 2026-01-22 — Completed quick task 003: Wire missing SBLOC config parameters
 
 Progress: ██████████████████████████ 100% (47/47 plans total)
 
@@ -414,9 +414,10 @@ None.
 |---|-------------|------|--------|-----------|
 | 001 | Make all sections in the left panel fully expanded by default | 2026-01-21 | 00eaad8 | [001-expand-left-panel-sections-default](./quick/001-expand-left-panel-sections-default/) |
 | 002 | Move Run Simulation button to sidebar footer for persistent visibility | 2026-01-21 | 02b38ef | [002-move-run-simulation-button-to-left-pa](./quick/002-move-run-simulation-button-to-left-pa/) |
+| 003 | Wire missing SBLOC config parameters in monte-carlo.ts | 2026-01-22 | 4c93afd | [003-resolve-key-missing-simulation-logic](./quick/003-resolve-key-missing-simulation-logic/) |
 
 ## Session Continuity
 
-Last session: 2026-01-21
-Stopped at: Completed quick task 002 (Move Run Simulation button to sidebar footer)
+Last session: 2026-01-22
+Stopped at: Completed quick task 003 (Wire missing SBLOC config parameters)
 Resume file: None - Phase 11 complete, ready for next phase
