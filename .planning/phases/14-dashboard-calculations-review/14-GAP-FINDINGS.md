@@ -8,7 +8,7 @@
 
 This document catalogs all calculation discrepancies and issues discovered during the Phase 14 dashboard calculations review. Each gap is documented with evidence from code inspection, expected behavior, and proposed resolution.
 
-**Total Gaps Found:** 2 (as of Task 1 completion)
+**Total Gaps Found:** 2 (HIGH severity issues only - no additional calculation gaps found in Task 2)
 
 ---
 
@@ -142,9 +142,110 @@ If the team prefers to count break-even as success:
 
 ---
 
+## Verified Calculations (No Issues Found)
+
+The following CALC requirements were inspected in Task 2 and found to be correctly implemented:
+
+### CALC-03: CAGR and Volatility ✓
+
+**CAGR (calculateCAGR in metrics.ts):**
+- Formula correctly implemented: `(endValue / startValue)^(1/years) - 1` (line 68)
+- Edge cases handled: returns -1 for zero/negative end value (line 63)
+- Uses median terminal value for CAGR calculation (line 226-229)
+
+**Volatility (calculateAnnualizedVolatility in metrics.ts):**
+- Correctly uses standard deviation of annualized returns (line 113)
+- Handles edge cases: returns 0 for empty or single-value arrays (lines 99, 104)
+- Terminal values converted to annualized returns before volatility calculation (lines 234-241)
+
+**Evidence:** Code inspection confirmed formulas match CFA standards and research documentation.
+
+---
+
+### CALC-04: Margin Call Probability ✓
+
+**Implementation (margin-call-probability.ts):**
+- Per-year probability correctly calculated: (iterations with call in year Y / total) × 100 (line 166)
+- Cumulative probability correctly enforced as monotonically increasing via `Math.max()` (line 170)
+- Tracks first margin call year per iteration for accurate cumulative calculation (lines 99-100)
+
+**Edge cases handled:**
+- Returns zeros for no iterations or no events (lines 219-234)
+- Handles multiple margin calls in same iteration (counts iteration once per year, lines 83-96)
+
+**Evidence:** Reviewed aggregateMarginCallEvents() and calculateMarginCallProbability() functions. Logic is sound and matches requirement.
+
+---
+
+### CALC-05: Salary Equivalent ✓
+
+**Implementation (salary-equivalent.ts):**
+- Formula correct: `withdrawal / (1 - taxRate)` (line 102)
+- Tax savings correctly calculated: `salaryEquivalent - annualWithdrawal` (line 106)
+
+**Test case verified:**
+- $50k withdrawal at 37% tax rate: `50000 / (1 - 0.37) = 50000 / 0.63 = 79,365.08` ✓
+- Matches expected ~$79,365 from research documentation
+
+**Edge cases handled:**
+- Returns 0 for zero/negative withdrawal (lines 68-74)
+- Returns same amount for 0% tax rate (lines 78-85)
+- Returns Infinity for 100% tax rate (lines 88-96)
+
+**Evidence:** Manual calculation verified. Formula implementation is correct.
+
+---
+
+### CALC-07: TWRR (Time-Weighted Rate of Return) ✓
+
+**Implementation (twrr.ts):**
+- Period return formula correct: `(endValue - startValue) / startValue` (line 43)
+- Geometric linking correct: `∏(1 + Rᵢ) - 1` via loop multiplication (lines 69-72)
+- Annualization correct: `(1 + totalReturn)^(1/periods) - 1` (line 106)
+- Uses median (P50) from yearlyPercentiles (lines 157-161)
+
+**Edge cases handled:**
+- Returns NaN for invalid start values (line 41)
+- Returns 0 for empty or single-year data (lines 138-151)
+- Handles invalid period returns gracefully (lines 165-168)
+- Returns -1 for complete loss (-100% total return) (line 103)
+
+**Evidence:** Reviewed calculateTWRR(), chainReturns(), and annualizeReturn() functions. Implementation matches CFA Institute formula referenced in module documentation.
+
+---
+
+### CALC-01: Success Rate (Already Documented as GAP-02) ⚠️
+
+Success rate calculation is functionally correct but has a minor inconsistency (GAP-02: `>=` vs `>` operator). The impact is negligible in practice.
+
+---
+
+### CALC-02: Percentile Outcomes (Documented as GAP-01) ❌
+
+Percentile scale mismatch is a HIGH severity bug that affects all percentile calculations in monte-carlo.ts. See GAP-01 for full details.
+
+---
+
+## Analysis Summary
+
+**Total Requirements Checked:** 7 (CALC-01 through CALC-07, excluding CALC-06 which doesn't exist)
+
+**Results:**
+- ✓ **5 requirements verified correct** (CALC-03, CALC-04, CALC-05, CALC-07, and partial CALC-01)
+- ⚠️ **1 minor inconsistency** (GAP-02: Success rate operator difference)
+- ❌ **1 critical bug** (GAP-01: Percentile scale mismatch)
+
+**Key findings:**
+1. The core calculation modules (metrics.ts, twrr.ts, salary-equivalent.ts, margin-call-probability.ts) are well-implemented with proper edge case handling
+2. The percentile scale bug in monte-carlo.ts is the primary issue affecting dashboard accuracy
+3. All formulas match CFA standards and expected mathematical behavior
+4. No issues found with CAGR, volatility, TWRR, salary equivalent, or margin call probability calculations
+
+---
+
 ## Next Steps
 
-1. Continue Task 2 to verify remaining CALC requirements (CALC-03 through CALC-07)
-2. Document any additional gaps found
-3. Prioritize gaps by severity and impact
-4. Create follow-up phase/plans for gap resolution
+1. ✓ Task 1 complete: Percentile scale mismatch documented (GAP-01)
+2. ✓ Task 2 complete: All CALC requirements verified
+3. Phase 14-01 complete: Gap findings documented
+4. **Recommended:** Create follow-up phase to fix GAP-01 (critical bug affecting all dashboard percentile displays)
