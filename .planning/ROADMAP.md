@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
 - [x] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
-- [ ] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
+- [x] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
 
 ## Phase Details
 
@@ -294,8 +294,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md - Monthly step functions and return distribution
-- [ ] 12-02-PLAN.md - Monte Carlo integration
+- [x] 12-01: Monthly step functions and return distribution
+- [x] 12-02: Monte Carlo integration
 
 ## Progress
 
@@ -316,6 +316,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 9. Theming & Polish | 0/3 | Not started | - |
 | 10. PWA & Export | 0/2 | Not started | - |
 | 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
-| 12. Monthly Withdrawal Simulation | 0/2 | Not started | - |
+| 12. Monthly Withdrawal Simulation | 2/2 | Complete | 2026-01-22 |
 
-**Total Plans**: 48
+**Total Plans**: 50
