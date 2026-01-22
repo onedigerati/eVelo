@@ -5,6 +5,8 @@ import './ui';
 import { runSimulation, SimulationConfig, PortfolioConfig, SimulationOutput, AssetConfig } from '../simulation';
 // Import preset service for historical returns
 import { getPresetData } from '../data/services/preset-service';
+// Import portfolio composition types
+import type { PortfolioComposition } from './ui/portfolio-composition';
 // Import portfolio types
 import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
 
@@ -12,7 +14,6 @@ import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
 type RangeSlider = import('./ui/range-slider').RangeSlider;
 type NumberInput = import('./ui/number-input').NumberInput;
 type SelectInput = import('./ui/select-input').SelectInput;
-type WeightEditor = import('./ui/weight-editor').WeightEditor;
 
 /**
  * Format currency values for display
@@ -24,19 +25,6 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-/**
- * Map asset symbols to display names
- */
-function getAssetName(symbol: string): string {
-  const names: Record<string, string> = {
-    SPY: 'S&P 500',
-    QQQ: 'Nasdaq 100',
-    IWM: 'Russell 2000',
-    AGG: 'Aggregate Bond',
-  };
-  return names[symbol] || symbol;
 }
 
 export class AppRoot extends BaseComponent {
@@ -79,7 +67,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="SBLOC Settings">
+          <param-section title="SBLOC Settings" open>
             <div class="param-group">
               <label>Loan-to-Value Ratio</label>
               <range-slider
@@ -102,21 +90,8 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Asset Allocation">
-            <asset-selector
-              id="asset-selector"
-              assets='["SPY","QQQ","IWM","AGG"]'
-              selected='["SPY","AGG"]'
-              max-selection="5"
-            ></asset-selector>
-            <weight-editor
-              id="weight-editor"
-              assets='[{"id":"SPY","name":"S&P 500","weight":70},{"id":"AGG","name":"Aggregate Bond","weight":30}]'
-            ></weight-editor>
-          </param-section>
-
-          <param-section title="Portfolio Management">
-            <portfolio-manager id="portfolio-manager"></portfolio-manager>
+          <param-section title="Asset Allocation" open>
+            <portfolio-composition id="portfolio-composition"></portfolio-composition>
           </param-section>
         </sidebar-panel>
 
@@ -278,7 +253,7 @@ export class AppRoot extends BaseComponent {
     const investmentInput = this.$('number-input') as (NumberInput & { value: number | null }) | null;
     const horizonSlider = this.$('range-slider[suffix=" years"]') as (RangeSlider & { value: number }) | null;
     const iterationsSelect = this.$('select-input') as (SelectInput & { value: string }) | null;
-    const weightEditor = this.$('weight-editor') as (WeightEditor & { getWeights(): Record<string, number> }) | null;
+    const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
 
     // Extract values with fallbacks
     const initialValue = investmentInput?.value ?? 1000000;
@@ -312,8 +287,8 @@ export class AppRoot extends BaseComponent {
       sbloc: sblocConfig,
     };
 
-    // Build PortfolioConfig from weight-editor assets
-    const weights: Record<string, number> = weightEditor?.getWeights() ?? { SPY: 60, BND: 30, GLD: 10 };
+    // Build PortfolioConfig from portfolio-composition assets
+    const weights: Record<string, number> = portfolioComp?.getWeights() ?? { SPY: 60, BND: 30, GLD: 10 };
     const assets: AssetConfig[] = [];
 
     for (const [symbol, weightPercent] of Object.entries(weights)) {
@@ -368,39 +343,8 @@ export class AppRoot extends BaseComponent {
       settingsPanel?.toggle();
     });
 
-    // Handle asset selection changes from asset-selector
-    const assetSelector = this.$('#asset-selector') as HTMLElement & { getSelected(): string[] };
-    const weightEditor = this.$('#weight-editor') as HTMLElement;
-
-    assetSelector?.addEventListener('selection-change', (e: Event) => {
-      const { selected } = (e as CustomEvent).detail as { selected: string[] };
-
-      // Get current weights from editor
-      const currentWeights = (weightEditor as any)?.getWeights?.() || {};
-
-      // Build new assets array
-      // - Keep existing weights for assets still selected
-      // - Add new assets with equal distribution of remaining weight
-      const existingTotal = selected
-        .filter((s) => s in currentWeights)
-        .reduce((sum, s) => sum + currentWeights[s], 0);
-
-      const newAssets = selected.filter((s) => !(s in currentWeights));
-      const remainingWeight = 100 - existingTotal;
-      const newWeight = newAssets.length > 0 ? remainingWeight / newAssets.length : 0;
-
-      // Map to weight-editor format
-      const assets = selected.map((symbol) => {
-        const existingWeight = currentWeights[symbol];
-        return {
-          id: symbol,
-          name: getAssetName(symbol),
-          weight: existingWeight !== undefined ? existingWeight : Math.round(newWeight),
-        };
-      });
-
-      weightEditor.setAttribute('assets', JSON.stringify(assets));
-    });
+    // Portfolio composition changes are handled internally by the component
+    // The component dispatches 'portfolio-change' events which we can listen to if needed
 
     runBtn?.addEventListener('click', async () => {
       // Prevent double-runs
@@ -452,8 +396,8 @@ export class AppRoot extends BaseComponent {
           dashboard.data = this._simulationResult;
 
           // Set portfolio composition for donut chart
-          const weightEditorTyped = this.$('#weight-editor') as (WeightEditor & { getWeights(): Record<string, number> }) | null;
-          const currentWeights = weightEditorTyped?.getWeights() ?? {};
+          const portfolioCompTyped = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
+          const currentWeights = portfolioCompTyped?.getWeights() ?? {};
           const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
             symbol,
             weight: weight as number
@@ -509,12 +453,12 @@ export class AppRoot extends BaseComponent {
       }
     });
 
-    // Handle request for current portfolio state (from portfolio-manager)
+    // Handle request for current portfolio state (from portfolio-composition)
     this.addEventListener('request-portfolio-state', (e: Event) => {
-      const weightEditor = this.$('#weight-editor') as (WeightEditor & {
+      const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & {
         getWeights(): Record<string, number>;
       }) | null;
-      const weights = weightEditor?.getWeights() || {};
+      const weights = portfolioComp?.getWeights() || {};
       const assets: AssetRecord[] = Object.entries(weights).map(([symbol, weight]) => ({
         id: symbol,
         symbol,
@@ -525,20 +469,7 @@ export class AppRoot extends BaseComponent {
       (e as CustomEvent).detail.assets = assets;
     });
 
-    // Handle portfolio loaded (from portfolio-manager)
-    this.addEventListener('portfolio-loaded', (e: Event) => {
-      const { portfolio } = (e as CustomEvent).detail as { portfolio: PortfolioRecord };
-      const weightEditor = this.$('#weight-editor') as HTMLElement | null;
-      if (weightEditor && portfolio.assets) {
-        // Transform to weight-editor format
-        const assets = portfolio.assets.map((a: AssetRecord) => ({
-          id: a.symbol,
-          name: a.name,
-          weight: a.weight * 100 // Convert decimal to percent
-        }));
-        weightEditor.setAttribute('assets', JSON.stringify(assets));
-      }
-    });
+    // Portfolio preset functionality is now handled internally by portfolio-composition
   }
 }
 
