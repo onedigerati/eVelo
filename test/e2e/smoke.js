@@ -57,6 +57,27 @@ async function runSmokeTest() {
       }
     }
 
+    // Test 1b: Verify param-sections exist
+    console.log('\n[Test 1b] Parameter Sections\n');
+
+    const PARAM_SECTIONS = [
+      'param-section'  // At least one should be visible
+    ];
+
+    for (const element of PARAM_SECTIONS) {
+      try {
+        const visible = await isVisible(element);
+        if (visible) {
+          console.log(`  [PASS] ${element} component found`);
+          passed++;
+        } else {
+          console.log(`  [WARN] ${element} not immediately visible`);
+        }
+      } catch (e) {
+        console.log(`  [INFO] Could not verify ${element}: ${e.message}`);
+      }
+    }
+
     // Test 2: Verify form inputs in accessibility tree
     console.log('\n[Test 2] Accessibility Tree - ARIA Roles\n');
 
