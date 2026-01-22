@@ -167,14 +167,30 @@ export function stepSBLOCYear(
 ): SBLOCYearResult {
   // =========================================================================
   // Backward compatible path: delegate directly to stepSBLOC
+  // VALIDATION: This path produces IDENTICAL results to calling stepSBLOC directly
+  // - Same parameters passed through unchanged
+  // - Returns the EXACT same SBLOCYearResult that stepSBLOC returns
+  // - No modifications to state or result
   // =========================================================================
   if (!monthlyWithdrawal) {
-    // IDENTICAL call to stepSBLOC - no modifications
+    // IDENTICAL call to stepSBLOC - no modifications whatsoever
+    // Verification test: stepSBLOCYear(s, c, 0.10, y, false).newState === stepSBLOC(s, c, 0.10, y).newState
     return stepSBLOC(state, config, portfolioReturn, currentYear);
   }
 
   // =========================================================================
   // Monthly mode: process 12 monthly substeps
+  // EXPECTED DIFFERENCES vs annual mode:
+  // 1. Monthly compounding: ~7.66% effective vs 7.4% nominal (for 7.4% rate)
+  //    - Example: $50k loan at 7.4% annual = $53,700 balance after 1 year
+  //    - Monthly: $50k * (1 + 0.074/12)^12 = $53,831 balance after 1 year
+  //    - Difference: ~$131 more interest (~0.26% higher effective rate)
+  // 2. Interest accrues on withdrawal immediately each month
+  //    - Annual: All $50k added at once, interest on full amount
+  //    - Monthly: $4,166.67 added each month, interest compounds on partial amounts
+  // 3. Margin calls can trigger mid-year (12 checkpoints vs 1)
+  //    - More sensitive to intra-year volatility
+  // 4. Total withdrawal amount is identical ($50k/year = 12 x $4,166.67)
   // =========================================================================
 
   // Convert annual return to 12 monthly returns
