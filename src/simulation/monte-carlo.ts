@@ -86,6 +86,11 @@ export async function runMonteCarlo(
   let sblocStates: SBLOCState[][] | null = null;
   let marginCallYears: number[] | null = null; // First margin call year per iteration (-1 if none)
 
+  // SBLOC configuration values (extracted for use in year loop)
+  const sblocBaseWithdrawal = config.sbloc?.annualWithdrawal ?? 0;
+  const sblocRaiseRate = config.sbloc?.annualWithdrawalRaise ?? 0;
+  const sblocWithdrawalStartYear = config.timeline?.withdrawalStartYear ?? 0;
+
   if (config.sbloc) {
     sblocStates = Array.from({ length: iterations }, () => []);
     marginCallYears = new Array(iterations).fill(-1);
@@ -130,32 +135,28 @@ export async function runMonteCarlo(
 
         // SBLOC simulation step (if enabled)
         if (config.sbloc && sblocStates && marginCallYears) {
-          // Get current SBLOC state or initialize
-          const prevState = year === 0
-            ? initializeSBLOCState(
-                {
-                  annualInterestRate: config.sbloc.interestRate,
-                  maxLTV: config.sbloc.maintenanceMargin, // Use maintenance as max for margin call
-                  maintenanceMargin: config.sbloc.maintenanceMargin,
-                  liquidationHaircut: 0.05,
-                  annualWithdrawal: config.sbloc.annualWithdrawal,
-                  compoundingFrequency: 'annual',
-                  startYear: 0,
-                },
-                initialValue
-              )
-            : sblocStates[i][year - 1];
+          // Calculate effective withdrawal for this year (with annual raises)
+          // yearsOfWithdrawals = how many years of withdrawals have occurred
+          const yearsOfWithdrawals = Math.max(0, year - sblocWithdrawalStartYear);
+          const effectiveWithdrawal = yearsOfWithdrawals > 0
+            ? sblocBaseWithdrawal * Math.pow(1 + sblocRaiseRate, yearsOfWithdrawals - 1)
+            : sblocBaseWithdrawal;
 
-          // Convert to SBLOC engine config
+          // Shared SBLOC engine config for this year
           const sblocConfig: SBLOCEngineConfig = {
             annualInterestRate: config.sbloc.interestRate,
-            maxLTV: config.sbloc.maintenanceMargin,
+            maxLTV: config.sbloc.maintenanceMargin, // Use maintenance as max for margin call
             maintenanceMargin: config.sbloc.maintenanceMargin,
-            liquidationHaircut: 0.05,
-            annualWithdrawal: config.sbloc.annualWithdrawal,
+            liquidationHaircut: config.sbloc.liquidationHaircut,
+            annualWithdrawal: effectiveWithdrawal,
             compoundingFrequency: 'annual',
-            startYear: 0,
+            startYear: sblocWithdrawalStartYear,
           };
+
+          // Get current SBLOC state or initialize
+          const prevState = year === 0
+            ? initializeSBLOCState(sblocConfig, initialValue, config.sbloc.initialLocBalance)
+            : sblocStates[i][year - 1];
 
           // Step SBLOC forward one year
           // Note: portfolioReturn is the portfolio return this year (before being applied)
@@ -216,13 +217,20 @@ export async function runMonteCarlo(
         p75: loanBalancesByYear.map(yv => percentile(yv, 0.75)),
         p90: loanBalancesByYear.map(yv => percentile(yv, 0.9)),
       },
-      cumulativeWithdrawals: Array.from(
-        { length: timeHorizon },
-        (_, i) => (i + 1) * config.sbloc!.annualWithdrawal
+      cumulativeWithdrawals: calculateCumulativeWithdrawals(
+        timeHorizon,
+        sblocBaseWithdrawal,
+        sblocRaiseRate,
+        sblocWithdrawalStartYear
       ),
       cumulativeInterest: {
         p50: loanBalancesByYear.map((yv, idx) => {
-          const cumWithdrawal = (idx + 1) * config.sbloc!.annualWithdrawal;
+          const cumWithdrawal = calculateCumulativeWithdrawalAtYear(
+            idx + 1,
+            sblocBaseWithdrawal,
+            sblocRaiseRate,
+            sblocWithdrawalStartYear
+          );
           const medianLoan = percentile(yv, 0.5);
           return Math.max(0, medianLoan - cumWithdrawal);
         }),
@@ -359,4 +367,59 @@ function computeMarginCallStats(
   }
 
   return stats;
+}
+
+/**
+ * Calculate cumulative withdrawals for all years, accounting for annual raises
+ * and withdrawal start year
+ */
+function calculateCumulativeWithdrawals(
+  timeHorizon: number,
+  baseWithdrawal: number,
+  raiseRate: number,
+  startYear: number
+): number[] {
+  const result: number[] = [];
+  let cumulative = 0;
+
+  for (let year = 1; year <= timeHorizon; year++) {
+    // year is 1-indexed, startYear is 0-indexed
+    // Year 1 corresponds to simulation year 0
+    const simYear = year - 1;
+    if (simYear >= startYear) {
+      const yearsOfWithdrawals = simYear - startYear;
+      const withdrawal = yearsOfWithdrawals > 0
+        ? baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals - 1)
+        : baseWithdrawal;
+      cumulative += withdrawal;
+    }
+    result.push(cumulative);
+  }
+
+  return result;
+}
+
+/**
+ * Calculate cumulative withdrawal at a specific year, accounting for raises
+ */
+function calculateCumulativeWithdrawalAtYear(
+  year: number,
+  baseWithdrawal: number,
+  raiseRate: number,
+  startYear: number
+): number {
+  let cumulative = 0;
+
+  for (let y = 1; y <= year; y++) {
+    const simYear = y - 1;
+    if (simYear >= startYear) {
+      const yearsOfWithdrawals = simYear - startYear;
+      const withdrawal = yearsOfWithdrawals > 0
+        ? baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals - 1)
+        : baseWithdrawal;
+      cumulative += withdrawal;
+    }
+  }
+
+  return cumulative;
 }
