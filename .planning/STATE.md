@@ -413,9 +413,10 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 001 | Make all sections in the left panel fully expanded by default | 2026-01-21 | 00eaad8 | [001-expand-left-panel-sections-default](./quick/001-expand-left-panel-sections-default/) |
+| 002 | Move Run Simulation button to sidebar footer for persistent visibility | 2026-01-21 | 02b38ef | [002-move-run-simulation-button-to-left-pa](./quick/002-move-run-simulation-button-to-left-pa/) |
 
 ## Session Continuity
 
-Last session: 2026-01-20
-Stopped at: Completed 11-13-PLAN.md (Enhanced Correlation Heatmap)
+Last session: 2026-01-21
+Stopped at: Completed quick task 002 (Move Run Simulation button to sidebar footer)
 Resume file: None - Phase 11 complete, ready for next phase
