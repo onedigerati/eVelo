@@ -111,6 +111,25 @@ async function runResponsiveTest() {
         failed++;
       }
 
+      // Test 3b: Verify results-dashboard visible
+      try {
+        const dashboardVisible = await isVisible('results-dashboard');
+        if (dashboardVisible) {
+          console.log(`  [PASS] Results dashboard visible at ${viewport.name}`);
+          passed++;
+        } else {
+          // On mobile, dashboard may require scroll
+          if (viewport.name === 'mobile') {
+            console.log(`  [WARN] Results dashboard not immediately visible on mobile (may need scroll)`);
+          } else {
+            console.log(`  [FAIL] Results dashboard not visible at ${viewport.name}`);
+            failed++;
+          }
+        }
+      } catch (e) {
+        console.log(`  [INFO] Could not check results dashboard: ${e.message}`);
+      }
+
       // Test 4: Check for horizontal overflow (layout issues)
       try {
         const hasOverflow = await evalJs(`
