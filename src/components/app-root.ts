@@ -93,6 +93,16 @@ export class AppRoot extends BaseComponent {
           <param-section title="Asset Allocation" open>
             <portfolio-composition id="portfolio-composition"></portfolio-composition>
           </param-section>
+
+          <div slot="footer" class="simulation-controls">
+            <button class="btn-primary" id="run-sim">Run Simulation</button>
+            <progress-indicator
+              id="sim-progress"
+              value="0"
+              label="Running simulation..."
+              class="hidden"
+            ></progress-indicator>
+          </div>
         </sidebar-panel>
 
         <div slot="header" class="header-content">
@@ -115,16 +125,6 @@ export class AppRoot extends BaseComponent {
             </ol>
             This simulator models the risks and outcomes of this strategy.
           </help-section>
-
-          <div class="simulation-controls">
-            <button class="btn-primary" id="run-sim">Run Simulation</button>
-            <progress-indicator
-              id="sim-progress"
-              value="0"
-              label="Running simulation..."
-              class="hidden"
-            ></progress-indicator>
-          </div>
 
           <results-dashboard id="results"></results-dashboard>
         </div>
@@ -159,9 +159,8 @@ export class AppRoot extends BaseComponent {
 
       .simulation-controls {
         display: flex;
-        align-items: center;
-        gap: var(--spacing-md, 16px);
-        margin: var(--spacing-lg, 24px) 0;
+        flex-direction: column;
+        gap: var(--spacing-sm, 8px);
       }
 
       .btn-primary {
@@ -174,6 +173,7 @@ export class AppRoot extends BaseComponent {
         font-weight: 500;
         cursor: pointer;
         transition: background 0.2s;
+        width: 100%;
       }
 
       .btn-primary:hover {
@@ -186,8 +186,7 @@ export class AppRoot extends BaseComponent {
       }
 
       progress-indicator {
-        flex: 1;
-        max-width: 300px;
+        width: 100%;
       }
 
       progress-indicator.hidden {
