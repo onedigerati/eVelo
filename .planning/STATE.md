@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 13 (E2E Testing with Agent-Browser)
-Plan: 5 of 6 complete
-Status: In progress
-Last activity: 2026-01-22 — Completed 13-05-PLAN.md (Chart visual regression test)
+Plan: 6 of 6 complete
+Status: Phase complete
+Last activity: 2026-01-22 — Completed 13-06-PLAN.md (CI/CD integration)
 
-Progress: ██████████████████████████████████░░ 98% (55/56 plans total)
+Progress: ████████████████████████████████████ 100% (56/56 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 55
+- Total plans completed: 56
 - Average duration: 3.4 min
-- Total execution time: 189 min
+- Total execution time: 193 min
 
 **By Phase:**
 
@@ -38,10 +38,10 @@ Progress: ███████████████████████�
 | 07.1-application-integration | 5/5 | 23 min | 4.6 min |
 | 11-complete-results-dashboard | 13/13 | 49 min | 3.8 min |
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
-| 13-e2e-testing-agent-browser | 5/6 | 17 min | 3.4 min |
+| 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 13-01 (4 min), 13-03 (3 min), 13-04 (4 min), 13-05 (3 min)
+- Last 5 plans: 13-03 (3 min), 13-04 (4 min), 13-05 (3 min), 13-06 (4 min)
 - Trend: Steady execution pace
 
 ## Accumulated Context
@@ -446,6 +446,13 @@ Recent decisions affecting current work:
 - Full dashboard screenshots (top/bottom) instead of per-chart (agent-browser captures full page)
 - 0.1 pixelmatch threshold for anti-aliasing tolerance
 
+**From 13-06:**
+- Test orchestrator runs smoke, workflow, responsive sequentially (not parallel) to avoid port conflicts
+- Critical vs non-critical test classification: critical failures block CI, non-critical log warnings only
+- Charts excluded from CI (requires baseline capture first)
+- GitHub Actions workflow with npm ci (triggers postinstall for agent-browser install)
+- Upload screenshots/diff as artifacts on failure for debugging
+
 ### Pending Todos
 
 None
@@ -466,5 +473,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 13-05-PLAN.md (Chart visual regression test)
+Stopped at: Completed 13-06-PLAN.md (CI/CD integration) - Phase 13 complete
 Resume file: None
