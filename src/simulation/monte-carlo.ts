@@ -17,7 +17,7 @@ import { simpleBootstrap, blockBootstrap } from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
 import {
   initializeSBLOCState,
-  stepSBLOC,
+  stepSBLOCYear,
   type SBLOCConfig as SBLOCEngineConfig,
   type SBLOCState,
 } from '../sbloc';
@@ -161,7 +161,14 @@ export async function runMonteCarlo(
           // Step SBLOC forward one year
           // Note: portfolioReturn is the portfolio return this year (before being applied)
           // The SBLOC engine expects the portfolio return as a decimal
-          const yearResult = stepSBLOC(prevState, sblocConfig, portfolioReturn, year);
+          // stepSBLOCYear handles monthly vs annual mode internally based on monthlyWithdrawal flag
+          const yearResult = stepSBLOCYear(
+            prevState,
+            sblocConfig,
+            portfolioReturn,
+            year,
+            config.sbloc.monthlyWithdrawal ?? false
+          );
           sblocStates[i].push(yearResult.newState);
 
           // Track first margin call year
