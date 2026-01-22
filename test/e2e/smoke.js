@@ -2,7 +2,8 @@
 // Smoke test - verifies all major components render correctly
 import { startServer, stopServer, getBaseUrl } from './helpers/server.js';
 import {
-  open, close, isVisible, snapshot, screenshot, wait
+  open, close, isVisible, snapshot, screenshot, wait,
+  findRole, evalJs
 } from './helpers/agent-browser.js';
 
 // Components to verify visibility
@@ -128,6 +129,141 @@ async function runSmokeTest() {
       console.log('  [WARN] Button found but "Run Simulation" text not detected');
     } else {
       console.log('  [FAIL] No button found in accessibility tree');
+      failed++;
+    }
+
+    // Test 6: Form Interaction Tests
+    console.log('\n[Test 6] Form Interactions\n');
+
+    // Test 6a: Range slider drag interaction
+    console.log('  [6a] Range Slider Interaction');
+    try {
+      // Find a slider in the accessibility tree and interact with it
+      const sliderBefore = await evalJs(`
+        const slider = document.querySelector('range-slider');
+        if (slider && slider.shadowRoot) {
+          const input = slider.shadowRoot.querySelector('input[type="range"]');
+          return input ? input.value : null;
+        }
+        return null;
+      `);
+
+      if (sliderBefore !== null) {
+        // Use keyboard to change slider value (more reliable than drag)
+        await findRole('slider', 'focus');
+        await findRole('slider', 'press', 'ArrowRight');
+        await findRole('slider', 'press', 'ArrowRight');
+
+        const sliderAfter = await evalJs(`
+          const slider = document.querySelector('range-slider');
+          if (slider && slider.shadowRoot) {
+            const input = slider.shadowRoot.querySelector('input[type="range"]');
+            return input ? input.value : null;
+          }
+          return null;
+        `);
+
+        if (sliderAfter !== sliderBefore) {
+          console.log(`    [PASS] Slider responded to keyboard: ${sliderBefore} -> ${sliderAfter}`);
+          passed++;
+        } else {
+          console.log(`    [WARN] Slider value unchanged after keyboard input`);
+        }
+      } else {
+        console.log('    [SKIP] No range-slider found');
+      }
+    } catch (e) {
+      console.log(`    [FAIL] Slider interaction failed: ${e.message}`);
+      failed++;
+    }
+
+    // Test 6b: Number input keyboard interaction
+    console.log('  [6b] Number Input Interaction');
+    try {
+      // Find number input and verify keyboard input works
+      const inputBefore = await evalJs(`
+        const numInput = document.querySelector('number-input');
+        if (numInput && numInput.shadowRoot) {
+          const input = numInput.shadowRoot.querySelector('input[type="number"]');
+          return input ? input.value : null;
+        }
+        return null;
+      `);
+
+      if (inputBefore !== null) {
+        // Focus and type new value
+        await findRole('spinbutton', 'focus');
+        await findRole('spinbutton', 'press', 'End');  // Move to end
+        await findRole('spinbutton', 'press', 'Backspace');  // Delete last char
+        await findRole('spinbutton', 'fill', '5');  // Type new digit
+
+        const inputAfter = await evalJs(`
+          const numInput = document.querySelector('number-input');
+          if (numInput && numInput.shadowRoot) {
+            const input = numInput.shadowRoot.querySelector('input[type="number"]');
+            return input ? input.value : null;
+          }
+          return null;
+        `);
+
+        if (inputAfter !== inputBefore) {
+          console.log(`    [PASS] Number input responded to keyboard: ${inputBefore} -> ${inputAfter}`);
+          passed++;
+        } else {
+          console.log(`    [WARN] Number input unchanged after keyboard input`);
+        }
+      } else {
+        console.log('    [SKIP] No number-input found');
+      }
+    } catch (e) {
+      console.log(`    [FAIL] Number input interaction failed: ${e.message}`);
+      failed++;
+    }
+
+    // Test 6c: Select dropdown interaction
+    console.log('  [6c] Select Dropdown Interaction');
+    try {
+      // Check if select/combobox exists in accessibility tree
+      const hasSelect = tree.toLowerCase().includes('combobox') ||
+                        tree.toLowerCase().includes('listbox') ||
+                        tree.toLowerCase().includes('option');
+
+      if (hasSelect) {
+        // Try to interact with select
+        try {
+          await findRole('combobox', 'click');
+          // Brief wait for dropdown to open
+          await new Promise(r => setTimeout(r, 300));
+
+          // Check if options are now visible
+          const expandedTree = await snapshot({ interactive: true });
+          const hasOptions = expandedTree.toLowerCase().includes('option') ||
+                            expandedTree.toLowerCase().includes('listbox');
+
+          if (hasOptions) {
+            console.log('    [PASS] Select dropdown opened with options');
+            passed++;
+          } else {
+            console.log('    [WARN] Select clicked but options not detected');
+          }
+
+          // Press Escape to close dropdown
+          await findRole('combobox', 'press', 'Escape');
+        } catch (e) {
+          // Try listbox pattern instead
+          try {
+            await findRole('listbox', 'focus');
+            console.log('    [PASS] Listbox found and focusable');
+            passed++;
+          } catch {
+            console.log(`    [INFO] Select interaction not available: ${e.message}`);
+          }
+        }
+      } else {
+        console.log('    [SKIP] No select/combobox found in accessibility tree');
+      }
+    } catch (e) {
+      console.log(`    [FAIL] Select interaction failed: ${e.message}`);
       failed++;
     }
 
