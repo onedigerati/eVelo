@@ -422,6 +422,12 @@ Recent decisions affecting current work:
 - Helper modules: agent-browser.js (CLI wrapper), server.js (Vite lifecycle), screenshot.js (comparison)
 - Test directory structure: baseline/ (committed), current/ and diff/ (gitignored)
 
+**From 13-02:**
+- Warn (not fail) for form labels not found in accessibility tree (may be in collapsed sections)
+- Keyboard-based interaction testing (ArrowRight, Backspace, fill) more reliable than mouse for Shadow DOM
+- Support both combobox and listbox ARIA patterns for select dropdown testing
+- Six test sections: layout, param-sections, ARIA roles, form labels, screenshot, form interactions
+
 **From 13-03:**
 - Accessibility tree snapshot for form value verification (confirms semantic locators work)
 - Phase-based test structure for clear user journey progression
