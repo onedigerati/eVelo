@@ -143,6 +143,8 @@ export async function runMonteCarlo(
             : sblocBaseWithdrawal;
 
           // Shared SBLOC engine config for this year
+          // Note: compoundingFrequency is 'annual' here; stepSBLOCYear adjusts to 'monthly'
+          // internally when config.sbloc.monthlyWithdrawal is true
           const sblocConfig: SBLOCEngineConfig = {
             annualInterestRate: config.sbloc.interestRate,
             maxLTV: config.sbloc.maintenanceMargin, // Use maintenance as max for margin call
