@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
 - [x] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
 - [x] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
-- [ ] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
+- [x] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
 
 ## Phase Details
 
@@ -307,18 +307,18 @@ Plans:
   2. Simulation workflow test confirms params -> run -> results flow
   3. Form interactions (range-slider, number-input, select) respond correctly
   4. Responsive layout works at desktop/tablet/mobile viewports
-  5. Screenshot baselines established for all 13 chart types
+  5. Screenshot baselines established for all 11 chart types
   6. Tests integrate with CI pipeline (GitHub Actions)
 **Research**: Complete (see .planning/quick/004-research-agent-browser-integration/004-RESEARCH.md)
 **Plans**: 6 plans
 
 Plans:
-- [ ] 13-01: Test infrastructure and helper setup
-- [ ] 13-02: Smoke tests for component rendering
-- [ ] 13-03: Simulation workflow E2E test
-- [ ] 13-04: Responsive layout tests
-- [ ] 13-05: Chart baseline screenshots
-- [ ] 13-06: CI/CD integration (GitHub Actions)
+- [x] 13-01: Test infrastructure and helper setup
+- [x] 13-02: Smoke tests for component rendering
+- [x] 13-03: Simulation workflow E2E test
+- [x] 13-04: Responsive layout tests
+- [x] 13-05: Chart baseline screenshots
+- [x] 13-06: CI/CD integration (GitHub Actions)
 
 **Details:**
 Based on research findings:
@@ -347,6 +347,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 10. PWA & Export | 0/2 | Not started | - |
 | 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
 | 12. Monthly Withdrawal Simulation | 2/2 | Complete | 2026-01-22 |
-| 13. E2E Testing with Agent-Browser | 0/6 | Not started | - |
+| 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
 
 **Total Plans**: 56
