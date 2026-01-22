@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 11 (Complete Results Dashboard)
 Plan: 13 of 13 complete
 Status: Phase complete
-Last activity: 2026-01-20 — Completed 11-13-PLAN.md (Enhanced Correlation Heatmap)
+Last activity: 2026-01-21 — Completed quick task 001: Expand left panel sections by default
 
 Progress: ██████████████████████████ 100% (47/47 plans total)
 
@@ -407,6 +407,12 @@ None - Phase 11 complete.
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Make all sections in the left panel fully expanded by default | 2026-01-21 | 00eaad8 | [001-expand-left-panel-sections-default](./quick/001-expand-left-panel-sections-default/) |
 
 ## Session Continuity
 
