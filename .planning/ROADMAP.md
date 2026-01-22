@@ -26,6 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
 - [x] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
 - [x] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
+- [ ] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
 
 ## Phase Details
 
@@ -327,10 +328,33 @@ Based on research findings:
 - Prioritized use cases: smoke tests, simulation workflow, responsive layouts, form interactions
 - Test directory: test/e2e/ with JavaScript test files (cross-platform)
 
+### Phase 14: Dashboard Calculations Review
+**Goal**: Thoroughly review dashboard components and verify calculations are working properly to display results, create gap findings for any issues
+**Depends on**: Phase 13
+**Requirements**: VIZ-01, VIZ-02, VIZ-03, VIZ-04, VIZ-05, VIZ-06, VIZ-07, CALC-01, CALC-02, CALC-03, CALC-04, CALC-05, CALC-07
+**Success Criteria** (what must be TRUE):
+  1. All dashboard components render correctly with simulation data
+  2. All calculations produce accurate and expected results
+  3. Gap findings documented for any identified issues
+  4. Each gap has a clear description and proposed resolution
+**Research**: Complete (see 14-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 14-01: Calculation verification and gap identification
+- [ ] 14-02: Visualization verification and final gap documentation
+
+**Details:**
+Based on research findings:
+- Percentile scale mismatch in monte-carlo.ts (uses 0-1 scale, should use 0-100)
+- Success rate definition inconsistency (> vs >=)
+- Asset statistics fallback values may be misleading
+- Output: 14-GAP-FINDINGS.md with complete issue documentation
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -348,5 +372,6 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
 | 12. Monthly Withdrawal Simulation | 2/2 | Complete | 2026-01-22 |
 | 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
+| 14. Dashboard Calculations Review | 0/2 | Not started | - |
 
-**Total Plans**: 56
+**Total Plans**: 58
