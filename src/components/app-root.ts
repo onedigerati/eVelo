@@ -51,7 +51,7 @@ export class AppRoot extends BaseComponent {
     return `
       <main-layout>
         <sidebar-panel slot="sidebar" title="Strategy Parameters">
-          <param-section title="Portfolio Settings" open>
+          <param-section title="Your Portfolio" open>
             <div class="param-group">
               <label>Initial Investment</label>
               <number-input
@@ -63,6 +63,7 @@ export class AppRoot extends BaseComponent {
                 suffix="$"
               ></number-input>
             </div>
+            <portfolio-composition id="portfolio-composition"></portfolio-composition>
             <div class="param-group">
               <label>Initial LOC Balance</label>
               <number-input
@@ -73,33 +74,45 @@ export class AppRoot extends BaseComponent {
                 step="1000"
                 suffix="$"
               ></number-input>
-              <span class="help-text">Starting line of credit balance (set to 0 if starting fresh)</span>
-            </div>
-            <div class="param-group">
-              <label>Simulation Iterations</label>
-              <select-input
-                id="num-simulations"
-                value="10000"
-                options='[{"value":"1000","label":"1,000 (Fast)"},{"value":"5000","label":"5,000 (Quick)"},{"value":"10000","label":"10,000 (Precise)"},{"value":"50000","label":"50,000 (Accurate)"},{"value":"100000","label":"100,000 (High Precision)"}]'
-              ></select-input>
-            </div>
-            <div class="param-group">
-              <label>Expected Annual Inflation (%)</label>
-              <range-slider
-                id="inflation-rate"
-                value="2.5"
-                min="0"
-                max="8"
-                step="0.5"
-                suffix="%"
-              ></range-slider>
-              <span class="help-text">Used to calculate real (inflation-adjusted) returns</span>
+              <span class="help-text">Leave at 0 if starting fresh</span>
             </div>
           </param-section>
 
-          <param-section title="Timeline" open>
+          <param-section title="Your Spending Needs" open>
             <div class="param-group">
-              <label>Buy Borrow Die Start Year</label>
+              <label>Annual Cash Need ($)</label>
+              <number-input
+                id="annual-withdrawal"
+                value="200000"
+                min="0"
+                max="10000000"
+                step="5000"
+                suffix="$"
+              ></number-input>
+            </div>
+            <div class="param-group">
+              <label>Annual Increase (%)</label>
+              <range-slider
+                id="annual-raise"
+                value="3"
+                min="0"
+                max="10"
+                step="0.5"
+                suffix="%"
+              ></range-slider>
+            </div>
+            <div class="param-group">
+              <checkbox-input
+                id="monthly-withdrawal"
+                label="Withdraw Monthly (Equal Amounts)"
+                checked
+              ></checkbox-input>
+            </div>
+          </param-section>
+
+          <param-section title="Time Horizon" open>
+            <div class="param-group">
+              <label>Strategy Start Year</label>
               <number-input
                 id="start-year"
                 value="${currentYear}"
@@ -109,7 +122,7 @@ export class AppRoot extends BaseComponent {
               ></number-input>
             </div>
             <div class="param-group">
-              <label>Year to Start Withdrawal</label>
+              <label>First Withdrawal Year</label>
               <number-input
                 id="withdrawal-start-year"
                 value="${currentYear}"
@@ -131,41 +144,9 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Withdrawal Strategy" open>
+          <param-section title="Line of Credit Terms" open>
             <div class="param-group">
-              <label>Total Annual Withdrawal ($)</label>
-              <number-input
-                id="annual-withdrawal"
-                value="200000"
-                min="0"
-                max="10000000"
-                step="5000"
-                suffix="$"
-              ></number-input>
-            </div>
-            <div class="param-group">
-              <label>Annual Percentage Raise (%)</label>
-              <range-slider
-                id="annual-raise"
-                value="3"
-                min="0"
-                max="10"
-                step="0.5"
-                suffix="%"
-              ></range-slider>
-            </div>
-            <div class="param-group">
-              <checkbox-input
-                id="monthly-withdrawal"
-                label="Withdraw Monthly (Equal Amounts)"
-                checked
-              ></checkbox-input>
-            </div>
-          </param-section>
-
-          <param-section title="SBLOC Risk Parameters" open>
-            <div class="param-group">
-              <label>SBLOC Interest Rate (%)</label>
+              <label>Annual Interest Rate (%)</label>
               <range-slider
                 id="sbloc-rate"
                 value="7"
@@ -176,7 +157,7 @@ export class AppRoot extends BaseComponent {
               ></range-slider>
             </div>
             <div class="param-group">
-              <label>SBLOC Max Borrowing % (Hard Margin Call)</label>
+              <label>Max LTV / Hard Margin (%)</label>
               <range-slider
                 id="max-borrowing"
                 value="65"
@@ -188,7 +169,7 @@ export class AppRoot extends BaseComponent {
               <span class="help-text">Portfolio liquidated if LTV exceeds this threshold</span>
             </div>
             <div class="param-group">
-              <label>Maintenance Margin % (Warning Zone)</label>
+              <label>Warning Zone LTV (%)</label>
               <range-slider
                 id="maintenance-margin"
                 value="50"
@@ -200,7 +181,7 @@ export class AppRoot extends BaseComponent {
               <span class="help-text">Warning zone - between this and max borrowing</span>
             </div>
             <div class="param-group">
-              <label>Forced Liquidation Haircut %</label>
+              <label>Forced Liquidation Haircut (%)</label>
               <range-slider
                 id="liquidation-haircut"
                 value="5"
@@ -213,11 +194,27 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Asset Allocation" open>
-            <portfolio-composition id="portfolio-composition"></portfolio-composition>
-          </param-section>
-
-          <param-section title="Return Distribution Model">
+          <param-section title="Simulation Settings">
+            <div class="param-group">
+              <label>Simulation Iterations</label>
+              <select-input
+                id="num-simulations"
+                value="10000"
+                options='[{"value":"1000","label":"1,000 (Fast)"},{"value":"5000","label":"5,000 (Quick)"},{"value":"10000","label":"10,000 (Precise)"},{"value":"50000","label":"50,000 (Accurate)"},{"value":"100000","label":"100,000 (High Precision)"}]'
+              ></select-input>
+            </div>
+            <div class="param-group">
+              <label>Expected Annual Inflation (%)</label>
+              <range-slider
+                id="inflation-rate"
+                value="2.5"
+                min="0"
+                max="8"
+                step="0.5"
+                suffix="%"
+              ></range-slider>
+              <span class="help-text">Used to calculate real (inflation-adjusted) returns</span>
+            </div>
             <div class="param-group">
               <label>Return Distribution Model</label>
               <select-input
