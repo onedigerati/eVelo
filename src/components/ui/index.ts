@@ -67,3 +67,4 @@ export {
 // Comparison Mode Components
 export { DeltaIndicator } from './delta-indicator';
 export { ComparisonDashboard } from './comparison-dashboard';
+export { TradeOffSummary } from './trade-off-summary';

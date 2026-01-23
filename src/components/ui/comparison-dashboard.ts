@@ -10,8 +10,9 @@ import { comparisonState } from '../../services/comparison-state';
 import { computeComparisonMetrics } from '../../utils/delta-calculations';
 import type { SimulationOutput, SimulationConfig } from '../../simulation/types';
 
-// Import results-dashboard to register it
+// Import results-dashboard and trade-off-summary to register them
 import './results-dashboard';
+import './trade-off-summary';
 
 /**
  * Comparison Dashboard - shows side-by-side results or single dashboard
@@ -56,6 +57,9 @@ export class ComparisonDashboard extends BaseComponent {
 
   /** Name/label for current preset */
   private _currentPresetName: string = '';
+
+  /** Current active tab for mobile view */
+  private _activeTab: 'previous' | 'current' | 'delta' = 'previous';
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -162,12 +166,18 @@ export class ComparisonDashboard extends BaseComponent {
    * Template for comparison mode (side-by-side)
    */
   private comparisonTemplate(): string {
+    const metrics = this._previousData && this._currentData
+      ? computeComparisonMetrics(this._previousData, this._currentData)
+      : null;
+
     return `
       <div class="comparison-container">
         <div class="comparison-header">
           <h2>Comparing Strategies</h2>
           <button class="exit-btn" id="exit-btn">Exit Comparison</button>
         </div>
+
+        <!-- Desktop: Side-by-side grid -->
         <div class="comparison-grid">
           <div class="comparison-panel previous-panel">
             <div class="panel-header">
@@ -184,8 +194,99 @@ export class ComparisonDashboard extends BaseComponent {
             <results-dashboard id="current-dashboard"></results-dashboard>
           </div>
         </div>
-        <div class="delta-summary">
-          <!-- Delta indicators for key metrics could go here in future -->
+
+        <!-- Mobile: Tabbed interface -->
+        <div class="comparison-tabs" role="tablist" aria-label="Comparison view">
+          <button
+            role="tab"
+            id="tab-previous"
+            aria-selected="${this._activeTab === 'previous'}"
+            aria-controls="panel-previous"
+            tabindex="${this._activeTab === 'previous' ? '0' : '-1'}"
+            class="tab-button">
+            Previous
+            <span class="tab-badge">${this.escapeHtml(this._previousPresetName)}</span>
+          </button>
+          <button
+            role="tab"
+            id="tab-current"
+            aria-selected="${this._activeTab === 'current'}"
+            aria-controls="panel-current"
+            tabindex="${this._activeTab === 'current' ? '0' : '-1'}"
+            class="tab-button">
+            Current
+            <span class="tab-badge">${this.escapeHtml(this._currentPresetName)}</span>
+          </button>
+          <button
+            role="tab"
+            id="tab-delta"
+            aria-selected="${this._activeTab === 'delta'}"
+            aria-controls="panel-delta"
+            tabindex="${this._activeTab === 'delta' ? '0' : '-1'}"
+            class="tab-button">
+            Delta
+          </button>
+        </div>
+
+        <div id="panel-previous" role="tabpanel" aria-labelledby="tab-previous" class="tab-panel" ${this._activeTab !== 'previous' ? 'hidden' : ''}>
+          <results-dashboard id="mobile-previous-dashboard"></results-dashboard>
+        </div>
+
+        <div id="panel-current" role="tabpanel" aria-labelledby="tab-current" class="tab-panel" ${this._activeTab !== 'current' ? 'hidden' : ''}>
+          <results-dashboard id="mobile-current-dashboard"></results-dashboard>
+        </div>
+
+        <div id="panel-delta" role="tabpanel" aria-labelledby="tab-delta" class="tab-panel" ${this._activeTab !== 'delta' ? 'hidden' : ''}>
+          ${this.deltaTableTemplate(metrics)}
+          <trade-off-summary id="trade-off-summary"></trade-off-summary>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Template for delta metrics table (mobile delta tab)
+   */
+  private deltaTableTemplate(metrics: ReturnType<typeof computeComparisonMetrics> | null): string {
+    if (!metrics) {
+      return '<p class="no-metrics">No comparison metrics available</p>';
+    }
+
+    return `
+      <div class="delta-table">
+        <h3>Key Metric Changes</h3>
+        <div class="delta-grid">
+          <delta-indicator
+            value="${this._currentData!.statistics.median}"
+            previous-value="${this._previousData!.statistics.median}"
+            format="currency"
+            label="Final Value">
+          </delta-indicator>
+
+          <delta-indicator
+            value="${this._currentData!.statistics.successRate}"
+            previous-value="${this._previousData!.statistics.successRate}"
+            format="percent"
+            label="Success Rate">
+          </delta-indicator>
+
+          ${metrics.cagr ? `
+            <delta-indicator
+              value="${this._currentData!.statistics.cagr || 0}"
+              previous-value="${this._previousData!.statistics.cagr || 0}"
+              format="percent"
+              label="CAGR">
+            </delta-indicator>
+          ` : ''}
+
+          ${metrics.marginCallProbability ? `
+            <delta-indicator
+              value="${this._currentData!.marginCallStats?.[this._currentData!.marginCallStats.length - 1]?.cumulativeProbability || 0}"
+              previous-value="${this._previousData!.marginCallStats?.[this._previousData!.marginCallStats.length - 1]?.cumulativeProbability || 0}"
+              format="percent"
+              label="Margin Call Risk">
+            </delta-indicator>
+          ` : ''}
         </div>
       </div>
     `;
@@ -295,11 +396,106 @@ export class ComparisonDashboard extends BaseComponent {
         border-radius: var(--radius-md, 6px);
       }
 
-      /* Hide comparison on mobile (handled in 16-03) */
+      /* Mobile tabs - hidden on desktop */
+      .comparison-tabs {
+        display: none;
+      }
+
+      .tab-panel {
+        display: block;
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+
+      /* Mobile responsive styles */
       @media (max-width: 768px) {
-        .comparison-container {
+        /* Hide desktop grid on mobile */
+        .comparison-grid {
           display: none;
         }
+
+        /* Show tabs on mobile */
+        .comparison-tabs {
+          display: flex;
+          border-bottom: 2px solid var(--border-color, #e5e7eb);
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .tab-button {
+          flex: 1;
+          padding: 12px 8px;
+          background: transparent;
+          border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer;
+          font-size: var(--font-size-sm, 0.875rem);
+          color: var(--text-secondary, #64748b);
+          transition: all 0.2s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .tab-button[aria-selected="true"] {
+          border-bottom-color: var(--color-primary, #0d9488);
+          color: var(--color-primary, #0d9488);
+          font-weight: 600;
+        }
+
+        .tab-button:hover {
+          background: var(--surface-secondary, #f8fafc);
+        }
+
+        .tab-badge {
+          font-size: 0.75rem;
+          font-weight: 400;
+          color: var(--text-tertiary, #94a3b8);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+
+        .tab-button[aria-selected="true"] .tab-badge {
+          color: var(--color-primary, #0d9488);
+          font-weight: 500;
+        }
+
+        /* Tab panels */
+        .tab-panel {
+          padding-top: var(--spacing-sm, 8px);
+        }
+      }
+
+      /* Delta table styles */
+      .delta-table {
+        margin-bottom: var(--spacing-lg, 24px);
+        padding: var(--spacing-md, 16px);
+        background: var(--surface-primary, #ffffff);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: var(--radius-md, 6px);
+      }
+
+      .delta-table h3 {
+        margin: 0 0 var(--spacing-md, 16px) 0;
+        font-size: var(--font-size-lg, 1.125rem);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+      }
+
+      .delta-grid {
+        display: grid;
+        gap: var(--spacing-sm, 8px);
+      }
+
+      .no-metrics {
+        color: var(--text-secondary, #64748b);
+        font-style: italic;
+        text-align: center;
+        padding: var(--spacing-lg, 24px);
       }
 
       /* Single mode styles */
@@ -317,7 +513,7 @@ export class ComparisonDashboard extends BaseComponent {
         exitBtn.addEventListener('click', () => this.exitComparisonMode());
       }
 
-      // Pass data to child dashboards
+      // Pass data to desktop child dashboards
       const prevDashboard = this.$('#previous-dashboard') as any;
       const currDashboard = this.$('#current-dashboard') as any;
 
@@ -344,6 +540,46 @@ export class ComparisonDashboard extends BaseComponent {
           }
         }
       }
+
+      // Pass data to mobile child dashboards
+      const mobilePrevDashboard = this.$('#mobile-previous-dashboard') as any;
+      const mobileCurrDashboard = this.$('#mobile-current-dashboard') as any;
+
+      if (mobilePrevDashboard && this._previousData) {
+        mobilePrevDashboard.data = this._previousData;
+        if (this._previousConfig) {
+          mobilePrevDashboard.simulationConfig = this._previousConfig;
+          mobilePrevDashboard.initialValue = this._previousConfig.initialValue;
+          mobilePrevDashboard.timeHorizon = this._previousConfig.timeHorizon;
+          if (this._previousConfig.sbloc) {
+            mobilePrevDashboard.annualWithdrawal = this._previousConfig.sbloc.annualWithdrawal;
+          }
+        }
+      }
+
+      if (mobileCurrDashboard && this._currentData) {
+        mobileCurrDashboard.data = this._currentData;
+        if (this._currentConfig) {
+          mobileCurrDashboard.simulationConfig = this._currentConfig;
+          mobileCurrDashboard.initialValue = this._currentConfig.initialValue;
+          mobileCurrDashboard.timeHorizon = this._currentConfig.timeHorizon;
+          if (this._currentConfig.sbloc) {
+            mobileCurrDashboard.annualWithdrawal = this._currentConfig.sbloc.annualWithdrawal;
+          }
+        }
+      }
+
+      // Wire up tab navigation (mobile)
+      this.setupTabNavigation();
+
+      // Update trade-off summary
+      const tradeOffSummary = this.$('#trade-off-summary') as any;
+      if (tradeOffSummary && this._previousData && this._currentData) {
+        const metrics = computeComparisonMetrics(this._previousData, this._currentData);
+        tradeOffSummary.metrics = metrics;
+        tradeOffSummary.previousName = this._previousPresetName;
+        tradeOffSummary.currentName = this._currentPresetName;
+      }
     } else {
       // Single mode - pass data to single dashboard
       const singleDashboard = this.$('#single-dashboard') as any;
@@ -351,6 +587,70 @@ export class ComparisonDashboard extends BaseComponent {
         singleDashboard.data = this._currentData;
       }
     }
+  }
+
+  /**
+   * Setup keyboard navigation and click handlers for mobile tabs
+   */
+  private setupTabNavigation(): void {
+    const tabs = this.$$('[role="tab"]') as NodeListOf<HTMLButtonElement>;
+    if (tabs.length === 0) return;
+
+    // Click handlers
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.id.replace('tab-', '') as 'previous' | 'current' | 'delta';
+        this.activateTab(tabId);
+      });
+    });
+
+    // Keyboard navigation
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('keydown', (e) => {
+        let targetIndex: number | null = null;
+
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          targetIndex = (index + 1) % tabs.length;
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          targetIndex = (index - 1 + tabs.length) % tabs.length;
+        }
+
+        if (targetIndex !== null) {
+          const targetTab = tabs[targetIndex];
+          const tabId = targetTab.id.replace('tab-', '') as 'previous' | 'current' | 'delta';
+          this.activateTab(tabId);
+          targetTab.focus();
+        }
+      });
+    });
+  }
+
+  /**
+   * Activate a specific tab
+   */
+  private activateTab(tabId: 'previous' | 'current' | 'delta'): void {
+    this._activeTab = tabId;
+
+    // Update tab buttons
+    const tabs = this.$$('[role="tab"]') as NodeListOf<HTMLButtonElement>;
+    tabs.forEach((tab) => {
+      const isActive = tab.id === `tab-${tabId}`;
+      tab.setAttribute('aria-selected', isActive.toString());
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+    });
+
+    // Update panels
+    const panels = this.$$('[role="tabpanel"]') as NodeListOf<HTMLElement>;
+    panels.forEach((panel) => {
+      const isActive = panel.id === `panel-${tabId}`;
+      if (isActive) {
+        panel.removeAttribute('hidden');
+      } else {
+        panel.setAttribute('hidden', '');
+      }
+    });
   }
 
   /**
