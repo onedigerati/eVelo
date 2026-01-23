@@ -32,7 +32,7 @@ export interface YearlyPercentileData {
 export interface WithdrawalData {
   /** Annual withdrawal amounts for each year */
   annual: number[];
-  /** Cumulative withdrawal amounts for each year */
+  /** Cumulative withdrawal amounts for each year (or loan balance if SBLOC) */
   cumulative: number[];
 }
 
@@ -46,6 +46,8 @@ export interface YearlyAnalysisTableProps {
   withdrawals: WithdrawalData;
   /** Yearly percentile data */
   percentiles: YearlyPercentileData[];
+  /** Whether cumulative column shows SBLOC loan balance (includes interest) */
+  isSBLOCLoanBalance?: boolean;
 }
 
 /**
@@ -134,7 +136,7 @@ export class YearlyAnalysisTable extends BaseComponent {
               </tr>
               <tr>
                 <th>Annual</th>
-                <th>Cumulative</th>
+                <th id="cumulative-header">Cumulative</th>
                 <th class="p10">10th %ile</th>
                 <th class="p25">25th %ile</th>
                 <th class="p50">50th %ile</th>
@@ -379,6 +381,16 @@ export class YearlyAnalysisTable extends BaseComponent {
   private updateTable(): void {
     const tableBody = this.$('#table-body') as HTMLTableSectionElement | null;
     if (!tableBody) return;
+
+    // Update cumulative header based on whether this is SBLOC loan balance data
+    const cumulativeHeader = this.$('#cumulative-header');
+    if (cumulativeHeader) {
+      // When showing SBLOC data, the cumulative column shows actual loan balance
+      // (principal + accrued interest), not just sum of principal withdrawals
+      cumulativeHeader.textContent = this._data?.isSBLOCLoanBalance
+        ? 'Loan Balance'
+        : 'Cumulative';
+    }
 
     if (!this._data || this._data.percentiles.length === 0) {
       tableBody.innerHTML = `

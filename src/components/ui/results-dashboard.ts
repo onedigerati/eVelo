@@ -1579,6 +1579,10 @@ export class ResultsDashboard extends BaseComponent {
   /**
    * Update yearly analysis table with year-by-year breakdown.
    * Displays withdrawals and net worth percentiles for each year.
+   *
+   * When SBLOC data is available, the cumulative column shows actual loan balance
+   * (principal + accrued interest) from the simulation. Otherwise, it shows
+   * synthetic cumulative principal withdrawals.
    */
   private updateYearlyAnalysisTable(): void {
     const table = this.$('#yearly-analysis-table') as YearlyAnalysisTable | null;
@@ -1587,13 +1591,23 @@ export class ResultsDashboard extends BaseComponent {
     // Calculate start year (current year)
     const startYear = new Date().getFullYear();
 
-    // Calculate withdrawal data with 3% annual growth
-    const withdrawalGrowth = 0.03;
+    // Calculate withdrawal data with user-specified annual growth
+    const withdrawalGrowth = this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0;
     const withdrawals = calculateWithdrawals(
       this._annualWithdrawal,
       withdrawalGrowth,
       this._timeHorizon
     );
+
+    // When SBLOC trajectory data is available, use actual loan balances (principal + interest)
+    // for the cumulative column instead of synthetic principal-only sums
+    const hasSBLOCData = !!this._data.sblocTrajectory;
+    if (hasSBLOCData) {
+      const loanBalances = this._data.sblocTrajectory!.loanBalance.p50;
+      // Replace synthetic cumulative with actual loan balance from simulation
+      // This includes both principal borrowed AND accrued interest
+      withdrawals.cumulative = loanBalances.slice(0, this._timeHorizon);
+    }
 
     // Transform yearly percentiles to include calendar year
     const percentiles = this._data.yearlyPercentiles.map((p, index) => ({
@@ -1610,6 +1624,7 @@ export class ResultsDashboard extends BaseComponent {
       startYear,
       withdrawals,
       percentiles,
+      isSBLOCLoanBalance: hasSBLOCData,
     };
   }
 
