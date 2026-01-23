@@ -136,11 +136,13 @@ export async function runMonteCarlo(
         // SBLOC simulation step (if enabled)
         if (config.sbloc && sblocStates && marginCallYears) {
           // Calculate effective withdrawal for this year (with annual raises)
-          // yearsOfWithdrawals = how many years of withdrawals have occurred
+          // yearsOfWithdrawals = how many years of withdrawals have occurred (0-indexed)
+          // Year 0: baseWithdrawal * (1+r)^0 = baseWithdrawal
+          // Year 1: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
           const yearsOfWithdrawals = Math.max(0, year - sblocWithdrawalStartYear);
-          const effectiveWithdrawal = yearsOfWithdrawals > 0
-            ? sblocBaseWithdrawal * Math.pow(1 + sblocRaiseRate, yearsOfWithdrawals - 1)
-            : sblocBaseWithdrawal;
+          const effectiveWithdrawal = year >= sblocWithdrawalStartYear
+            ? sblocBaseWithdrawal * Math.pow(1 + sblocRaiseRate, yearsOfWithdrawals)
+            : 0;
 
           // Shared SBLOC engine config for this year
           // Note: compoundingFrequency is 'annual' here; stepSBLOCYear adjusts to 'monthly'
@@ -397,9 +399,10 @@ function calculateCumulativeWithdrawals(
     const simYear = year - 1;
     if (simYear >= startYear) {
       const yearsOfWithdrawals = simYear - startYear;
-      const withdrawal = yearsOfWithdrawals > 0
-        ? baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals - 1)
-        : baseWithdrawal;
+      // Year 0 of withdrawals: baseWithdrawal * (1+r)^0 = baseWithdrawal
+      // Year 1 of withdrawals: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
+      // etc.
+      const withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
       cumulative += withdrawal;
     }
     result.push(cumulative);
@@ -423,9 +426,10 @@ function calculateCumulativeWithdrawalAtYear(
     const simYear = y - 1;
     if (simYear >= startYear) {
       const yearsOfWithdrawals = simYear - startYear;
-      const withdrawal = yearsOfWithdrawals > 0
-        ? baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals - 1)
-        : baseWithdrawal;
+      // Year 0 of withdrawals: baseWithdrawal * (1+r)^0 = baseWithdrawal
+      // Year 1 of withdrawals: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
+      // etc.
+      const withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
       cumulative += withdrawal;
     }
   }

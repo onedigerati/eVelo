@@ -811,6 +811,14 @@ export class AppRoot extends BaseComponent {
     const progress = this.$('#sim-progress') as HTMLElement;
     const toastContainer = this.$('toast-container') as any;
 
+    // Listen for show-toast events from child components
+    this.shadowRoot?.addEventListener('show-toast', ((e: CustomEvent) => {
+      if (toastContainer && typeof toastContainer.show === 'function') {
+        const { message, type } = e.detail;
+        toastContainer.show(message, type);
+      }
+    }) as EventListener);
+
     // Settings button handler
     const settingsBtn = this.$('#btn-settings');
     const settingsPanel = this.$('#settings-panel') as any;
@@ -896,6 +904,18 @@ export class AppRoot extends BaseComponent {
     // Portfolio composition changes are handled internally by the component
     // The component dispatches 'portfolio-change' events which we can listen to if needed
 
+    // =========================================================================
+    // Auto-run simulation on parameter commit (Enter key or slider mouseup)
+    // =========================================================================
+    const triggerSimulation = () => {
+      if (!this._isRunning) {
+        runBtn?.click();
+      }
+    };
+
+    // Listen for 'commit' events from number-input and range-slider components
+    this.shadowRoot?.addEventListener('commit', triggerSimulation);
+
     runBtn?.addEventListener('click', async () => {
       // Prevent double-runs
       if (this._isRunning) {
@@ -941,6 +961,9 @@ export class AppRoot extends BaseComponent {
           dashboard.timeHorizon = config.timeHorizon;
           dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
           dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
+
+          // Set simulation config for yearly analysis table (annualWithdrawalRaise, etc.)
+          (dashboard as any).simulationConfig = config;
 
           // Set simulation data (triggers chart updates)
           dashboard.data = this._simulationResult;
