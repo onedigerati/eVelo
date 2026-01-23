@@ -9,6 +9,10 @@ import { getPresetData } from '../data/services/preset-service';
 import type { PortfolioComposition } from './ui/portfolio-composition';
 // Import portfolio types
 import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
+// Import comparison state manager
+import { comparisonState } from '../services/comparison-state';
+// Import comparison dashboard
+import type { ComparisonDashboard } from './ui/comparison-dashboard';
 
 // UI component types for type casting
 type RangeSlider = import('./ui/range-slider').RangeSlider;
@@ -46,6 +50,12 @@ export class AppRoot extends BaseComponent {
 
   /** Track regime calibration mode */
   private _regimeCalibration: RegimeCalibrationMode = 'historical';
+
+  /** Flag for pending comparison mode after simulation */
+  private _pendingComparisonMode: boolean = false;
+
+  /** Current preset name for comparison tracking */
+  private _currentPresetName: string = '';
   protected template(): string {
     const currentYear = new Date().getFullYear();
     return `
@@ -390,7 +400,7 @@ export class AppRoot extends BaseComponent {
             This simulator models the risks and outcomes of this strategy.
           </help-section>
 
-          <results-dashboard id="results"></results-dashboard>
+          <comparison-dashboard id="results"></comparison-dashboard>
         </div>
       </main-layout>
       <toast-container position="bottom-right"></toast-container>
@@ -1032,6 +1042,24 @@ export class AppRoot extends BaseComponent {
       }
     }) as EventListener);
 
+    // Listen for preset-loaded to capture pending comparison flag
+    this.addEventListener('preset-loaded', (e: Event) => {
+      const customEvent = e as CustomEvent;
+      this._pendingComparisonMode = customEvent.detail.pendingComparisonMode || false;
+      this._currentPresetName = customEvent.detail.presetName || '';
+    });
+
+    // Listen for exit-comparison-mode from dashboard
+    this.addEventListener('exit-comparison-mode', () => {
+      comparisonState.exitComparisonMode();
+      const dashboard = this.$('#results') as ComparisonDashboard;
+      const currentResult = comparisonState.getCurrentResult();
+      dashboard.exitComparisonMode();
+      if (currentResult) {
+        dashboard.data = currentResult;
+      }
+    });
+
     // Settings button handler
     const settingsBtn = this.$('#btn-settings');
     const settingsPanel = this.$('#settings-panel') as any;
@@ -1199,7 +1227,7 @@ export class AppRoot extends BaseComponent {
         this._simulationResult = result;
 
         // Update results dashboard with simulation data
-        const dashboard = this.$('#results') as HTMLElement & {
+        const dashboard = this.$('#results') as ComparisonDashboard & {
           data: SimulationOutput | null;
           portfolioWeights: { symbol: string; weight: number }[] | null;
           correlationMatrix: { labels: string[]; matrix: number[][] } | null;
@@ -1209,32 +1237,50 @@ export class AppRoot extends BaseComponent {
           effectiveTaxRate: number;
         };
         if (dashboard) {
-          // Set configuration values for extended stats calculation
-          dashboard.initialValue = config.initialValue;
-          dashboard.timeHorizon = config.timeHorizon;
-          dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
-          dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
+          if (this._pendingComparisonMode && comparisonState.getCurrentResult()) {
+            // Enter comparison mode
+            comparisonState.enterComparisonMode(result, config, this._currentPresetName);
+            const state = comparisonState.getState();
+            dashboard.enterComparisonMode(
+              state.previousResult!,
+              state.currentResult!,
+              state.previousConfig!,
+              state.currentConfig!,
+              state.previousPresetName,
+              state.currentPresetName
+            );
+          } else {
+            // Normal mode - replace results
+            comparisonState.replaceResults(result, config, this._currentPresetName);
 
-          // Set simulation config for yearly analysis table (annualWithdrawalRaise, etc.)
-          (dashboard as any).simulationConfig = config;
+            // Set configuration values for extended stats calculation
+            dashboard.initialValue = config.initialValue;
+            dashboard.timeHorizon = config.timeHorizon;
+            dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
+            dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
 
-          // Set simulation data (triggers chart updates)
-          dashboard.data = this._simulationResult;
+            // Set simulation config for yearly analysis table (annualWithdrawalRaise, etc.)
+            (dashboard as any).simulationConfig = config;
 
-          // Set portfolio composition for donut chart
-          const portfolioCompTyped = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
-          const currentWeights = portfolioCompTyped?.getWeights() ?? {};
-          const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
-            symbol,
-            weight: weight as number
-          }));
-          dashboard.portfolioWeights = portfolioWeights;
+            // Set simulation data (triggers chart updates)
+            dashboard.data = this._simulationResult;
 
-          // Set correlation matrix for heatmap
-          dashboard.correlationMatrix = {
-            labels: portfolioWeights.map(w => w.symbol),
-            matrix: portfolio.correlationMatrix
-          };
+            // Set portfolio composition for donut chart
+            const portfolioCompTyped = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
+            const currentWeights = portfolioCompTyped?.getWeights() ?? {};
+            const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
+              symbol,
+              weight: weight as number
+            }));
+            dashboard.portfolioWeights = portfolioWeights;
+
+            // Set correlation matrix for heatmap
+            dashboard.correlationMatrix = {
+              labels: portfolioWeights.map(w => w.symbol),
+              matrix: portfolio.correlationMatrix
+            };
+          }
+          this._pendingComparisonMode = false;
         }
 
         // Hide progress
@@ -1253,7 +1299,7 @@ export class AppRoot extends BaseComponent {
         // Dispatch custom event for other components (e.g., charts)
         this.dispatchEvent(
           new CustomEvent('simulation-complete', {
-            detail: { result: this._simulationResult },
+            detail: { result: this._simulationResult, config },
             bubbles: true,
             composed: true,
           })
