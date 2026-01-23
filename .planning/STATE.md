@@ -526,6 +526,7 @@ None
 | 006 | Match reference dashboard style | 2026-01-22 | b01a589 | [006-match-reference-dashboard-style](./quick/006-match-reference-dashboard-style/) |
 | 007 | Replace Portfolio Composition layout with donut+bars card | 2026-01-22 | 09cb38f | [007-replace-portfolio-composition-layout](./quick/007-replace-portfolio-composition-layout/) |
 | 008 | Portfolio preset management with auto-save and persistence | 2026-01-22 | f4dbbbf | [008-portfolio-preset-management-auto-save-pe](./quick/008-portfolio-preset-management-auto-save-pe/) |
+| 009 | Implement modal framework with blur effect | 2026-01-23 | ff49a7c | [009-implement-modal-framework-with-blur-effe](./quick/009-implement-modal-framework-with-blur-effe/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -558,6 +559,15 @@ None
 - All 6 preset buttons functional: Save, Load, Import, Export, Delete
 - Weight conversion: 0-1 in storage, 0-100 in UI
 
+**From quick-009:**
+- modal-dialog.ts component with show()/hide() Promise-based API
+- Prompt mode returns input string or null
+- Confirm mode returns true/false
+- CSS backdrop-filter blur (4px) on overlay
+- Keyboard support: Enter confirms, Escape cancels
+- CSS tokens: --modal-backdrop, --modal-backdrop-blur, --modal-shadow, --modal-max-width
+- portfolio-composition uses modal-dialog for Save and Delete actions
+
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
 - Success = terminal value strictly above initial value (not at-or-above)
@@ -577,9 +587,9 @@ None
 
 ## Session Continuity
 
-Last session: 2026-01-22
-Stopped at: Completed quick-008 (Portfolio preset management with auto-save)
+Last session: 2026-01-23
+Stopped at: Completed quick-009 (Modal framework with blur effect)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 008 complete: Portfolio presets fully functional with auto-save and persistence.**
+**Quick task 009 complete: Modal framework replaces native browser dialogs in portfolio management.**
