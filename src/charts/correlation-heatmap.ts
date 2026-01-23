@@ -216,6 +216,17 @@ export class CorrelationHeatmap extends BaseComponent {
         font-weight: 500;
       }
 
+      .correlation-table td.estimated {
+        font-style: italic;
+        opacity: 0.85;
+      }
+
+      .correlation-table .est-suffix {
+        font-size: 0.75em;
+        opacity: 0.7;
+        margin-left: 2px;
+      }
+
       .note-section {
         background: var(--surface-secondary, #f8fafc);
         border: 1px solid var(--border-color, #e2e8f0);
@@ -283,7 +294,7 @@ export class CorrelationHeatmap extends BaseComponent {
       return;
     }
 
-    const { labels, matrix, expectedReturns, volatilities } = this._data;
+    const { labels, matrix, expectedReturns, volatilities, isEstimate } = this._data;
     const hasStats = expectedReturns && volatilities &&
                      expectedReturns.length === labels.length &&
                      volatilities.length === labels.length;
@@ -316,13 +327,19 @@ export class CorrelationHeatmap extends BaseComponent {
       if (hasStats) {
         const returnValue = expectedReturns![row];
         const volValue = volatilities![row];
-        bodyHtml += `<td class="return-cell">${(returnValue * 100).toFixed(2)}%</td>`;
-        bodyHtml += `<td class="volatility-cell">${(volValue * 100).toFixed(2)}%</td>`;
+        const isEst = isEstimate?.[row] ?? false;
+        const estClass = isEst ? ' estimated' : '';
+        const estSuffix = isEst ? '<span class="est-suffix">(est)</span>' : '';
+        bodyHtml += `<td class="return-cell${estClass}">${(returnValue * 100).toFixed(2)}%${estSuffix}</td>`;
+        bodyHtml += `<td class="volatility-cell${estClass}">${(volValue * 100).toFixed(2)}%${estSuffix}</td>`;
       }
 
       bodyHtml += '</tr>';
     }
     tbody.innerHTML = bodyHtml;
+
+    // Check if any values are estimates
+    const hasEstimates = isEstimate?.some(v => v) ?? false;
 
     // Build note section
     noteSection.innerHTML = `
@@ -330,6 +347,7 @@ export class CorrelationHeatmap extends BaseComponent {
       <p><strong class="note-highlight">Expected Annual Return:</strong> Arithmetic mean of all year-over-year returns from historical data. Formula: <em>mu = (sum r_i) / n</em> where r_i represents each annual return and n is the number of years of data.</p>
       <p><strong>Annualized Volatility:</strong> Standard deviation of annual returns, measuring return dispersion. Formula: <em>sigma = sqrt(sum(r_i - mu)^2 / n)</em>. Higher volatility indicates greater price fluctuation and risk. Used in modern portfolio theory to assess risk-adjusted returns.</p>
       <p><strong class="note-highlight">Diversification Insight:</strong> Lower correlations (closer to 0 or negative) provide better diversification benefits. Assets with correlations above 0.90 move very similarly and offer limited diversification value.</p>
+      ${hasEstimates ? '<p><strong>(est)</strong> indicates estimated values using market average assumptions (8% return, 16% volatility) because historical data is unavailable for that asset.</p>' : ''}
     `;
   }
 

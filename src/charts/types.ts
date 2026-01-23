@@ -77,6 +77,8 @@ export interface HeatmapData {
   expectedReturns?: number[];
   /** Optional per-asset annualized volatility (as decimal, e.g., 0.15 for 15%) */
   volatilities?: number[];
+  /** Optional flags indicating which values are estimates (true = fallback/estimate) */
+  isEstimate?: boolean[];
 }
 
 /**

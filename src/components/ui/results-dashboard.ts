@@ -785,6 +785,7 @@ export class ResultsDashboard extends BaseComponent {
         matrix: this._correlationMatrix.matrix,
         expectedReturns: assetStats.expectedReturns,
         volatilities: assetStats.volatilities,
+        isEstimate: assetStats.isEstimate,
       };
     }
 
