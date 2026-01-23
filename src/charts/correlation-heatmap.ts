@@ -180,20 +180,28 @@ export class CorrelationHeatmap extends BaseComponent {
       }
 
       .correlation-table th {
-        background: var(--surface-secondary, #f8fafc);
+        background: #0d9488;
         font-weight: 600;
-        color: var(--text-primary, #1e293b);
+        color: white;
         white-space: nowrap;
       }
 
       .correlation-table th.stats-header {
-        background: var(--surface-secondary, #f8fafc);
+        background: #0d9488;
+        color: white;
         border-left: 2px solid var(--border-color, #e2e8f0);
         min-width: 90px;
       }
 
+      .correlation-table tbody tr:nth-child(odd) td.row-label {
+        background: #f8fafc;
+      }
+
+      .correlation-table tbody tr:nth-child(even) td.row-label {
+        background: #ffffff;
+      }
+
       .correlation-table td.row-label {
-        background: var(--surface-secondary, #f8fafc);
         font-weight: 500;
         color: var(--text-primary, #1e293b);
         text-align: left;
@@ -203,6 +211,16 @@ export class CorrelationHeatmap extends BaseComponent {
       .correlation-table td.correlation-cell {
         font-weight: 600;
         min-width: 60px;
+      }
+
+      .correlation-table tbody tr:nth-child(odd) td.return-cell,
+      .correlation-table tbody tr:nth-child(odd) td.volatility-cell {
+        background: #f8fafc;
+      }
+
+      .correlation-table tbody tr:nth-child(even) td.return-cell,
+      .correlation-table tbody tr:nth-child(even) td.volatility-cell {
+        background: #ffffff;
       }
 
       .correlation-table td.return-cell {
