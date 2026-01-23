@@ -1,5 +1,17 @@
 import { BaseComponent } from '../base-component';
 import { getPresetData, getPresetSymbols, PresetData } from '../../data/services/preset-service';
+import {
+  saveTempPortfolio,
+  loadLastPortfolio,
+  deleteTempPortfolio,
+  savePortfolio,
+  loadAllPortfolios,
+  deletePortfolio,
+  importFromFile,
+  exportAndDownload,
+  TEMP_PORTFOLIO_KEY
+} from '../../data/services/portfolio-service';
+import type { AssetRecord, PortfolioRecord } from '../../data/schemas/portfolio';
 import { Chart, DoughnutController, ArcElement } from 'chart.js/auto';
 
 /**
@@ -55,6 +67,8 @@ export class PortfolioComposition extends BaseComponent {
   private selectedAssets: SelectedAsset[] = [];
   private searchQuery = '';
   private donutChart: Chart | null = null;
+  private _currentPortfolioId: number | undefined = undefined;
+  private _currentPortfolioName = '';
 
   protected template(): string {
     return `
@@ -100,6 +114,15 @@ export class PortfolioComposition extends BaseComponent {
               <line x1="15" y1="15" x2="12" y2="12"></line>
             </svg>
           </button>
+          <button class="preset-btn export-btn" title="Export to file" aria-label="Export portfolio">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="12" x2="12" y2="18"></line>
+              <line x1="9" y1="15" x2="12" y2="18"></line>
+              <line x1="15" y1="15" x2="12" y2="18"></line>
+            </svg>
+          </button>
           <button class="preset-btn delete-btn" title="Delete" aria-label="Delete portfolio">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
@@ -107,10 +130,12 @@ export class PortfolioComposition extends BaseComponent {
             </svg>
           </button>
         </div>
+        <input type="file" class="import-file-input" accept=".json" hidden />
         <p class="preset-legend">
           <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path></svg> Save,</span>
           <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load,</span>
-          <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> Import from file, or</span>
+          <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> Import,</span>
+          <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> Export, or</span>
           <span class="legend-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</span>
           portfolio configurations
         </p>
@@ -691,6 +716,63 @@ export class PortfolioComposition extends BaseComponent {
     // Load assets BEFORE rendering so data is available in afterRender
     this.loadAvailableAssets();
     super.connectedCallback();
+    // Load last portfolio from IndexedDB after rendering
+    this.loadInitialPortfolio();
+  }
+
+  private async loadInitialPortfolio(): Promise<void> {
+    try {
+      const lastPortfolio = await loadLastPortfolio();
+      if (lastPortfolio && lastPortfolio.assets.length > 0) {
+        this.populateFromPortfolio(lastPortfolio);
+      }
+    } catch (error) {
+      console.warn('Failed to load last portfolio:', error);
+    }
+  }
+
+  private populateFromPortfolio(portfolio: PortfolioRecord): void {
+    // Track if this is a named portfolio (not temp)
+    if (portfolio.name !== TEMP_PORTFOLIO_KEY) {
+      this._currentPortfolioId = portfolio.id;
+      this._currentPortfolioName = portfolio.name;
+    } else {
+      this._currentPortfolioId = undefined;
+      this._currentPortfolioName = '';
+    }
+
+    // Convert AssetRecords to SelectedAssets
+    this.selectedAssets = portfolio.assets.map((asset, index) => {
+      const availableAsset = this.availableAssets.find(a => a.symbol === asset.symbol);
+      const color = ASSET_COLORS[index % ASSET_COLORS.length];
+      return {
+        symbol: asset.symbol,
+        name: asset.name,
+        assetClass: availableAsset?.assetClass || 'STOCK',
+        years: availableAsset?.years || 0,
+        avgReturn: availableAsset?.avgReturn || 0,
+        volatility: availableAsset?.volatility || 0,
+        color,
+        weight: asset.weight * 100, // Convert from 0-1 to 0-100
+      };
+    });
+
+    this.renderAvailableAssets();
+    this.renderSelectedAssets();
+    this.updatePresetSelect();
+    this.dispatchPortfolioChange();
+  }
+
+  private updatePresetSelect(): void {
+    const select = this.$('.preset-select') as HTMLSelectElement;
+    if (!select) return;
+
+    // Update selected option based on current portfolio
+    if (this._currentPortfolioId !== undefined) {
+      select.value = this._currentPortfolioId.toString();
+    } else {
+      select.value = '';
+    }
   }
 
   override disconnectedCallback(): void {
@@ -708,6 +790,7 @@ export class PortfolioComposition extends BaseComponent {
     this.renderAvailableAssets();
     this.attachEventListeners();
     this.initializeDonutChart();
+    this.refreshPresetDropdown();
   }
 
   private loadAvailableAssets(): void {
@@ -774,16 +857,16 @@ export class PortfolioComposition extends BaseComponent {
     const list = this.$('.available-assets-list');
     if (!list) return;
 
-    const filtered = this.getFilteredAssets();
     const selectedSymbols = new Set(this.selectedAssets.map(a => a.symbol));
+    // Filter OUT selected symbols entirely (hide, not disable)
+    const filtered = this.getFilteredAssets().filter(a => !selectedSymbols.has(a.symbol));
 
     list.innerHTML = filtered.map(asset => {
-      const isSelected = selectedSymbols.has(asset.symbol);
       return `
-        <div class="available-asset-item ${isSelected ? 'disabled' : ''}"
+        <div class="available-asset-item"
              data-symbol="${asset.symbol}"
              role="option"
-             aria-selected="${isSelected}">
+             aria-selected="false">
           <div class="asset-info">
             <div>
               <span class="asset-name">${asset.symbol}</span>
@@ -793,7 +876,7 @@ export class PortfolioComposition extends BaseComponent {
               ${asset.years} years | Avg: ${asset.avgReturn.toFixed(1)}% | Vol: ${asset.volatility.toFixed(1)}%
             </div>
           </div>
-          <button class="add-btn" ${isSelected ? 'disabled' : ''} aria-label="Add ${asset.symbol}">+</button>
+          <button class="add-btn" aria-label="Add ${asset.symbol}">+</button>
         </div>
       `;
     }).join('');
@@ -952,11 +1035,72 @@ export class PortfolioComposition extends BaseComponent {
     // Clear button
     this.$('.clear-btn')?.addEventListener('click', () => this.clearAll());
 
-    // Preset buttons (placeholder for now)
+    // Preset buttons
     this.$('.save-btn')?.addEventListener('click', () => this.savePreset());
     this.$('.load-btn')?.addEventListener('click', () => this.loadPreset());
     this.$('.import-btn')?.addEventListener('click', () => this.importPreset());
+    this.$('.export-btn')?.addEventListener('click', () => this.exportPreset());
     this.$('.delete-btn')?.addEventListener('click', () => this.deletePreset());
+
+    // File input for import
+    const fileInput = this.$('.import-file-input') as HTMLInputElement;
+    fileInput?.addEventListener('change', (e) => this.handleFileImport(e));
+
+    // Preset select change handler
+    const presetSelect = this.$('.preset-select') as HTMLSelectElement;
+    presetSelect?.addEventListener('change', () => this.handlePresetSelectChange());
+  }
+
+  private async handleFileImport(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const portfolios = await importFromFile(file);
+      if (portfolios.length > 0) {
+        // Load first portfolio from import
+        const portfolio = portfolios[0];
+        this.populateFromPortfolio(portfolio);
+        this.showToast(`Imported portfolio: ${portfolio.name}`, 'success');
+      }
+    } catch (error) {
+      this.showToast(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+    }
+
+    // Reset file input for future imports
+    input.value = '';
+  }
+
+  private async handlePresetSelectChange(): Promise<void> {
+    const select = this.$('.preset-select') as HTMLSelectElement;
+    const selectedId = parseInt(select.value);
+
+    if (isNaN(selectedId)) {
+      // User selected default option - clear current portfolio tracking
+      this._currentPortfolioId = undefined;
+      this._currentPortfolioName = '';
+      return;
+    }
+
+    try {
+      const portfolios = await loadAllPortfolios();
+      const portfolio = portfolios.find(p => p.id === selectedId);
+      if (portfolio) {
+        this.populateFromPortfolio(portfolio);
+      }
+    } catch (error) {
+      this.showToast('Failed to load portfolio', 'error');
+    }
+  }
+
+  private showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    // Dispatch toast event for toast-container to handle
+    this.dispatchEvent(new CustomEvent('show-toast', {
+      bubbles: true,
+      composed: true,
+      detail: { message, type },
+    }));
   }
 
   private addAsset(symbol: string): void {
@@ -1013,33 +1157,129 @@ export class PortfolioComposition extends BaseComponent {
     this.dispatchPortfolioChange();
   }
 
-  private savePreset(): void {
-    this.dispatchEvent(new CustomEvent('save-preset', {
-      bubbles: true,
-      composed: true,
-      detail: { assets: this.selectedAssets },
-    }));
+  private async savePreset(): Promise<void> {
+    if (this.selectedAssets.length === 0) {
+      this.showToast('Add assets to portfolio before saving', 'error');
+      return;
+    }
+
+    const name = window.prompt('Portfolio name:');
+    if (!name || !name.trim()) return;
+
+    try {
+      const assets = this.buildAssetRecords();
+      const now = new Date().toISOString();
+      const id = await savePortfolio({
+        name: name.trim(),
+        assets,
+        created: now,
+        modified: now,
+        version: 1,
+      });
+
+      this._currentPortfolioId = id;
+      this._currentPortfolioName = name.trim();
+
+      // Delete temp portfolio after successful save
+      await deleteTempPortfolio();
+
+      // Refresh preset dropdown
+      await this.refreshPresetDropdown();
+
+      this.showToast(`Saved portfolio: ${name.trim()}`, 'success');
+    } catch (error) {
+      this.showToast('Failed to save portfolio', 'error');
+    }
   }
 
-  private loadPreset(): void {
-    this.dispatchEvent(new CustomEvent('load-preset', {
-      bubbles: true,
-      composed: true,
-    }));
+  private async loadPreset(): Promise<void> {
+    // Refresh and show the dropdown with all portfolios
+    await this.refreshPresetDropdown();
+
+    // Focus the select to prompt user selection
+    const select = this.$('.preset-select') as HTMLSelectElement;
+    if (select) {
+      select.focus();
+      // Optionally open the dropdown (browser-dependent)
+      select.click();
+    }
   }
 
   private importPreset(): void {
-    this.dispatchEvent(new CustomEvent('import-preset', {
-      bubbles: true,
-      composed: true,
-    }));
+    // Trigger the hidden file input
+    const fileInput = this.$('.import-file-input') as HTMLInputElement;
+    fileInput?.click();
   }
 
-  private deletePreset(): void {
-    this.dispatchEvent(new CustomEvent('delete-preset', {
-      bubbles: true,
-      composed: true,
-    }));
+  private exportPreset(): void {
+    if (this.selectedAssets.length === 0) {
+      this.showToast('Add assets to portfolio before exporting', 'error');
+      return;
+    }
+
+    const assets = this.buildAssetRecords();
+    const now = new Date().toISOString();
+    const portfolio: PortfolioRecord = {
+      name: this._currentPortfolioName || 'Exported Portfolio',
+      assets,
+      created: now,
+      modified: now,
+      version: 1,
+    };
+
+    exportAndDownload([portfolio]);
+    this.showToast('Portfolio exported', 'success');
+  }
+
+  private async deletePreset(): Promise<void> {
+    if (this._currentPortfolioId === undefined) {
+      this.showToast('No saved portfolio selected to delete', 'error');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete portfolio "${this._currentPortfolioName}"?`);
+    if (!confirmed) return;
+
+    try {
+      await deletePortfolio(this._currentPortfolioId);
+
+      // Clear current portfolio tracking
+      const deletedName = this._currentPortfolioName;
+      this._currentPortfolioId = undefined;
+      this._currentPortfolioName = '';
+
+      // Refresh preset dropdown
+      await this.refreshPresetDropdown();
+
+      this.showToast(`Deleted portfolio: ${deletedName}`, 'success');
+    } catch (error) {
+      this.showToast('Failed to delete portfolio', 'error');
+    }
+  }
+
+  private async refreshPresetDropdown(): Promise<void> {
+    const select = this.$('.preset-select') as HTMLSelectElement;
+    if (!select) return;
+
+    try {
+      const portfolios = await loadAllPortfolios();
+      // Filter out temp portfolio from display
+      const namedPortfolios = portfolios.filter(p => p.name !== TEMP_PORTFOLIO_KEY);
+
+      // Rebuild options
+      select.innerHTML = '<option value="">-- Presets --</option>';
+      namedPortfolios.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id?.toString() || '';
+        option.textContent = p.name;
+        if (p.id === this._currentPortfolioId) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.warn('Failed to refresh preset dropdown:', error);
+    }
   }
 
   private dispatchPortfolioChange(): void {
@@ -1057,6 +1297,32 @@ export class PortfolioComposition extends BaseComponent {
         total,
         valid: Math.abs(total - 100) < 0.01,
       },
+    }));
+
+    // Auto-save to temp portfolio when no named portfolio is selected
+    if (this._currentPortfolioId === undefined) {
+      this.autoSaveToTemp();
+    }
+  }
+
+  private async autoSaveToTemp(): Promise<void> {
+    try {
+      const assets = this.buildAssetRecords();
+      await saveTempPortfolio(assets);
+    } catch (error) {
+      console.warn('Failed to auto-save temp portfolio:', error);
+    }
+  }
+
+  private buildAssetRecords(): AssetRecord[] {
+    return this.selectedAssets.map(asset => ({
+      id: asset.symbol, // Use symbol as unique ID
+      symbol: asset.symbol,
+      name: asset.name,
+      assetClass: (asset.assetClass.toLowerCase() === 'stock' ? 'equity' :
+                   asset.assetClass.toLowerCase() === 'index' ? 'equity' :
+                   asset.assetClass.toLowerCase()) as any,
+      weight: asset.weight / 100, // Convert from 0-100 to 0-1
     }));
   }
 
