@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 15 - Dashboard Gap Fixes
+**Current focus:** Phase 15 Complete - All gap fixes applied
 
 ## Current Position
 
 Phase: 15 of 15 (Dashboard Gap Fixes)
-Plan: 3 of 4 complete (15-01, 15-02, 15-03)
-Status: In progress
-Last activity: 2026-01-22 — Completed 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing)
+Plan: 4 of 4 complete (15-01, 15-02, 15-03, 15-04)
+Status: Phase complete
+Last activity: 2026-01-22 — Completed 15-04-PLAN.md (VIZ-04: Estimate labeling)
 
-Progress: ██████████████████████████████████████░░ 98% (62/63 plans total)
+Progress: ████████████████████████████████████████ 100% (63/63 plans total)
 
 ## Performance Metrics
 
@@ -40,11 +40,11 @@ Progress: ███████████████████████�
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
-| 15-dashboard-gap-fixes | 3/4 | 10 min | 3.3 min |
+| 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 14-02 (5 min), 15-01 (2 min), 15-02 (2 min), 15-03 (6 min)
-- Trend: Fast gap closure execution
+- Last 5 plans: 15-01 (2 min), 15-02 (2 min), 15-03 (6 min), 15-04 (9 min)
+- Trend: Phase 15 complete, all gaps resolved
 
 ## Accumulated Context
 
@@ -504,10 +504,13 @@ None
 - Fixed: Changed `>=` to `>` in calculateStatistics function
 - Commit: 1172a58
 
-**VIZ-04 (LOW):**
-- Correlation heatmap fallback values (8%/16%) not labeled as estimates
-- Impact: User confusion about data source
-- Fix effort: Medium (requires UI changes)
+**VIZ-04 (LOW) - FIXED in 15-04:**
+- Correlation heatmap now displays "(est)" suffix for fallback values
+- Added CSS styling (italic, reduced opacity) for estimated values
+- Explanation note appears when any estimates are present
+- Commit: edc03e1
+
+**All gaps from Phase 14 are now RESOLVED.**
 
 **See:** .planning/phases/14-dashboard-calculations-review/14-GAP-FINDINGS.md
 
@@ -530,10 +533,17 @@ None
 - yearlyPercentiles[year] changed to yearlyPercentiles[idx]
 - year is actual year number (1, 2, 3...), idx is array index (0, 1, 2...)
 
+**From 15-04:**
+- Added isEstimate field to HeatmapData interface
+- Correlation heatmap displays "(est)" suffix for fallback values
+- CSS styling for estimates: italic, 85% opacity
+- Dynamic explanation note when estimates present
+- Users can now distinguish calculated vs estimated values
+
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing)
+Stopped at: Completed 15-04-PLAN.md (VIZ-04: Estimate labeling) - Phase 15 complete
 Resume file: None
 
-**Next:** 15-04-PLAN.md (VIZ-04: Fallback value labeling in correlation heatmap)
+**Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
