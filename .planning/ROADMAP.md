@@ -28,6 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
 - [x] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
+- [ ] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
 
 ## Phase Details
 
@@ -379,6 +380,45 @@ Gap resolution priority from 14-GAP-FINDINGS.md:
 - GAP-02 (MEDIUM): Success rate inconsistency - 1 operator change
 - VIZ-04 (LOW): Fallback value labeling - UI enhancement
 
+### Phase 16: Dashboard Comparison Mode
+**Goal**: Implement side-by-side comparison view when switching portfolio presets, allowing users to compare simulation results between different strategies
+**Depends on**: Phase 15
+**Requirements**: UI-01, UI-04, VIZ-01, VIZ-02
+**Success Criteria** (what must be TRUE):
+  1. When switching presets after a simulation, user is prompted to compare or replace results
+  2. Comparison mode displays previous and current simulation results side-by-side (desktop)
+  3. Comparison mode displays tabbed/table view on mobile with delta indicators
+  4. Delta indicators show +/- changes for key metrics (final value, success rate, drawdown, returns)
+  5. Key differences summary provides plain-language trade-off assessment
+  6. User can exit comparison mode to return to single-result view
+  7. User can run new simulation from comparison mode
+  8. Comparison state persists during session but clears on page refresh
+**Research**: Likely (state management patterns for comparison cache, responsive layout transitions)
+**Research topics**: Comparison state architecture, animation patterns for layout transitions, accessibility for comparison views
+**Plans**: TBD
+
+Plans:
+- [ ] 16-01: Comparison state management and preset change detection
+- [ ] 16-02: Desktop side-by-side comparison layout
+- [ ] 16-03: Mobile responsive comparison view
+- [ ] 16-04: Delta calculations and trade-off summary
+- [ ] 16-05: User flow integration and exit/transition handling
+
+**Details:**
+User flow:
+1. User runs simulation with Preset A → results displayed normally
+2. User switches to Preset B → prompt: "Compare with previous results?"
+3. If yes → comparison mode activates, showing both results
+4. If no → previous results cleared, ready for new simulation
+5. User can exit comparison anytime via "Exit Comparison" button
+
+Key components:
+- Comparison state store (previous results cache)
+- Desktop: Two-panel grid layout with colored borders
+- Mobile: Segmented control + unified comparison table
+- Delta calculator service for metric differences
+- Trade-off summary generator (natural language)
+
 ## Progress
 
 **Execution Order:**
@@ -402,6 +442,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
+| 16. Dashboard Comparison Mode | 0/5 | Not started | - |
 
-**Total Plans**: 62
+**Total Plans**: 67
 **Completed Plans**: 62
