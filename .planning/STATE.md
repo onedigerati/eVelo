@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 16 of 16 (Dashboard Comparison Mode)
-Plan: 1 of 3 complete (16-01)
+Plan: 2 of 3 complete (16-02)
 Status: In progress
-Last activity: 2026-01-23 — Completed 16-01-PLAN.md
+Last activity: 2026-01-23 — Completed 16-02-PLAN.md
 
-Progress: ████████████████████████████████████████ 98% (64/66 plans total)
+Progress: ████████████████████████████████████████ 98% (65/66 plans total)
 
 ## Performance Metrics
 
@@ -41,11 +41,11 @@ Progress: ███████████████████████�
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
-| 16-dashboard-comparison-mode | 1/3 | 2 min | 2 min |
+| 16-dashboard-comparison-mode | 2/3 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 15-02 (2 min), 15-03 (6 min), 15-04 (9 min), 16-01 (2 min)
-- Trend: Phase 16 started - comparison mode foundation
+- Last 5 plans: 15-03 (6 min), 15-04 (9 min), 16-01 (2 min), 16-02 (8 min)
+- Trend: Phase 16 in progress - desktop comparison UI complete
 
 ## Accumulated Context
 
@@ -611,11 +611,20 @@ None
 - Singleton ComparisonStateManager with enter/exit/replace API
 - CustomEvent dispatch for state change notifications
 
+**From 16-02:**
+- DeltaIndicator uses observed attributes for reactive updates
+- Composition pattern for ComparisonDashboard (wraps two results-dashboard instances)
+- Event-driven state sync via comparison-state-change listener
+- Map delta direction to CSS classes (up→positive, down→negative)
+- Desktop-only comparison view (@media max-width: 768px hides grid)
+- Color-coded panel borders: purple (#8b5cf6) for previous, teal (#0d9488) for current
+- DeltaIndicator supports three formats: currency, percent, number
+
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 16-01-PLAN.md (Comparison State Foundation)
+Stopped at: Completed 16-02-PLAN.md (Desktop Comparison View Components)
 Resume file: None
 
-**Phase 16 in progress (1/3 plans complete).**
-**Comparison state foundation complete: state management and delta calculations ready for UI components.**
+**Phase 16 in progress (2/3 plans complete).**
+**Desktop comparison UI complete: DeltaIndicator and ComparisonDashboard ready for integration.**
