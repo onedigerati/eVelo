@@ -524,6 +524,7 @@ None
 | 004 | Research agent-browser integration for UI testing | 2026-01-22 | 6ae2cdf | [004-research-agent-browser-integration](./quick/004-research-agent-browser-integration/) |
 | 005 | Fix SBLOC chart Y-axis scaling for better readability | 2026-01-22 | 30f44fc | [005-fix-sbloc-chart-y-axis-scaling](./quick/005-fix-sbloc-chart-y-axis-scaling/) |
 | 006 | Match reference dashboard style | 2026-01-22 | b01a589 | [006-match-reference-dashboard-style](./quick/006-match-reference-dashboard-style/) |
+| 007 | Replace Portfolio Composition layout with donut+bars card | 2026-01-22 | 09cb38f | [007-replace-portfolio-composition-layout](./quick/007-replace-portfolio-composition-layout/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -539,6 +540,13 @@ None
 - Correlation table headers use teal background (#0d9488) with white text
 - Alternating row backgrounds in correlation table (#f8fafc / #ffffff) for readability
 - Both visualization and editing cards maintained for better UX
+
+**From quick-007:**
+- Created portfolio-viz-card component for results dashboard
+- Donut chart (120x120px, 70% cutout) with center asset count label
+- Horizontal bars sorted by weight descending with color swatches
+- Portfolio Composition and Asset Correlations now full width on dashboard
+- PORTFOLIO_COLORS constant for consistent asset coloring
 
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
@@ -560,8 +568,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed quick-006 (Match reference dashboard style)
+Stopped at: Completed quick-007 (Replace Portfolio Composition layout)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 006 complete: Dashboard styling now matches reference design with donut chart and teal theme.**
+**Quick task 007 complete: Dashboard Portfolio Composition now uses donut+bars card at full width.**
