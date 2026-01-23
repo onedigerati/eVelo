@@ -1231,7 +1231,7 @@ export class ResultsDashboard extends BaseComponent {
       startingPortfolio: config?.initialValue || this._initialValue,
       timeHorizon: config?.timeHorizon || this._timeHorizon,
       annualWithdrawal: config?.sbloc?.annualWithdrawal || this._annualWithdrawal,
-      withdrawalGrowth: 3.0, // Default 3% growth (not in config type)
+      withdrawalGrowth: (config?.sbloc?.annualWithdrawalRaise ?? 0.03) * 100, // Convert from decimal to percentage
       sblocInterestRate: (config?.sbloc?.interestRate || 0.07) * 100,
       maxBorrowing: (config?.sbloc?.targetLTV || 0.65) * 100,
       maintenanceMargin: (config?.sbloc?.maintenanceMargin || 0.50) * 100,
@@ -1262,7 +1262,7 @@ export class ResultsDashboard extends BaseComponent {
       {
         initialValue: this._initialValue,
         annualWithdrawal: this._annualWithdrawal,
-        withdrawalGrowth: 0.03, // 3% annual withdrawal growth
+        withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon: this._timeHorizon,
         capitalGainsRate: 0.238,
         costBasisRatio: 0.4, // Assume 40% cost basis
@@ -1375,7 +1375,7 @@ export class ResultsDashboard extends BaseComponent {
       {
         initialValue: this._initialValue,
         annualWithdrawal: this._annualWithdrawal,
-        withdrawalGrowth: 0.03,
+        withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon: this._timeHorizon,
         capitalGainsRate: 0.238,
         costBasisRatio: 0.4,
