@@ -137,6 +137,10 @@ export class PortfolioComposition extends BaseComponent {
           </div>
         </div>
 
+        <div class="selected-assets-list">
+          <!-- Weight editing cards populated dynamically -->
+        </div>
+
         <div class="weight-section" style="display: none;">
           <h4 class="subsection-title">Weight Distribution:</h4>
           <div class="weight-bar">
