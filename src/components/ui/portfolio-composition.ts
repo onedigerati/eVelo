@@ -15,6 +15,7 @@ import {
 } from '../../data/services/portfolio-service';
 import type { AssetRecord, PortfolioRecord } from '../../data/schemas/portfolio';
 import { Chart, DoughnutController, ArcElement } from 'chart.js/auto';
+import { comparisonState } from '../../services/comparison-state';
 
 /**
  * Asset with calculated statistics
@@ -74,6 +75,7 @@ export class PortfolioComposition extends BaseComponent {
   private _isDirty = false; // Track unsaved changes
   private _savedSnapshot = ''; // Snapshot of state at load/save time
   private modal!: ModalDialog;
+  private _pendingComparisonMode: boolean = false;
 
   protected template(): string {
     return `
@@ -1250,7 +1252,33 @@ export class PortfolioComposition extends BaseComponent {
     const selectedId = parseInt(select.value);
     const previousId = this._currentPortfolioId;
 
-    // Check for unsaved changes before switching
+    // Check if simulation results exist
+    const hasExistingResults = comparisonState.getCurrentResult() !== null;
+
+    if (hasExistingResults) {
+      const choice = await this.modal.show({
+        title: 'Simulation Results Exist',
+        subtitle: 'Would you like to compare with the new preset or replace the current results?',
+        type: 'choice',
+        confirmText: 'Replace',
+        cancelText: 'Cancel',
+        alternateText: 'Compare',
+      });
+
+      if (choice === 'cancel') {
+        // Restore previous selection in dropdown
+        select.value = previousId?.toString() || '';
+        return;
+      }
+
+      if (choice === 'alternate') {
+        // Flag for comparison mode after simulation completes
+        this._pendingComparisonMode = true;
+      }
+      // 'confirm' = replace, proceed normally
+    }
+
+    // Check for unsaved changes before switching (after comparison prompt)
     if (this._isDirty && this._currentPortfolioId !== undefined) {
       const choice = await this.modal.show({
         title: 'Unsaved Changes',
@@ -1264,6 +1292,7 @@ export class PortfolioComposition extends BaseComponent {
       if (choice === 'cancel') {
         // User cancelled - restore the previous selection
         select.value = previousId?.toString() || '';
+        this._pendingComparisonMode = false; // Reset flag
         return;
       }
 
@@ -1280,6 +1309,7 @@ export class PortfolioComposition extends BaseComponent {
       this._currentPortfolioName = '';
       this._isDirty = false;
       this.updateDirtyIndicator();
+      this._pendingComparisonMode = false; // Reset flag
       return;
     }
 
@@ -1288,10 +1318,23 @@ export class PortfolioComposition extends BaseComponent {
       const portfolio = portfolios.find(p => p.id === selectedId);
       if (portfolio) {
         this.populateFromPortfolio(portfolio);
+
+        // Dispatch preset-loaded event with pendingComparisonMode flag
+        this.dispatchEvent(new CustomEvent('preset-loaded', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            presetName: portfolio.name,
+            pendingComparisonMode: this._pendingComparisonMode,
+          }
+        }));
+        this._pendingComparisonMode = false; // Reset flag
+
         this.showToast(`Loaded portfolio: ${portfolio.name}`, 'info');
       }
     } catch (error) {
       this.showToast('Failed to load portfolio', 'error');
+      this._pendingComparisonMode = false; // Reset flag on error
     }
   }
 
