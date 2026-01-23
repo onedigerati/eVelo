@@ -393,36 +393,36 @@ Gap resolution priority from 14-GAP-FINDINGS.md:
   6. User can exit comparison mode to return to single-result view
   7. User can run new simulation from comparison mode
   8. Comparison state persists during session but clears on page refresh
-**Research**: Likely (state management patterns for comparison cache, responsive layout transitions)
-**Research topics**: Comparison state architecture, animation patterns for layout transitions, accessibility for comparison views
-**Plans**: TBD
+**Research**: Complete (see 16-RESEARCH.md)
+**Plans**: 4 plans
 
 Plans:
-- [ ] 16-01: Comparison state management and preset change detection
-- [ ] 16-02: Desktop side-by-side comparison layout
-- [ ] 16-03: Mobile responsive comparison view
-- [ ] 16-04: Delta calculations and trade-off summary
-- [ ] 16-05: User flow integration and exit/transition handling
+- [ ] 16-01-PLAN.md -- State manager and delta calculations (Wave 1)
+- [ ] 16-02-PLAN.md -- Desktop comparison dashboard and delta indicators (Wave 2)
+- [ ] 16-03-PLAN.md -- Mobile tabs and trade-off summary (Wave 2)
+- [ ] 16-04-PLAN.md -- Integration and user flow wiring (Wave 3)
 
 **Details:**
 User flow:
-1. User runs simulation with Preset A → results displayed normally
-2. User switches to Preset B → prompt: "Compare with previous results?"
-3. If yes → comparison mode activates, showing both results
-4. If no → previous results cleared, ready for new simulation
+1. User runs simulation with Preset A -> results displayed normally
+2. User switches to Preset B -> prompt: "Compare with previous results?"
+3. If yes -> comparison mode activates, showing both results
+4. If no -> previous results cleared, ready for new simulation
 5. User can exit comparison anytime via "Exit Comparison" button
 
 Key components:
-- Comparison state store (previous results cache)
-- Desktop: Two-panel grid layout with colored borders
-- Mobile: Segmented control + unified comparison table
-- Delta calculator service for metric differences
-- Trade-off summary generator (natural language)
+- ComparisonStateManager service (sessionStorage persistence)
+- ComparisonDashboard wrapper component
+- DeltaIndicator component (+/- with colors)
+- TradeOffSummary component (plain-language assessment)
+- Delta calculation utilities
+- Desktop: Two-panel CSS Grid layout
+- Mobile: ARIA-compliant tabbed interface
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -442,7 +442,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
-| 16. Dashboard Comparison Mode | 0/5 | Not started | - |
+| 16. Dashboard Comparison Mode | 0/4 | Not started | - |
 
-**Total Plans**: 67
+**Total Plans**: 66
 **Completed Plans**: 62
