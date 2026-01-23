@@ -448,7 +448,8 @@ export class ResultsDashboard extends BaseComponent {
       .chart-container probability-cone-chart,
       .chart-container histogram-chart,
       .chart-container donut-chart,
-      .chart-container correlation-heatmap {
+      .chart-container correlation-heatmap,
+      .chart-container bbd-comparison-chart {
         position: absolute;
         inset: 0;
         width: 100%;
