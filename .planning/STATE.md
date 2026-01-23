@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 15 of 15 (Dashboard Gap Fixes)
 Plan: 4 of 4 complete (15-01, 15-02, 15-03, 15-04)
 Status: Phase complete
-Last activity: 2026-01-23 — Completed quick-009: Modal framework with blur effect
+Last activity: 2026-01-23 — Completed quick-012: Save all params to portfolio presets
 
 Progress: ████████████████████████████████████████ 100% (63/63 plans total)
 
@@ -528,6 +528,8 @@ None
 | 008 | Portfolio preset management with auto-save and persistence | 2026-01-22 | f4dbbbf | [008-portfolio-preset-management-auto-save-pe](./quick/008-portfolio-preset-management-auto-save-pe/) |
 | 009 | Implement modal framework with blur effect | 2026-01-23 | ff49a7c | [009-implement-modal-framework-with-blur-effe](./quick/009-implement-modal-framework-with-blur-effe/) |
 | 010 | Prevent duplicate portfolio preset names | 2026-01-23 | e2caede | [010-prevent-duplicate-portfolio-preset-names](./quick/010-prevent-duplicate-portfolio-preset-names/) |
+| 011 | Reorganize parameter sections UX | 2026-01-23 | 26abaac | [011-reorganize-parameter-sections-ux](./quick/011-reorganize-parameter-sections-ux/) |
+| 012 | Save all params to portfolio presets | 2026-01-23 | 7626f22 | [012-save-all-params-to-portfolio-presets](./quick/012-save-all-params-to-portfolio-presets/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -576,6 +578,14 @@ None
 - Preserves original created timestamp when overwriting
 - Skip duplicate check if saving over currently loaded portfolio
 
+**From quick-012:**
+- Extended PortfolioRecord with 20+ optional simulation param fields
+- getSimulationParams/setSimulationParams methods in app-root
+- Event-based param capture (get-simulation-params) and restore (set-simulation-params)
+- All params saved: SBLOC terms, iterations, inflation, return model, chapters, tax modeling
+- Backward compatible: old portfolios without params load using UI defaults
+- Auto-save to temp portfolio now includes simulation params
+
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
 - Success = terminal value strictly above initial value (not at-or-above)
@@ -596,8 +606,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick-010 (Prevent duplicate portfolio preset names)
+Stopped at: Completed quick-012 (Save all params to portfolio presets)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 010 complete: Duplicate portfolio names now trigger overwrite/change-name modal.**
+**Quick task 012 complete: Portfolio presets now save complete simulation configuration.**
