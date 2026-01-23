@@ -8,7 +8,7 @@
  */
 import { BaseComponent } from '../base-component';
 import type { SimulationOutput, YearlyPercentiles, SimulationStatistics, SimulationConfig } from '../../simulation/types';
-import type { ProbabilityConeData, HistogramData, HistogramBin, DonutChartData, HeatmapData, BarChartData, LineChartData } from '../../charts/types';
+import type { ProbabilityConeData, HistogramData, HistogramBin, HeatmapData, BarChartData, LineChartData } from '../../charts/types';
 import type { BBDComparisonChartData } from '../../charts/bbd-comparison-chart';
 import type { ComparisonLineChartData } from '../../charts/comparison-line-chart';
 import type { CumulativeCostsChartData } from '../../charts/cumulative-costs-chart';
@@ -59,6 +59,22 @@ import './performance-table';
 import './return-probability-table';
 // Import recommendations section
 import './recommendations-section';
+// Import portfolio visualization card
+import './portfolio-viz-card';
+
+/** Portfolio color palette for consistent asset colors */
+const PORTFOLIO_COLORS = [
+  '#0d9488', // teal
+  '#8b5cf6', // purple
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#3b82f6', // blue
+  '#10b981', // emerald
+  '#ec4899', // pink
+  '#6366f1', // indigo
+  '#14b8a6', // cyan
+  '#f97316', // orange
+];
 
 /**
  * Dashboard container with chart components for displaying simulation results.
@@ -267,14 +283,11 @@ export class ResultsDashboard extends BaseComponent {
           </percentile-spectrum>
         </section>
 
-        <section class="chart-section">
-          <h3>Portfolio Composition</h3>
-          <div class="chart-container square">
-            <donut-chart id="donut-chart"></donut-chart>
-          </div>
+        <section class="portfolio-viz-section full-width">
+          <portfolio-viz-card id="portfolio-viz-card"></portfolio-viz-card>
         </section>
 
-        <section class="chart-section">
+        <section class="chart-section full-width">
           <h3>Asset Correlations</h3>
           <div class="chart-container square">
             <correlation-heatmap id="heatmap-chart"></correlation-heatmap>
@@ -509,6 +522,11 @@ export class ResultsDashboard extends BaseComponent {
       /* Executive summary sections - components provide their own styling */
       .banner-section,
       .param-section {
+        /* Component provides its own styling */
+      }
+
+      /* Portfolio visualization section - component provides its own styling */
+      .portfolio-viz-section {
         /* Component provides its own styling */
       }
 
@@ -764,15 +782,22 @@ export class ResultsDashboard extends BaseComponent {
     // Update summary statistics
     this.updateStats(this._data.statistics);
 
-    // Update donut chart (portfolio composition)
-    const donut = this.$('#donut-chart') as HTMLElement & { data: DonutChartData | null };
-    if (donut && this._portfolioWeights) {
-      donut.data = {
-        segments: this._portfolioWeights.map(p => ({
-          label: p.symbol,
-          value: p.weight
-        }))
-      };
+    // Update portfolio visualization card
+    const vizCard = this.$('#portfolio-viz-card') as HTMLElement & {
+      data: { assets: Array<{ symbol: string; name: string; weight: number; color: string }> } | null
+    };
+    if (vizCard && this._portfolioWeights) {
+      // Get asset names from preset data
+      const assets = this._portfolioWeights.map((p, idx) => {
+        const preset = getPresetData(p.symbol);
+        return {
+          symbol: p.symbol,
+          name: preset?.name || p.symbol,
+          weight: p.weight,
+          color: PORTFOLIO_COLORS[idx % PORTFOLIO_COLORS.length],
+        };
+      });
+      vizCard.data = { assets };
     }
 
     // Update correlation heatmap with per-asset statistics
