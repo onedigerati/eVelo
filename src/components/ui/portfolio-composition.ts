@@ -1,4 +1,5 @@
 import { BaseComponent } from '../base-component';
+import { ModalDialog } from './modal-dialog';
 import { getPresetData, getPresetSymbols, PresetData } from '../../data/services/preset-service';
 import {
   saveTempPortfolio,
@@ -69,6 +70,7 @@ export class PortfolioComposition extends BaseComponent {
   private donutChart: Chart | null = null;
   private _currentPortfolioId: number | undefined = undefined;
   private _currentPortfolioName = '';
+  private modal!: ModalDialog;
 
   protected template(): string {
     return `
@@ -188,6 +190,7 @@ export class PortfolioComposition extends BaseComponent {
           </div>
         </div>
       </div>
+      <modal-dialog id="portfolio-modal"></modal-dialog>
     `;
   }
 
@@ -787,6 +790,9 @@ export class PortfolioComposition extends BaseComponent {
     // Register Chart.js components
     Chart.register(DoughnutController, ArcElement);
 
+    // Get modal reference
+    this.modal = this.$('#portfolio-modal') as ModalDialog;
+
     this.renderAvailableAssets();
     this.attachEventListeners();
     this.initializeDonutChart();
@@ -1163,8 +1169,16 @@ export class PortfolioComposition extends BaseComponent {
       return;
     }
 
-    const name = window.prompt('Portfolio name:');
-    if (!name || !name.trim()) return;
+    const name = await this.modal.show({
+      title: 'Save Portfolio',
+      subtitle: this._currentPortfolioName
+        ? `Overwrite "${this._currentPortfolioName}" or enter a new name:`
+        : 'Enter a name for this portfolio:',
+      type: 'prompt',
+      defaultValue: this._currentPortfolioName || '',
+      confirmText: 'Save',
+    });
+    if (!name || typeof name !== 'string' || !name.trim()) return;
 
     try {
       const assets = this.buildAssetRecords();
@@ -1237,7 +1251,12 @@ export class PortfolioComposition extends BaseComponent {
       return;
     }
 
-    const confirmed = window.confirm(`Delete portfolio "${this._currentPortfolioName}"?`);
+    const confirmed = await this.modal.show({
+      title: 'Delete Portfolio',
+      subtitle: `Are you sure you want to delete "${this._currentPortfolioName}"? This cannot be undone.`,
+      type: 'confirm',
+      confirmText: 'Delete',
+    });
     if (!confirmed) return;
 
     try {
