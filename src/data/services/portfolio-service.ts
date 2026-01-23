@@ -5,7 +5,14 @@
  */
 
 import { db } from '../db';
-import type { PortfolioRecord } from '../schemas/portfolio';
+import type { PortfolioRecord, AssetRecord } from '../schemas/portfolio';
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+/** Special key for temp portfolio that auto-saves on any change */
+export const TEMP_PORTFOLIO_KEY = '__temp_portfolio__';
 
 // =============================================================================
 // CRUD Operations
@@ -282,4 +289,81 @@ export async function importFromFile(file: File): Promise<PortfolioRecord[]> {
 export async function bulkImportPortfolios(portfolios: PortfolioRecord[]): Promise<number[]> {
   const ids = await db.portfolios.bulkAdd(portfolios, { allKeys: true });
   return ids as number[];
+}
+
+// =============================================================================
+// Temp Portfolio Functions
+// =============================================================================
+
+/**
+ * Save a temp portfolio (auto-save on any change when no named portfolio selected)
+ * Upserts: updates if exists, creates if not
+ */
+export async function saveTempPortfolio(assets: AssetRecord[]): Promise<number> {
+  const now = new Date().toISOString();
+
+  // Check if temp portfolio already exists
+  const existing = await db.portfolios
+    .where('name')
+    .equals(TEMP_PORTFOLIO_KEY)
+    .first();
+
+  if (existing && existing.id !== undefined) {
+    // Update existing temp portfolio
+    const record: PortfolioRecord = {
+      ...existing,
+      assets,
+      modified: now
+    };
+    return (await db.portfolios.put(record)) as number;
+  }
+
+  // Create new temp portfolio
+  const record: PortfolioRecord = {
+    name: TEMP_PORTFOLIO_KEY,
+    assets,
+    created: now,
+    modified: now,
+    version: 1
+  };
+  return (await db.portfolios.put(record)) as number;
+}
+
+/**
+ * Load the temp portfolio if it exists
+ */
+export async function loadTempPortfolio(): Promise<PortfolioRecord | undefined> {
+  return await db.portfolios
+    .where('name')
+    .equals(TEMP_PORTFOLIO_KEY)
+    .first();
+}
+
+/**
+ * Load the last portfolio (temp or most recently modified named)
+ * First tries temp, then falls back to most recent named portfolio
+ */
+export async function loadLastPortfolio(): Promise<PortfolioRecord | undefined> {
+  // First check for temp portfolio
+  const temp = await loadTempPortfolio();
+  if (temp) return temp;
+
+  // Fall back to most recently modified named portfolio
+  const portfolios = await db.portfolios
+    .orderBy('modified')
+    .reverse()
+    .filter(p => p.name !== TEMP_PORTFOLIO_KEY)
+    .first();
+
+  return portfolios;
+}
+
+/**
+ * Delete the temp portfolio
+ */
+export async function deleteTempPortfolio(): Promise<void> {
+  await db.portfolios
+    .where('name')
+    .equals(TEMP_PORTFOLIO_KEY)
+    .delete();
 }
