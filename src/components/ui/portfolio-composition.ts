@@ -1355,13 +1355,14 @@ export class PortfolioComposition extends BaseComponent {
       }
 
       // Capture simulation parameters from app-root
+      let simulationParams: any = {};
       const paramsEvent = new CustomEvent('get-simulation-params', {
         bubbles: true,
         composed: true,
-        detail: { callback: null },
+        detail: {
+          callback: (params: any) => { simulationParams = params; }
+        },
       });
-      let simulationParams: any = {};
-      paramsEvent.detail.callback = (params: any) => { simulationParams = params; };
       this.dispatchEvent(paramsEvent);
 
       const id = await savePortfolio({
@@ -1510,7 +1511,19 @@ export class PortfolioComposition extends BaseComponent {
   private async autoSaveToTemp(): Promise<void> {
     try {
       const assets = this.buildAssetRecords();
-      await saveTempPortfolio(assets);
+
+      // Capture simulation parameters from app-root
+      let simulationParams: any = {};
+      const paramsEvent = new CustomEvent('get-simulation-params', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          callback: (params: any) => { simulationParams = params; }
+        },
+      });
+      this.dispatchEvent(paramsEvent);
+
+      await saveTempPortfolio(assets, simulationParams);
     } catch (error) {
       console.warn('Failed to auto-save temp portfolio:', error);
     }

@@ -299,7 +299,10 @@ export async function bulkImportPortfolios(portfolios: PortfolioRecord[]): Promi
  * Save a temp portfolio (auto-save on any change when no named portfolio selected)
  * Upserts: updates if exists, creates if not
  */
-export async function saveTempPortfolio(assets: AssetRecord[]): Promise<number> {
+export async function saveTempPortfolio(
+  assets: AssetRecord[],
+  params?: Partial<PortfolioRecord>
+): Promise<number> {
   const now = new Date().toISOString();
 
   // Check if temp portfolio already exists
@@ -313,7 +316,8 @@ export async function saveTempPortfolio(assets: AssetRecord[]): Promise<number> 
     const record: PortfolioRecord = {
       ...existing,
       assets,
-      modified: now
+      modified: now,
+      ...(params || {}), // Spread optional params if provided
     };
     return (await db.portfolios.put(record)) as number;
   }
@@ -324,7 +328,8 @@ export async function saveTempPortfolio(assets: AssetRecord[]): Promise<number> 
     assets,
     created: now,
     modified: now,
-    version: 1
+    version: 1,
+    ...(params || {}), // Spread optional params if provided
   };
   return (await db.portfolios.put(record)) as number;
 }
