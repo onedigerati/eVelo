@@ -12,11 +12,13 @@ export { HelpSection } from './help-section';
 // Portfolio Configuration Components
 export { AssetSelector } from './asset-selector';
 export { WeightEditor } from './weight-editor';
+export { PortfolioComposition } from './portfolio-composition';
 
 // Input Components
 export { RangeSlider } from './range-slider';
 export { NumberInput } from './number-input';
 export { SelectInput, type SelectOption } from './select-input';
+export { CheckboxInput } from './checkbox-input';
 
 // Feedback Components
 export { ProgressIndicator } from './progress-indicator';
@@ -25,6 +27,9 @@ export { ToastContainer } from './toast-container';
 
 // Settings Components
 export { SettingsPanel } from './settings-panel';
+
+// Modal Components
+export { ModalDialog, type ModalOptions } from './modal-dialog';
 
 // Portfolio Management Components
 export { PortfolioManager } from './portfolio-manager';
