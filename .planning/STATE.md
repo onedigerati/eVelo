@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 15 of 15 (Dashboard Gap Fixes)
 Plan: 4 of 4 complete (15-01, 15-02, 15-03, 15-04)
 Status: Phase complete
-Last activity: 2026-01-22 — Completed 15-04-PLAN.md (VIZ-04: Estimate labeling)
+Last activity: 2026-01-22 — Completed quick-005: Fix SBLOC chart Y-axis scaling
 
 Progress: ████████████████████████████████████████ 100% (63/63 plans total)
 
