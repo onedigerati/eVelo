@@ -220,11 +220,11 @@ export async function runMonteCarlo(
     sblocTrajectory = {
       years: Array.from({ length: timeHorizon }, (_, i) => i + 1),
       loanBalance: {
-        p10: loanBalancesByYear.map(yv => percentile(yv, 0.1)),
-        p25: loanBalancesByYear.map(yv => percentile(yv, 0.25)),
-        p50: loanBalancesByYear.map(yv => percentile(yv, 0.5)),
-        p75: loanBalancesByYear.map(yv => percentile(yv, 0.75)),
-        p90: loanBalancesByYear.map(yv => percentile(yv, 0.9)),
+        p10: loanBalancesByYear.map(yv => percentile(yv, 10)),
+        p25: loanBalancesByYear.map(yv => percentile(yv, 25)),
+        p50: loanBalancesByYear.map(yv => percentile(yv, 50)),
+        p75: loanBalancesByYear.map(yv => percentile(yv, 75)),
+        p90: loanBalancesByYear.map(yv => percentile(yv, 90)),
       },
       cumulativeWithdrawals: calculateCumulativeWithdrawals(
         timeHorizon,
@@ -240,7 +240,7 @@ export async function runMonteCarlo(
             sblocRaiseRate,
             sblocWithdrawalStartYear
           );
-          const medianLoan = percentile(yv, 0.5);
+          const medianLoan = percentile(yv, 50);
           return Math.max(0, medianLoan - cumWithdrawal);
         }),
       },
@@ -251,7 +251,7 @@ export async function runMonteCarlo(
 
     // Compute estate analysis (median case)
     const finalStates = sblocStates.map(iterStates => iterStates[timeHorizon - 1]);
-    const medianLoan = percentile(finalStates.map(s => s?.loanBalance ?? 0), 0.5);
+    const medianLoan = percentile(finalStates.map(s => s?.loanBalance ?? 0), 50);
     const medianPortfolio = statistics.median;
     const bbdNetEstate = medianPortfolio - medianLoan;
 
@@ -328,11 +328,11 @@ function calculateStatistics(
   values: number[],
   initialValue: number
 ): SimulationStatistics {
-  const successCount = values.filter(v => v >= initialValue).length;
+  const successCount = values.filter(v => v > initialValue).length;
 
   return {
     mean: mean(values),
-    median: percentile(values, 0.5),
+    median: percentile(values, 50),
     stddev: stddev(values),
     successRate: (successCount / values.length) * 100,
   };
@@ -346,11 +346,11 @@ function calculateYearlyPercentiles(
 ): YearlyPercentiles[] {
   return yearlyValues.map((values, year) => ({
     year: year + 1,
-    p10: percentile(values, 0.1),
-    p25: percentile(values, 0.25),
-    p50: percentile(values, 0.5),
-    p75: percentile(values, 0.75),
-    p90: percentile(values, 0.9),
+    p10: percentile(values, 10),
+    p25: percentile(values, 25),
+    p50: percentile(values, 50),
+    p75: percentile(values, 75),
+    p90: percentile(values, 90),
   }));
 }
 
