@@ -15,16 +15,18 @@ import { BaseComponent } from '../base-component';
  */
 export class ParamSection extends BaseComponent {
   static override get observedAttributes(): string[] {
-    return ['title', 'open'];
+    return ['title', 'open', 'icon'];
   }
 
   protected template(): string {
     const title = this.getAttribute('title') || 'Section';
+    const icon = this.getAttribute('icon') || '';
     const isOpen = this.hasAttribute('open') ? 'open' : '';
 
     return `
       <details ${isOpen}>
         <summary>
+          ${icon ? `<span class="section-icon">${icon}</span>` : ''}
           <span class="section-title">${title}</span>
           <span class="chevron" aria-hidden="true"></span>
         </summary>
@@ -73,6 +75,19 @@ export class ParamSection extends BaseComponent {
       summary:focus-visible {
         outline: 2px solid var(--color-primary, #0d9488);
         outline-offset: -2px;
+      }
+
+      .section-icon {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        margin-right: var(--spacing-sm, 8px);
+        color: var(--section-icon-color, var(--color-primary, #0d9488));
+      }
+
+      .section-icon svg {
+        width: 18px;
+        height: 18px;
       }
 
       .section-title {

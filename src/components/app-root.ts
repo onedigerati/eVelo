@@ -51,7 +51,7 @@ export class AppRoot extends BaseComponent {
     return `
       <main-layout>
         <sidebar-panel slot="sidebar" title="Strategy Parameters">
-          <param-section title="Your Portfolio" open>
+          <param-section title="Your Portfolio" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12V7H5a2 2 0 0 1 0-4h14v4'/><path d='M3 5v14a2 2 0 0 0 2 2h16v-5'/><path d='M18 12a2 2 0 0 0 0 4h4v-4Z'/></svg>" open>
             <div class="param-group">
               <label>Initial Investment</label>
               <number-input
@@ -78,7 +78,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Your Spending Needs" open>
+          <param-section title="Your Spending Needs" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='6' width='20' height='12' rx='2'/><circle cx='12' cy='12' r='2'/><path d='M6 12h.01M18 12h.01'/></svg>" open>
             <div class="param-group">
               <label>Annual Cash Need ($)</label>
               <number-input
@@ -110,7 +110,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Time Horizon" open>
+          <param-section title="Time Horizon" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2'/><path d='M16 2v4M8 2v4M3 10h18'/></svg>" open>
             <div class="param-group">
               <label>Strategy Start Year</label>
               <number-input
@@ -144,7 +144,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Line of Credit Terms" open>
+          <param-section title="Line of Credit Terms" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10'/><path d='m9 12 2 2 4-4'/></svg>" open>
             <div class="param-group">
               <label>Annual Interest Rate (%)</label>
               <range-slider
@@ -194,7 +194,11 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Simulation Settings">
+          <div class="section-divider">
+            <span>Advanced Options</span>
+          </div>
+
+          <param-section title="Simulation Settings" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'/></svg>">
             <div class="param-group">
               <label>Simulation Iterations</label>
               <select-input
@@ -234,7 +238,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Withdrawal Chapters (Optional)">
+          <param-section title="Withdrawal Chapters (Optional)" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='2' width='8' height='4' rx='1' ry='1'/><path d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/><path d='M12 11h4'/><path d='M12 16h4'/><path d='M8 11h.01'/><path d='M8 16h.01'/></svg>">
             <div class="param-group">
               <checkbox-input
                 id="enable-chapters"
@@ -294,7 +298,7 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
-          <param-section title="Tax Modeling (Optional)">
+          <param-section title="Tax Modeling (Optional)" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z'/><path d='M14 8H8'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
             <div class="param-group">
               <checkbox-input
                 id="enable-tax-modeling"
@@ -423,6 +427,27 @@ export class AppRoot extends BaseComponent {
       .dashboard {
         max-width: 1200px;
         margin: 0 auto;
+      }
+
+      /* Section Divider for Advanced Options */
+      .section-divider {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm, 8px);
+        padding: var(--spacing-md, 16px) var(--spacing-md, 16px);
+        color: var(--text-secondary, #64748b);
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .section-divider::before,
+      .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-color, #e2e8f0);
       }
 
       .simulation-controls {
