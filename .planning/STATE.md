@@ -527,6 +527,7 @@ None
 | 007 | Replace Portfolio Composition layout with donut+bars card | 2026-01-22 | 09cb38f | [007-replace-portfolio-composition-layout](./quick/007-replace-portfolio-composition-layout/) |
 | 008 | Portfolio preset management with auto-save and persistence | 2026-01-22 | f4dbbbf | [008-portfolio-preset-management-auto-save-pe](./quick/008-portfolio-preset-management-auto-save-pe/) |
 | 009 | Implement modal framework with blur effect | 2026-01-23 | ff49a7c | [009-implement-modal-framework-with-blur-effe](./quick/009-implement-modal-framework-with-blur-effe/) |
+| 010 | Prevent duplicate portfolio preset names | 2026-01-23 | e2caede | [010-prevent-duplicate-portfolio-preset-names](./quick/010-prevent-duplicate-portfolio-preset-names/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -568,6 +569,13 @@ None
 - CSS tokens: --modal-backdrop, --modal-backdrop-blur, --modal-shadow, --modal-max-width
 - portfolio-composition uses modal-dialog for Save and Delete actions
 
+**From quick-010:**
+- findPortfolioByName helper for case-insensitive name lookup
+- Duplicate detection when saving portfolio presets
+- Overwrite/change-name modal when duplicate name entered
+- Preserves original created timestamp when overwriting
+- Skip duplicate check if saving over currently loaded portfolio
+
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
 - Success = terminal value strictly above initial value (not at-or-above)
@@ -588,8 +596,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick-009 (Modal framework with blur effect)
+Stopped at: Completed quick-010 (Prevent duplicate portfolio preset names)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 009 complete: Modal framework replaces native browser dialogs in portfolio management.**
+**Quick task 010 complete: Duplicate portfolio names now trigger overwrite/change-name modal.**
