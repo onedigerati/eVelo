@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 15 Complete - All gap fixes applied
+**Current focus:** Phase 16 - Dashboard Comparison Mode
 
 ## Current Position
 
-Phase: 15 of 15 (Dashboard Gap Fixes)
-Plan: 4 of 4 complete (15-01, 15-02, 15-03, 15-04)
-Status: Phase complete
-Last activity: 2026-01-23 — Completed quick-012: Save all params to portfolio presets
+Phase: 16 of 16 (Dashboard Comparison Mode)
+Plan: 1 of 3 complete (16-01)
+Status: In progress
+Last activity: 2026-01-23 — Completed 16-01-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (63/63 plans total)
+Progress: ████████████████████████████████████████ 98% (64/66 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 58
+- Total plans completed: 59
 - Average duration: 3.5 min
-- Total execution time: 202 min
+- Total execution time: 204 min
 
 **By Phase:**
 
@@ -41,10 +41,11 @@ Progress: ███████████████████████�
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
+| 16-dashboard-comparison-mode | 1/3 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 15-01 (2 min), 15-02 (2 min), 15-03 (6 min), 15-04 (9 min)
-- Trend: Phase 15 complete, all gaps resolved
+- Last 5 plans: 15-02 (2 min), 15-03 (6 min), 15-04 (9 min), 16-01 (2 min)
+- Trend: Phase 16 started - comparison mode foundation
 
 ## Accumulated Context
 
@@ -603,11 +604,18 @@ None
 - Dynamic explanation note when estimates present
 - Users can now distinguish calculated vs estimated values
 
+**From 16-01:**
+- SessionStorage for comparison state (clears on page refresh by design)
+- Float64Array serialization: Array.from() before stringify, new Float64Array() on load
+- 0.001 threshold for neutral direction in delta calculations (avoids floating-point noise)
+- Singleton ComparisonStateManager with enter/exit/replace API
+- CustomEvent dispatch for state change notifications
+
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick-012 (Save all params to portfolio presets)
+Stopped at: Completed 16-01-PLAN.md (Comparison State Foundation)
 Resume file: None
 
-**Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 012 complete: Portfolio presets now save complete simulation configuration.**
+**Phase 16 in progress (1/3 plans complete).**
+**Comparison state foundation complete: state management and delta calculations ready for UI components.**
