@@ -63,3 +63,7 @@ export {
   RecommendationsSection,
   type RecommendationsSectionProps,
 } from './recommendations-section';
+
+// Comparison Mode Components
+export { DeltaIndicator } from './delta-indicator';
+export { ComparisonDashboard } from './comparison-dashboard';
