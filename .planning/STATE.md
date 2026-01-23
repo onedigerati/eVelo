@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 16 of 16 (Dashboard Comparison Mode)
-Plan: 3 of 3 complete (16-03)
+Plan: 4 of 4 complete (16-04)
 Status: Phase complete
-Last activity: 2026-01-23 — Completed 16-03-PLAN.md
+Last activity: 2026-01-23 — Completed 16-04-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (66/66 plans total)
+Progress: ████████████████████████████████████████ 100% (67/67 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 66
+- Total plans completed: 67
 - Average duration: 3.6 min
-- Total execution time: 236 min
+- Total execution time: 239 min
 
 **By Phase:**
 
@@ -41,11 +41,11 @@ Progress: ███████████████████████�
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
-| 16-dashboard-comparison-mode | 3/3 | 16 min | 5.3 min |
+| 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 15-04 (9 min), 16-01 (2 min), 16-02 (8 min), 16-03 (6 min)
-- Trend: Phase 16 complete - all 66 plans finished!
+- Last 5 plans: 16-01 (2 min), 16-02 (8 min), 16-03 (6 min), 16-04 (3 min)
+- Trend: Phase 16 complete - all 67 plans finished!
 
 ## Accumulated Context
 
@@ -515,6 +515,37 @@ None
 
 **See:** .planning/phases/14-dashboard-calculations-review/14-GAP-FINDINGS.md
 
+**From 16-01:**
+- SessionStorage for comparison state (clears on page refresh by design)
+- Float64Array serialization: Array.from() before stringify, new Float64Array() on load
+- 0.001 threshold for neutral direction in delta calculations (avoids floating-point noise)
+- Singleton ComparisonStateManager with enter/exit/replace API
+- CustomEvent dispatch for state change notifications
+
+**From 16-02:**
+- DeltaIndicator uses observed attributes for reactive updates
+- Composition pattern for ComparisonDashboard (wraps two results-dashboard instances)
+- Event-driven state sync via comparison-state-change listener
+- Map delta direction to CSS classes (up→positive, down→negative)
+- Desktop-only comparison view (@media max-width: 768px hides grid)
+- Color-coded panel borders: purple (#8b5cf6) for previous, teal (#0d9488) for current
+- DeltaIndicator supports three formats: currency, percent, number
+
+**From 16-03:**
+- ARIA tab pattern for mobile comparison (role=tablist, aria-selected, aria-controls, tabindex)
+- Weighted scoring for trade-off assessment (final value=2, success rate=1, margin call=1, CAGR=1)
+- Mobile tabs (≤768px) replace desktop grid for responsive comparison
+- TradeOffSummary generates plain-language strategy recommendations
+- Keyboard navigation with ArrowLeft/ArrowRight for tab switching
+- Dual dashboard instances (desktop + mobile) avoid complex responsive logic within results-dashboard
+
+**From 16-04:**
+- Comparison prompt before loading new preset (user decides before state changes)
+- Event-driven communication via preset-loaded/simulation-complete/exit-comparison-mode
+- Modal dialog choice type for 3-button decisions (Compare/Replace/Cancel)
+- State machine pattern: normal → comparison → exit
+- _pendingComparisonMode flag for async workflow coordination between components
+
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Directory |
@@ -631,8 +662,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 16-03-PLAN.md (Mobile Tabs & Trade-Off Summary)
+Stopped at: Completed 16-04-PLAN.md (Comparison Mode Integration)
 Resume file: None
 
-**Phase 16 COMPLETE (3/3 plans complete).**
-**All 66 plans finished! Dashboard Comparison Mode ready with mobile/desktop responsive UI.**
+**Phase 16 COMPLETE (4/4 plans complete).**
+**All 67 plans finished! Dashboard Comparison Mode fully integrated with preset change detection, modal prompts, side-by-side desktop view, tabbed mobile view, and complete state management.**
