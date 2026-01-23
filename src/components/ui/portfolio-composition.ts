@@ -10,6 +10,7 @@ import {
   deletePortfolio,
   importFromFile,
   exportAndDownload,
+  findPortfolioByName,
   TEMP_PORTFOLIO_KEY
 } from '../../data/services/portfolio-service';
 import type { AssetRecord, PortfolioRecord } from '../../data/schemas/portfolio';
@@ -1169,6 +1170,7 @@ export class PortfolioComposition extends BaseComponent {
       return;
     }
 
+    // Step 1: Prompt for name
     const name = await this.modal.show({
       title: 'Save Portfolio',
       subtitle: this._currentPortfolioName
@@ -1180,19 +1182,56 @@ export class PortfolioComposition extends BaseComponent {
     });
     if (!name || typeof name !== 'string' || !name.trim()) return;
 
+    const trimmedName = name.trim();
+
+    // Step 2: Check for existing portfolio with same name (case-insensitive)
+    const existing = await findPortfolioByName(trimmedName);
+
+    // If exists and it's not the currently loaded portfolio, ask user what to do
+    if (existing && existing.id !== this._currentPortfolioId) {
+      const choice = await this.modal.show({
+        title: 'Name Already Exists',
+        subtitle: `A portfolio named "${existing.name}" already exists. What would you like to do?`,
+        type: 'confirm',
+        confirmText: 'Overwrite',
+        cancelText: 'Change Name',
+      });
+
+      if (choice === false) {
+        // User chose "Change Name" - restart the save process
+        return this.savePreset();
+      }
+      // choice === true means "Overwrite" - continue with existing.id
+    }
+
     try {
       const assets = this.buildAssetRecords();
       const now = new Date().toISOString();
+
+      // Determine ID and created timestamp based on whether we're overwriting
+      let portfolioId: number | undefined;
+      let createdTimestamp = now;
+
+      if (existing && existing.id !== this._currentPortfolioId) {
+        // Overwriting an existing portfolio - preserve its ID and created timestamp
+        portfolioId = existing.id;
+        createdTimestamp = existing.created;
+      } else {
+        // Updating current portfolio or creating new
+        portfolioId = this._currentPortfolioId;
+      }
+
       const id = await savePortfolio({
-        name: name.trim(),
+        id: portfolioId,
+        name: trimmedName,
         assets,
-        created: now,
+        created: createdTimestamp,
         modified: now,
         version: 1,
       });
 
       this._currentPortfolioId = id;
-      this._currentPortfolioName = name.trim();
+      this._currentPortfolioName = trimmedName;
 
       // Delete temp portfolio after successful save
       await deleteTempPortfolio();
@@ -1200,7 +1239,7 @@ export class PortfolioComposition extends BaseComponent {
       // Refresh preset dropdown
       await this.refreshPresetDropdown();
 
-      this.showToast(`Saved portfolio: ${name.trim()}`, 'success');
+      this.showToast(`Saved portfolio: ${trimmedName}`, 'success');
     } catch (error) {
       this.showToast('Failed to save portfolio', 'error');
     }

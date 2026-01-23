@@ -367,3 +367,16 @@ export async function deleteTempPortfolio(): Promise<void> {
     .equals(TEMP_PORTFOLIO_KEY)
     .delete();
 }
+
+/**
+ * Find a portfolio by name (case-insensitive match)
+ * Returns undefined if not found
+ */
+export async function findPortfolioByName(name: string): Promise<PortfolioRecord | undefined> {
+  const portfolios = await loadAllPortfolios();
+  const normalizedName = name.trim().toLowerCase();
+  return portfolios.find(p =>
+    p.name !== TEMP_PORTFOLIO_KEY &&
+    p.name.toLowerCase() === normalizedName
+  );
+}
