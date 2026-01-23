@@ -14,6 +14,16 @@ import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
 type RangeSlider = import('./ui/range-slider').RangeSlider;
 type NumberInput = import('./ui/number-input').NumberInput;
 type SelectInput = import('./ui/select-input').SelectInput;
+type CheckboxInput = import('./ui/checkbox-input').CheckboxInput;
+
+// Import additional types from simulation
+import type {
+  SBLOCSimConfig,
+  TimelineConfig,
+  WithdrawalChaptersConfig,
+  TaxModelingConfig,
+  RegimeCalibrationMode,
+} from '../simulation/types';
 
 /**
  * Format currency values for display
@@ -33,7 +43,11 @@ export class AppRoot extends BaseComponent {
 
   /** Track if simulation is running */
   private _isRunning = false;
+
+  /** Track regime calibration mode */
+  private _regimeCalibration: RegimeCalibrationMode = 'historical';
   protected template(): string {
+    const currentYear = new Date().getFullYear();
     return `
       <main-layout>
         <sidebar-panel slot="sidebar" title="Strategy Parameters">
@@ -41,7 +55,8 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>Initial Investment</label>
               <number-input
-                value="1000000"
+                id="initial-investment"
+                value="5000000"
                 min="10000"
                 max="100000000"
                 step="10000"
@@ -49,44 +64,152 @@ export class AppRoot extends BaseComponent {
               ></number-input>
             </div>
             <div class="param-group">
-              <label>Time Horizon</label>
+              <label>Initial LOC Balance</label>
+              <number-input
+                id="initial-loc-balance"
+                value="0"
+                min="0"
+                max="50000000"
+                step="1000"
+                suffix="$"
+              ></number-input>
+              <span class="help-text">Starting line of credit balance (set to 0 if starting fresh)</span>
+            </div>
+            <div class="param-group">
+              <label>Simulation Iterations</label>
+              <select-input
+                id="num-simulations"
+                value="10000"
+                options='[{"value":"1000","label":"1,000 (Fast)"},{"value":"5000","label":"5,000 (Quick)"},{"value":"10000","label":"10,000 (Precise)"},{"value":"50000","label":"50,000 (Accurate)"},{"value":"100000","label":"100,000 (High Precision)"}]'
+              ></select-input>
+            </div>
+            <div class="param-group">
+              <label>Expected Annual Inflation (%)</label>
               <range-slider
-                value="30"
-                min="10"
+                id="inflation-rate"
+                value="2.5"
+                min="0"
+                max="8"
+                step="0.5"
+                suffix="%"
+              ></range-slider>
+              <span class="help-text">Used to calculate real (inflation-adjusted) returns</span>
+            </div>
+          </param-section>
+
+          <param-section title="Timeline" open>
+            <div class="param-group">
+              <label>Buy Borrow Die Start Year</label>
+              <number-input
+                id="start-year"
+                value="${currentYear}"
+                min="2000"
+                max="2100"
+                step="1"
+              ></number-input>
+            </div>
+            <div class="param-group">
+              <label>Year to Start Withdrawal</label>
+              <number-input
+                id="withdrawal-start-year"
+                value="${currentYear}"
+                min="2000"
+                max="2100"
+                step="1"
+              ></number-input>
+            </div>
+            <div class="param-group">
+              <label>Period (Years)</label>
+              <range-slider
+                id="time-horizon"
+                value="15"
+                min="5"
                 max="50"
                 step="1"
                 suffix=" years"
               ></range-slider>
             </div>
+          </param-section>
+
+          <param-section title="Withdrawal Strategy" open>
             <div class="param-group">
-              <label>Simulation Iterations</label>
-              <select-input
-                value="10000"
-                options='[{"value":"1000","label":"1,000 (Fast)"},{"value":"10000","label":"10,000 (Standard)"},{"value":"50000","label":"50,000 (Accurate)"},{"value":"100000","label":"100,000 (High Precision)"}]'
-              ></select-input>
+              <label>Total Annual Withdrawal ($)</label>
+              <number-input
+                id="annual-withdrawal"
+                value="200000"
+                min="0"
+                max="10000000"
+                step="5000"
+                suffix="$"
+              ></number-input>
+            </div>
+            <div class="param-group">
+              <label>Annual Percentage Raise (%)</label>
+              <range-slider
+                id="annual-raise"
+                value="3"
+                min="0"
+                max="10"
+                step="0.5"
+                suffix="%"
+              ></range-slider>
+            </div>
+            <div class="param-group">
+              <checkbox-input
+                id="monthly-withdrawal"
+                label="Withdraw Monthly (Equal Amounts)"
+                checked
+              ></checkbox-input>
             </div>
           </param-section>
 
-          <param-section title="SBLOC Settings" open>
+          <param-section title="SBLOC Risk Parameters" open>
             <div class="param-group">
-              <label>Loan-to-Value Ratio</label>
+              <label>SBLOC Interest Rate (%)</label>
               <range-slider
+                id="sbloc-rate"
+                value="7"
+                min="3"
+                max="15"
+                step="0.25"
+                suffix="%"
+              ></range-slider>
+            </div>
+            <div class="param-group">
+              <label>SBLOC Max Borrowing % (Hard Margin Call)</label>
+              <range-slider
+                id="max-borrowing"
+                value="65"
+                min="30"
+                max="80"
+                step="5"
+                suffix="%"
+              ></range-slider>
+              <span class="help-text">Portfolio liquidated if LTV exceeds this threshold</span>
+            </div>
+            <div class="param-group">
+              <label>Maintenance Margin % (Warning Zone)</label>
+              <range-slider
+                id="maintenance-margin"
                 value="50"
-                min="10"
+                min="20"
                 max="70"
                 step="5"
                 suffix="%"
               ></range-slider>
+              <span class="help-text">Warning zone - between this and max borrowing</span>
             </div>
             <div class="param-group">
-              <label>Interest Rate</label>
+              <label>Forced Liquidation Haircut %</label>
               <range-slider
-                value="6.5"
-                min="3"
-                max="12"
-                step="0.25"
+                id="liquidation-haircut"
+                value="5"
+                min="0"
+                max="20"
+                step="1"
                 suffix="%"
               ></range-slider>
+              <span class="help-text">Market impact + transaction costs on forced sale</span>
             </div>
           </param-section>
 
@@ -94,8 +217,148 @@ export class AppRoot extends BaseComponent {
             <portfolio-composition id="portfolio-composition"></portfolio-composition>
           </param-section>
 
+          <param-section title="Return Distribution Model">
+            <div class="param-group">
+              <label>Return Distribution Model</label>
+              <select-input
+                id="return-model"
+                value="bootstrap"
+                options='[{"value":"bootstrap","label":"Bootstrap Resampling"},{"value":"regime","label":"Regime-Switching (Bull/Bear)"}]'
+              ></select-input>
+              <span class="help-text">How to model market returns and volatility</span>
+            </div>
+            <div class="param-group regime-calibration-group" id="regime-calibration-group">
+              <label>Regime Calibration</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn active" id="regime-historical">Historical</button>
+                <button type="button" class="toggle-btn" id="regime-conservative">Conservative</button>
+              </div>
+              <span class="help-text" id="regime-help-text">Calibrated to historical S&P 500 data (1950-2024)</span>
+            </div>
+          </param-section>
+
+          <param-section title="Withdrawal Chapters (Optional)">
+            <div class="param-group">
+              <checkbox-input
+                id="enable-chapters"
+                label="Enable Multi-Phase Withdrawal Strategy"
+              ></checkbox-input>
+            </div>
+            <div class="chapters-config" id="chapters-config">
+              <div class="chapter-group">
+                <span class="chapter-label">Chapter 2</span>
+                <div class="param-group">
+                  <label>Years After Start</label>
+                  <number-input
+                    id="chapter2-years"
+                    value="10"
+                    min="1"
+                    max="40"
+                    step="1"
+                  ></number-input>
+                </div>
+                <div class="param-group">
+                  <label>Reduction %</label>
+                  <range-slider
+                    id="chapter2-reduction"
+                    value="20"
+                    min="-50"
+                    max="80"
+                    step="5"
+                    suffix="%"
+                  ></range-slider>
+                  <span class="help-text">Positive = reduce spending, negative = increase</span>
+                </div>
+              </div>
+              <div class="chapter-group">
+                <span class="chapter-label">Chapter 3</span>
+                <div class="param-group">
+                  <label>Years After Chapter 2</label>
+                  <number-input
+                    id="chapter3-years"
+                    value="10"
+                    min="1"
+                    max="40"
+                    step="1"
+                  ></number-input>
+                </div>
+                <div class="param-group">
+                  <label>Reduction %</label>
+                  <range-slider
+                    id="chapter3-reduction"
+                    value="30"
+                    min="-50"
+                    max="80"
+                    step="5"
+                    suffix="%"
+                  ></range-slider>
+                </div>
+              </div>
+            </div>
+          </param-section>
+
+          <param-section title="Tax Modeling (Optional)">
+            <div class="param-group">
+              <checkbox-input
+                id="enable-tax-modeling"
+                label="Enable Dividend Tax & Capital Gains Tax Modeling"
+              ></checkbox-input>
+            </div>
+            <div class="tax-config" id="tax-config">
+              <div class="param-group">
+                <checkbox-input
+                  id="tax-advantaged"
+                  label="Portfolio in Tax-Advantaged Account (No Taxes)"
+                ></checkbox-input>
+              </div>
+              <div class="tax-rates-group" id="tax-rates-group">
+                <div class="param-group">
+                  <label>Average Dividend Yield (%)</label>
+                  <range-slider
+                    id="dividend-yield"
+                    value="0.5"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    suffix="%"
+                  ></range-slider>
+                  <span class="help-text">Approximate dividend yield of portfolio</span>
+                </div>
+                <div class="param-group">
+                  <label>Ordinary Income Tax Rate (%)</label>
+                  <range-slider
+                    id="ordinary-tax-rate"
+                    value="37"
+                    min="0"
+                    max="50"
+                    step="1"
+                    suffix="%"
+                  ></range-slider>
+                  <span class="help-text">Top federal + state tax rate on dividends</span>
+                </div>
+                <div class="param-group">
+                  <label>Long-Term Capital Gains Tax Rate (%)</label>
+                  <range-slider
+                    id="ltcg-tax-rate"
+                    value="23.8"
+                    min="0"
+                    max="40"
+                    step="0.1"
+                    suffix="%"
+                  ></range-slider>
+                  <span class="help-text">Federal LTCG (20%) + NIIT (3.8%)</span>
+                </div>
+              </div>
+            </div>
+          </param-section>
+
           <div slot="footer" class="simulation-controls">
-            <button class="btn-primary" id="run-sim">Run Simulation</button>
+            <button class="btn-primary" id="run-sim">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Run Monte Carlo Simulation
+            </button>
             <progress-indicator
               id="sim-progress"
               value="0"
@@ -152,6 +415,14 @@ export class AppRoot extends BaseComponent {
         margin-bottom: var(--spacing-xs, 4px);
       }
 
+      .param-group .help-text {
+        display: block;
+        font-size: var(--font-size-xs, 0.75rem);
+        color: var(--text-muted, #94a3b8);
+        margin-top: var(--spacing-xs, 4px);
+        font-style: italic;
+      }
+
       .dashboard {
         max-width: 1200px;
         margin: 0 auto;
@@ -164,15 +435,19 @@ export class AppRoot extends BaseComponent {
       }
 
       .btn-primary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm, 8px);
         background: var(--color-primary, #0d9488);
         color: white;
         border: none;
-        padding: var(--spacing-sm, 8px) var(--spacing-lg, 24px);
+        padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
         border-radius: var(--radius-md, 6px);
         font-size: var(--font-size-base, 1rem);
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: background 0.2s, transform 0.1s;
         width: 100%;
       }
 
@@ -180,9 +455,17 @@ export class AppRoot extends BaseComponent {
         background: var(--color-primary-dark, #0f766e);
       }
 
+      .btn-primary:active {
+        transform: scale(0.98);
+      }
+
       .btn-primary:focus-visible {
         outline: 2px solid var(--color-primary, #0d9488);
         outline-offset: 2px;
+      }
+
+      .btn-primary .btn-icon {
+        flex-shrink: 0;
       }
 
       progress-indicator {
@@ -226,6 +509,102 @@ export class AppRoot extends BaseComponent {
         outline: 2px solid var(--color-primary, #0d9488);
         outline-offset: 2px;
       }
+
+      /* Toggle Group for Regime Calibration */
+      .toggle-group {
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-md, 6px);
+        overflow: hidden;
+        background: var(--surface-secondary, #f8fafc);
+      }
+
+      .toggle-btn {
+        flex: 1;
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        border: none;
+        background: transparent;
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 500;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .toggle-btn:not(:last-child) {
+        border-right: 1px solid var(--border-color, #e2e8f0);
+      }
+
+      .toggle-btn.active {
+        background: var(--color-primary, #0d9488);
+        color: white;
+      }
+
+      .toggle-btn:hover:not(.active) {
+        background: var(--surface-tertiary, #e2e8f0);
+      }
+
+      /* Regime Calibration Group - conditionally shown */
+      .regime-calibration-group {
+        display: none;
+      }
+
+      .regime-calibration-group.visible {
+        display: block;
+      }
+
+      /* Chapters Configuration */
+      .chapters-config {
+        display: none;
+        margin-top: var(--spacing-md, 16px);
+        padding: var(--spacing-md, 16px);
+        background: var(--surface-secondary, #f8fafc);
+        border-radius: var(--radius-md, 6px);
+        border: 1px solid var(--border-color, #e2e8f0);
+      }
+
+      .chapters-config.visible {
+        display: block;
+      }
+
+      .chapter-group {
+        margin-bottom: var(--spacing-lg, 24px);
+      }
+
+      .chapter-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .chapter-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: var(--spacing-sm, 8px);
+        font-size: var(--font-size-sm, 0.875rem);
+      }
+
+      /* Tax Configuration */
+      .tax-config {
+        display: none;
+        margin-top: var(--spacing-md, 16px);
+      }
+
+      .tax-config.visible {
+        display: block;
+      }
+
+      .tax-rates-group {
+        padding: var(--spacing-md, 16px);
+        background: var(--surface-secondary, #f8fafc);
+        border-radius: var(--radius-md, 6px);
+        border: 1px solid var(--border-color, #e2e8f0);
+        margin-top: var(--spacing-sm, 8px);
+      }
+
+      .tax-rates-group.hidden {
+        display: none;
+      }
     `;
   }
 
@@ -243,35 +622,106 @@ export class AppRoot extends BaseComponent {
     return this._isRunning;
   }
 
+  /** Helper to get value from a UI component by ID */
+  private getNumberInputValue(id: string, fallback: number): number {
+    const el = this.$(`#${id}`) as (NumberInput & { value: number | null }) | null;
+    return el?.value ?? fallback;
+  }
+
+  private getRangeSliderValue(id: string, fallback: number): number {
+    const el = this.$(`#${id}`) as (RangeSlider & { value: number }) | null;
+    return el?.value ?? fallback;
+  }
+
+  private getSelectInputValue(id: string, fallback: string): string {
+    const el = this.$(`#${id}`) as (SelectInput & { value: string }) | null;
+    return el?.value ?? fallback;
+  }
+
+  private getCheckboxValue(id: string, fallback: boolean): boolean {
+    const el = this.$(`#${id}`) as (CheckboxInput & { checked: boolean }) | null;
+    return el?.checked ?? fallback;
+  }
+
   /**
    * Collect simulation parameters from UI components
    */
   private collectSimulationParams(): { config: SimulationConfig; portfolio: PortfolioConfig } {
-    // Query UI components directly from shadow DOM
-    // Portfolio Settings section
-    const investmentInput = this.$('number-input') as (NumberInput & { value: number | null }) | null;
-    const horizonSlider = this.$('range-slider[suffix=" years"]') as (RangeSlider & { value: number }) | null;
-    const iterationsSelect = this.$('select-input') as (SelectInput & { value: string }) | null;
-    const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
+    // Portfolio Settings
+    const initialValue = this.getNumberInputValue('initial-investment', 5000000);
+    const initialLocBalance = this.getNumberInputValue('initial-loc-balance', 0);
+    const iterations = parseInt(this.getSelectInputValue('num-simulations', '10000'), 10);
+    const inflationRate = this.getRangeSliderValue('inflation-rate', 2.5) / 100;
 
-    // Extract values with fallbacks
-    const initialValue = investmentInput?.value ?? 1000000;
-    const timeHorizon = horizonSlider?.value ?? 30;
-    const iterations = parseInt(iterationsSelect?.value ?? '10000', 10);
+    // Timeline
+    const currentYear = new Date().getFullYear();
+    const startYear = this.getNumberInputValue('start-year', currentYear);
+    const withdrawalStartYearCalendar = this.getNumberInputValue('withdrawal-start-year', currentYear);
+    const timeHorizon = this.getRangeSliderValue('time-horizon', 15);
 
-    // Get SBLOC settings from sidebar
-    // Find the SBLOC section and get sliders within it
-    const sblocSection = this.$('param-section[title="SBLOC Settings"]');
-    const sblocSliders = sblocSection?.querySelectorAll('range-slider');
-    const ltvSlider = sblocSliders?.[0] as (RangeSlider & { value: number }) | undefined;
-    const interestSlider = sblocSliders?.[1] as (RangeSlider & { value: number }) | undefined;
+    // Convert calendar years to 0-based simulation year indices
+    // withdrawalStartYear should be 0 if withdrawals start immediately,
+    // or (withdrawalStartYearCalendar - startYear) to delay withdrawals
+    const withdrawalStartYear = Math.max(0, withdrawalStartYearCalendar - startYear);
+
+    // Withdrawal Strategy
+    const annualWithdrawal = this.getNumberInputValue('annual-withdrawal', 200000);
+    const annualRaise = this.getRangeSliderValue('annual-raise', 3) / 100;
+    const monthlyWithdrawal = this.getCheckboxValue('monthly-withdrawal', true);
+
+    // SBLOC Risk Parameters
+    const sblocRate = this.getRangeSliderValue('sbloc-rate', 7) / 100;
+    const maxBorrowing = this.getRangeSliderValue('max-borrowing', 65) / 100;
+    const maintenanceMargin = this.getRangeSliderValue('maintenance-margin', 50) / 100;
+    const liquidationHaircut = this.getRangeSliderValue('liquidation-haircut', 5) / 100;
+
+    // Return Distribution Model
+    const returnModel = this.getSelectInputValue('return-model', 'bootstrap');
+    const regimeCalibration = this._regimeCalibration;
+
+    // Withdrawal Chapters
+    const enableChapters = this.getCheckboxValue('enable-chapters', false);
+    const withdrawalChapters: WithdrawalChaptersConfig = {
+      enabled: enableChapters,
+    };
+    if (enableChapters) {
+      withdrawalChapters.chapter2 = {
+        yearsAfterStart: this.getNumberInputValue('chapter2-years', 10),
+        reductionPercent: this.getRangeSliderValue('chapter2-reduction', 20),
+      };
+      withdrawalChapters.chapter3 = {
+        yearsAfterStart: this.getNumberInputValue('chapter3-years', 10),
+        reductionPercent: this.getRangeSliderValue('chapter3-reduction', 30),
+      };
+    }
+
+    // Tax Modeling
+    const enableTaxModeling = this.getCheckboxValue('enable-tax-modeling', false);
+    const taxAdvantaged = this.getCheckboxValue('tax-advantaged', false);
+    const taxModeling: TaxModelingConfig = {
+      enabled: enableTaxModeling,
+      taxAdvantaged,
+      dividendYield: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('dividend-yield', 0.5) / 100 : 0,
+      ordinaryTaxRate: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('ordinary-tax-rate', 37) / 100 : 0,
+      ltcgTaxRate: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('ltcg-tax-rate', 23.8) / 100 : 0,
+    };
 
     // Build SBLOC config
-    const sblocConfig = {
-      targetLTV: (ltvSlider?.value ?? 50) / 100, // Convert % to decimal
-      interestRate: (interestSlider?.value ?? 6.5) / 100, // Convert % to decimal
-      annualWithdrawal: 50000, // Fixed for now, could add slider
-      maintenanceMargin: 0.70, // 70% margin call threshold
+    const sblocConfig: SBLOCSimConfig = {
+      targetLTV: maxBorrowing,
+      interestRate: sblocRate,
+      annualWithdrawal,
+      annualWithdrawalRaise: annualRaise,
+      monthlyWithdrawal,
+      maintenanceMargin,
+      liquidationHaircut,
+      initialLocBalance,
+    };
+
+    // Build Timeline config
+    const timeline: TimelineConfig = {
+      startYear,
+      withdrawalStartYear,
     };
 
     // Build SimulationConfig
@@ -279,14 +729,19 @@ export class AppRoot extends BaseComponent {
       iterations,
       timeHorizon,
       initialValue,
-      inflationRate: 0.03,
+      inflationRate,
       inflationAdjusted: false,
-      resamplingMethod: 'simple',
+      resamplingMethod: returnModel === 'regime' ? 'regime' : 'simple',
+      regimeCalibration: returnModel === 'regime' ? regimeCalibration : undefined,
       seed: undefined,
+      timeline,
       sbloc: sblocConfig,
+      withdrawalChapters,
+      taxModeling,
     };
 
     // Build PortfolioConfig from portfolio-composition assets
+    const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
     const weights: Record<string, number> = portfolioComp?.getWeights() ?? { SPY: 60, BND: 30, GLD: 10 };
     const assets: AssetConfig[] = [];
 
@@ -341,6 +796,80 @@ export class AppRoot extends BaseComponent {
     settingsBtn?.addEventListener('click', () => {
       settingsPanel?.toggle();
     });
+
+    // =========================================================================
+    // Return Distribution Model Toggle
+    // =========================================================================
+    const returnModelSelect = this.$('#return-model') as (SelectInput & { value: string }) | null;
+    const regimeCalibrationGroup = this.$('#regime-calibration-group');
+    const regimeHistoricalBtn = this.$('#regime-historical') as HTMLButtonElement | null;
+    const regimeConservativeBtn = this.$('#regime-conservative') as HTMLButtonElement | null;
+    const regimeHelpText = this.$('#regime-help-text');
+
+    const updateRegimeVisibility = () => {
+      const isRegime = returnModelSelect?.value === 'regime';
+      if (regimeCalibrationGroup) {
+        regimeCalibrationGroup.classList.toggle('visible', isRegime);
+      }
+    };
+
+    returnModelSelect?.addEventListener('change', updateRegimeVisibility);
+    updateRegimeVisibility(); // Initial state
+
+    // Regime calibration toggle buttons
+    const updateRegimeCalibration = (mode: RegimeCalibrationMode) => {
+      this._regimeCalibration = mode;
+      regimeHistoricalBtn?.classList.toggle('active', mode === 'historical');
+      regimeConservativeBtn?.classList.toggle('active', mode === 'conservative');
+      if (regimeHelpText) {
+        regimeHelpText.textContent = mode === 'historical'
+          ? 'Calibrated to historical S&P 500 data (1950-2024)'
+          : 'Stress-testing with extended crash durations';
+      }
+    };
+
+    regimeHistoricalBtn?.addEventListener('click', () => updateRegimeCalibration('historical'));
+    regimeConservativeBtn?.addEventListener('click', () => updateRegimeCalibration('conservative'));
+
+    // =========================================================================
+    // Withdrawal Chapters Toggle
+    // =========================================================================
+    const enableChaptersCheckbox = this.$('#enable-chapters') as (CheckboxInput & { checked: boolean }) | null;
+    const chaptersConfig = this.$('#chapters-config');
+
+    const updateChaptersVisibility = () => {
+      const isEnabled = enableChaptersCheckbox?.checked ?? false;
+      if (chaptersConfig) {
+        chaptersConfig.classList.toggle('visible', isEnabled);
+      }
+    };
+
+    enableChaptersCheckbox?.addEventListener('change', updateChaptersVisibility);
+    updateChaptersVisibility(); // Initial state
+
+    // =========================================================================
+    // Tax Modeling Toggle
+    // =========================================================================
+    const enableTaxCheckbox = this.$('#enable-tax-modeling') as (CheckboxInput & { checked: boolean }) | null;
+    const taxConfig = this.$('#tax-config');
+    const taxAdvantagedCheckbox = this.$('#tax-advantaged') as (CheckboxInput & { checked: boolean }) | null;
+    const taxRatesGroup = this.$('#tax-rates-group');
+
+    const updateTaxVisibility = () => {
+      const isEnabled = enableTaxCheckbox?.checked ?? false;
+      const isTaxAdvantaged = taxAdvantagedCheckbox?.checked ?? false;
+
+      if (taxConfig) {
+        taxConfig.classList.toggle('visible', isEnabled);
+      }
+      if (taxRatesGroup) {
+        taxRatesGroup.classList.toggle('hidden', isTaxAdvantaged);
+      }
+    };
+
+    enableTaxCheckbox?.addEventListener('change', updateTaxVisibility);
+    taxAdvantagedCheckbox?.addEventListener('change', updateTaxVisibility);
+    updateTaxVisibility(); // Initial state
 
     // Portfolio composition changes are handled internally by the component
     // The component dispatches 'portfolio-change' events which we can listen to if needed
