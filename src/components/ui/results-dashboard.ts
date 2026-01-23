@@ -1384,7 +1384,7 @@ export class ResultsDashboard extends BaseComponent {
 
     // BBD net worth = portfolio value - loan balance
     const bbdValues = years.map((year, idx) => {
-      const portfolio = this._data!.yearlyPercentiles[year]?.p50 || 0;
+      const portfolio = this._data!.yearlyPercentiles[idx]?.p50 || 0;
       const loan = traj.loanBalance.p50[idx] || 0;
       return portfolio - loan;
     });
@@ -1496,7 +1496,7 @@ export class ResultsDashboard extends BaseComponent {
 
     for (let idx = 0; idx < years.length; idx++) {
       const year = years[idx];
-      const yearData = this._data!.yearlyPercentiles[year];
+      const yearData = this._data!.yearlyPercentiles[idx];
 
       if (!yearData) {
         p10.push(0);
@@ -1675,14 +1675,16 @@ export class ResultsDashboard extends BaseComponent {
    * Uses bundled historical returns to compute annualized metrics.
    *
    * @param symbols - Array of asset symbols (e.g., ['SPY', 'AGG'])
-   * @returns Object with expectedReturns and volatilities arrays (as decimals)
+   * @returns Object with expectedReturns, volatilities, and isEstimate arrays
    */
   private calculateAssetStatistics(symbols: string[]): {
     expectedReturns: number[];
     volatilities: number[];
+    isEstimate: boolean[];
   } {
     const expectedReturns: number[] = [];
     const volatilities: number[] = [];
+    const isEstimate: boolean[] = [];
 
     for (const symbol of symbols) {
       const presetData = getPresetData(symbol);
@@ -1703,15 +1705,17 @@ export class ResultsDashboard extends BaseComponent {
 
         expectedReturns.push(annualReturn);
         volatilities.push(annualVol);
+        isEstimate.push(false);
       } else {
         // Fallback values if preset data not available
-        // Use market average estimates
+        // Use market average estimates - mark as estimates for UI indication
         expectedReturns.push(0.08);  // 8% default expected return
         volatilities.push(0.16);    // 16% default volatility
+        isEstimate.push(true);
       }
     }
 
-    return { expectedReturns, volatilities };
+    return { expectedReturns, volatilities, isEstimate };
   }
 }
 
