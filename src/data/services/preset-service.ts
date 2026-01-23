@@ -1,16 +1,20 @@
 /**
  * Preset data service for accessing bundled historical market data
  *
- * Provides synchronous access to pre-bundled S&P 500 and index data
- * that Vite inlines at build time. No network requests required.
+ * Provides synchronous access to pre-bundled market data that Vite
+ * inlines at build time. No network requests required.
+ *
+ * Data sources:
+ * - stocks.json: 43 tickers with annual returns (2025-2055)
+ * - indices.json: Additional index funds (IWM, AGG)
  */
 
 // Static imports - Vite inlines these at build time
-import sp500Data from '../presets/sp500.json';
+import stocksData from '../presets/stocks.json';
 import indicesData from '../presets/indices.json';
 
 /**
- * Single day's return in a preset dataset
+ * Single period's return in a preset dataset
  */
 export interface PresetReturn {
   date: string;
@@ -23,22 +27,30 @@ export interface PresetReturn {
 export interface PresetData {
   symbol: string;
   name: string;
+  assetClass?: string;
   startDate: string;
   endDate: string;
   returns: PresetReturn[];
 }
+
+// Type the imported JSON data
+const typedStocksData = stocksData as Record<string, PresetData>;
+const typedIndicesData = indicesData as Record<string, PresetData>;
 
 /**
  * All bundled preset data keyed by symbol
  *
  * These are inlined at build time by Vite, so access is synchronous
  * and requires no network requests.
+ *
+ * Includes 43 stocks with annual returns plus additional index funds.
  */
 export const BUNDLED_PRESETS: Record<string, PresetData> = {
-  SPY: sp500Data as PresetData,
-  QQQ: (indicesData as Record<string, PresetData>).QQQ,
-  IWM: (indicesData as Record<string, PresetData>).IWM,
-  AGG: (indicesData as Record<string, PresetData>).AGG,
+  // All 43 tickers from stocks.json (annual returns 2025-2055)
+  ...typedStocksData,
+  // Additional indices not in stocks.json
+  IWM: typedIndicesData.IWM,
+  AGG: typedIndicesData.AGG,
 };
 
 /**

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm view:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx get-shit-done-cc --global)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(quick-003\\): wire missing SBLOC config parameters in monte-carlo.ts\n\n- Use config.sbloc.liquidationHaircut instead of hardcoded 0.05\n- Use config.timeline.withdrawalStartYear instead of hardcoded startYear: 0\n- Implement annual withdrawal raises using config.sbloc.annualWithdrawalRaise\n- Pass config.sbloc.initialLocBalance to initializeSBLOCState\n- Update cumulativeWithdrawals calculation to account for raises\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs\\(quick-003\\): complete wire missing SBLOC config parameters task\n\nTasks completed: 1/1\n- Wire SBLOC config parameters in monte-carlo.ts\n\nSUMMARY: .planning/quick/003-resolve-key-missing-simulation-logic/003-SUMMARY.md\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(test:*)",
+      "Bash(git commit:*)",
+      "Bash(git check-ignore:*)"
+    ]
+  }
+}

@@ -13,15 +13,76 @@
  * SBLOC configuration for Monte Carlo simulation
  */
 export interface SBLOCSimConfig {
-  /** Target LTV ratio for borrowing (e.g., 0.5 for 50%) */
+  /** Target LTV ratio for borrowing / max borrowing (e.g., 0.65 for 65%) */
   targetLTV: number;
-  /** Interest rate (e.g., 0.065 for 6.5%) */
+  /** Interest rate (e.g., 0.07 for 7%) */
   interestRate: number;
-  /** Annual withdrawal amount */
+  /** Annual withdrawal amount in dollars */
   annualWithdrawal: number;
-  /** Maintenance margin (triggers margin call above this) */
+  /** Annual percentage raise for withdrawals (e.g., 0.03 for 3%) */
+  annualWithdrawalRaise: number;
+  /** Whether to withdraw monthly (true) or annually (false) */
+  monthlyWithdrawal: boolean;
+  /** Maintenance margin / warning zone (e.g., 0.50 for 50%) */
   maintenanceMargin: number;
+  /** Forced liquidation haircut (e.g., 0.05 for 5%) */
+  liquidationHaircut: number;
+  /** Initial LOC balance (pre-existing debt) */
+  initialLocBalance: number;
 }
+
+/**
+ * Withdrawal chapter configuration for multi-phase strategies
+ */
+export interface WithdrawalChapter {
+  /** Years after withdrawal start to begin this chapter */
+  yearsAfterStart: number;
+  /** Reduction percentage (positive = reduce, negative = increase) */
+  reductionPercent: number;
+}
+
+/**
+ * Withdrawal chapters configuration
+ */
+export interface WithdrawalChaptersConfig {
+  /** Whether multi-phase withdrawal is enabled */
+  enabled: boolean;
+  /** Chapter 2 configuration (first change) */
+  chapter2?: WithdrawalChapter;
+  /** Chapter 3 configuration (second change) */
+  chapter3?: WithdrawalChapter;
+}
+
+/**
+ * Tax modeling configuration
+ */
+export interface TaxModelingConfig {
+  /** Whether tax modeling is enabled */
+  enabled: boolean;
+  /** Whether portfolio is in tax-advantaged account (no taxes) */
+  taxAdvantaged: boolean;
+  /** Average dividend yield (e.g., 0.005 for 0.5%) */
+  dividendYield: number;
+  /** Ordinary income tax rate for dividends (e.g., 0.37 for 37%) */
+  ordinaryTaxRate: number;
+  /** Long-term capital gains tax rate (e.g., 0.238 for 23.8%) */
+  ltcgTaxRate: number;
+}
+
+/**
+ * Timeline configuration for BBD strategy
+ */
+export interface TimelineConfig {
+  /** Start year for Buy-Borrow-Die strategy */
+  startYear: number;
+  /** Year to begin withdrawals */
+  withdrawalStartYear: number;
+}
+
+/**
+ * Regime model calibration mode
+ */
+export type RegimeCalibrationMode = 'historical' | 'conservative';
 
 /**
  * Simulation configuration - controls how Monte Carlo runs
@@ -33,18 +94,26 @@ export interface SimulationConfig {
   timeHorizon: number;
   /** Initial portfolio value */
   initialValue: number;
-  /** Annual inflation rate (e.g., 0.03 for 3%) */
+  /** Annual inflation rate (e.g., 0.025 for 2.5%) */
   inflationRate: number;
   /** Whether to adjust results for inflation (real vs nominal) */
   inflationAdjusted: boolean;
   /** Return resampling method */
   resamplingMethod: 'simple' | 'block' | 'regime';
+  /** Regime calibration mode (only used when resamplingMethod is 'regime') */
+  regimeCalibration?: RegimeCalibrationMode;
   /** Block size for block bootstrap (auto-calculated if not provided) */
   blockSize?: number;
   /** Random seed for reproducibility */
   seed?: string;
+  /** Timeline configuration for BBD strategy */
+  timeline?: TimelineConfig;
   /** SBLOC configuration (optional - if omitted, no SBLOC simulation) */
   sbloc?: SBLOCSimConfig;
+  /** Withdrawal chapters for multi-phase strategy */
+  withdrawalChapters?: WithdrawalChaptersConfig;
+  /** Tax modeling configuration */
+  taxModeling?: TaxModelingConfig;
 }
 
 /**

@@ -1041,6 +1041,19 @@ export class AppRoot extends BaseComponent {
     });
 
     // =========================================================================
+    // Notify portfolio-composition when parameters change (for dirty state tracking)
+    // =========================================================================
+    const notifyParamsChanged = () => {
+      const portfolioComp = this.$('#portfolio-composition');
+      if (portfolioComp) {
+        portfolioComp.dispatchEvent(new CustomEvent('params-changed', {
+          bubbles: false,
+          composed: false,
+        }));
+      }
+    };
+
+    // =========================================================================
     // Return Distribution Model Toggle
     // =========================================================================
     const returnModelSelect = this.$('#return-model') as (SelectInput & { value: string }) | null;
@@ -1071,8 +1084,14 @@ export class AppRoot extends BaseComponent {
       }
     };
 
-    regimeHistoricalBtn?.addEventListener('click', () => updateRegimeCalibration('historical'));
-    regimeConservativeBtn?.addEventListener('click', () => updateRegimeCalibration('conservative'));
+    regimeHistoricalBtn?.addEventListener('click', () => {
+      updateRegimeCalibration('historical');
+      notifyParamsChanged();
+    });
+    regimeConservativeBtn?.addEventListener('click', () => {
+      updateRegimeCalibration('conservative');
+      notifyParamsChanged();
+    });
 
     // =========================================================================
     // Withdrawal Chapters Toggle
@@ -1128,6 +1147,27 @@ export class AppRoot extends BaseComponent {
 
     // Listen for 'commit' events from number-input and range-slider components
     this.shadowRoot?.addEventListener('commit', triggerSimulation);
+
+    // Listen for changes on all input components
+    this.shadowRoot?.addEventListener('input', (e) => {
+      const target = e.target as HTMLElement;
+      // Only notify for parameter inputs, not search inputs etc.
+      if (target.tagName === 'RANGE-SLIDER' ||
+          target.tagName === 'NUMBER-INPUT' ||
+          target.tagName === 'SELECT-INPUT' ||
+          target.tagName === 'CHECKBOX-INPUT') {
+        notifyParamsChanged();
+      }
+    });
+
+    // Also listen for change events (for selects and checkboxes)
+    this.shadowRoot?.addEventListener('change', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'SELECT-INPUT' ||
+          target.tagName === 'CHECKBOX-INPUT') {
+        notifyParamsChanged();
+      }
+    });
 
     runBtn?.addEventListener('click', async () => {
       // Prevent double-runs

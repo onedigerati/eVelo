@@ -71,6 +71,8 @@ export class PortfolioComposition extends BaseComponent {
   private donutChart: Chart | null = null;
   private _currentPortfolioId: number | undefined = undefined;
   private _currentPortfolioName = '';
+  private _isDirty = false; // Track unsaved changes
+  private _savedSnapshot = ''; // Snapshot of state at load/save time
   private modal!: ModalDialog;
 
   protected template(): string {
@@ -91,7 +93,10 @@ export class PortfolioComposition extends BaseComponent {
           <!-- Populated dynamically -->
         </div>
 
-        <h4 class="subsection-title preset-title">Select a Portfolio Preset:</h4>
+        <h4 class="subsection-title preset-title">
+          Select a Portfolio Preset:
+          <span class="modified-badge" style="display: none;">Modified</span>
+        </h4>
         <div class="preset-row">
           <select class="preset-select" aria-label="Portfolio preset">
             <option value="">-- Presets --</option>
@@ -230,6 +235,26 @@ export class PortfolioComposition extends BaseComponent {
 
       .subsection-title.preset-title {
         margin-top: var(--spacing-lg, 24px);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm, 8px);
+      }
+
+      .modified-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        background: var(--color-warning, #f59e0b);
+        color: white;
+        border-radius: var(--border-radius-sm, 4px);
+        font-size: var(--font-size-xs, 0.75rem);
+        font-weight: 600;
+        text-transform: uppercase;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
       }
 
       .subsection-desc {
@@ -887,6 +912,9 @@ export class PortfolioComposition extends BaseComponent {
         detail: portfolio,
       }));
     }
+
+    // Clear dirty state after loading - use setTimeout to ensure params are set first
+    setTimeout(() => this.clearDirty(), 0);
   }
 
   private updatePresetSelect(): void {
@@ -920,6 +948,11 @@ export class PortfolioComposition extends BaseComponent {
     this.attachEventListeners();
     this.initializeDonutChart();
     this.refreshPresetDropdown();
+
+    // Listen for parameter changes from app-root
+    this.addEventListener('params-changed', () => {
+      this.markDirty();
+    });
   }
 
   private loadAvailableAssets(): void {
@@ -1117,6 +1150,7 @@ export class PortfolioComposition extends BaseComponent {
           this.renderVisualizationOnly();
           this.renderWeightBar();
           this.updateTotal();
+          this.markDirty();
           this.dispatchPortfolioChange();
         }
       });
@@ -1214,11 +1248,38 @@ export class PortfolioComposition extends BaseComponent {
   private async handlePresetSelectChange(): Promise<void> {
     const select = this.$('.preset-select') as HTMLSelectElement;
     const selectedId = parseInt(select.value);
+    const previousId = this._currentPortfolioId;
+
+    // Check for unsaved changes before switching
+    if (this._isDirty && this._currentPortfolioId !== undefined) {
+      const choice = await this.modal.show({
+        title: 'Unsaved Changes',
+        subtitle: `You have unsaved changes to "${this._currentPortfolioName}". What would you like to do?`,
+        type: 'choice',
+        confirmText: 'Discard Changes',
+        cancelText: 'Cancel',
+        alternateText: 'Save Changes',
+      });
+
+      if (choice === 'cancel') {
+        // User cancelled - restore the previous selection
+        select.value = previousId?.toString() || '';
+        return;
+      }
+
+      if (choice === 'alternate') {
+        // User wants to save first - save current portfolio then continue
+        await this.saveCurrentPortfolio();
+      }
+      // choice === 'confirm' means discard - continue without saving
+    }
 
     if (isNaN(selectedId)) {
       // User selected default option - clear current portfolio tracking
       this._currentPortfolioId = undefined;
       this._currentPortfolioName = '';
+      this._isDirty = false;
+      this.updateDirtyIndicator();
       return;
     }
 
@@ -1241,6 +1302,80 @@ export class PortfolioComposition extends BaseComponent {
       composed: true,
       detail: { message, type },
     }));
+  }
+
+  /**
+   * Mark the portfolio as having unsaved changes
+   * Only tracks dirty state when a named portfolio is loaded
+   */
+  private markDirty(): void {
+    // Only mark dirty if we have a named portfolio loaded
+    if (this._currentPortfolioId === undefined) {
+      return;
+    }
+
+    // Check if current state differs from saved snapshot
+    const currentState = this.getStateSnapshot();
+    if (currentState !== this._savedSnapshot) {
+      this._isDirty = true;
+      this.updateDirtyIndicator();
+    }
+  }
+
+  /**
+   * Clear the dirty state (after save or load)
+   */
+  private clearDirty(): void {
+    this._isDirty = false;
+    this._savedSnapshot = this.getStateSnapshot();
+    this.updateDirtyIndicator();
+  }
+
+  /**
+   * Get a snapshot of current state for comparison
+   */
+  private getStateSnapshot(): string {
+    // Include assets, weights, and request params from app-root
+    const assetsState = this.selectedAssets.map(a => `${a.symbol}:${a.weight.toFixed(2)}`).join(',');
+
+    // Request simulation params for complete snapshot
+    let paramsState = '';
+    const paramsEvent = new CustomEvent('get-simulation-params', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        callback: (params: any) => {
+          paramsState = JSON.stringify(params);
+        }
+      },
+    });
+    this.dispatchEvent(paramsEvent);
+
+    return `${assetsState}|${paramsState}`;
+  }
+
+  /**
+   * Update the visual indicator for dirty state
+   */
+  private updateDirtyIndicator(): void {
+    const badge = this.$('.modified-badge') as HTMLElement;
+    if (badge) {
+      badge.style.display = this._isDirty ? 'inline-block' : 'none';
+    }
+  }
+
+  /**
+   * Check if there are unsaved changes
+   */
+  public get isDirty(): boolean {
+    return this._isDirty;
+  }
+
+  /**
+   * Check if a named portfolio is currently loaded
+   */
+  public get hasLoadedPortfolio(): boolean {
+    return this._currentPortfolioId !== undefined;
   }
 
   private addAsset(symbol: string): void {
@@ -1268,6 +1403,7 @@ export class PortfolioComposition extends BaseComponent {
 
     this.renderAvailableAssets();
     this.renderSelectedAssets();
+    this.markDirty();
     this.dispatchPortfolioChange();
   }
 
@@ -1275,6 +1411,7 @@ export class PortfolioComposition extends BaseComponent {
     this.selectedAssets = this.selectedAssets.filter(a => a.symbol !== symbol);
     this.renderAvailableAssets();
     this.renderSelectedAssets();
+    this.markDirty();
     this.dispatchPortfolioChange();
   }
 
@@ -1287,6 +1424,7 @@ export class PortfolioComposition extends BaseComponent {
     });
 
     this.renderSelectedAssets();
+    this.markDirty();
     this.dispatchPortfolioChange();
   }
 
@@ -1294,7 +1432,53 @@ export class PortfolioComposition extends BaseComponent {
     this.selectedAssets = [];
     this.renderAvailableAssets();
     this.renderSelectedAssets();
+    this.markDirty();
     this.dispatchPortfolioChange();
+  }
+
+  /**
+   * Save the current portfolio silently (no dialogs).
+   * Used when user chooses "Save Changes" before switching portfolios.
+   */
+  private async saveCurrentPortfolio(): Promise<void> {
+    if (this._currentPortfolioId === undefined || !this._currentPortfolioName) {
+      return;
+    }
+
+    try {
+      const assets = this.buildAssetRecords();
+      const now = new Date().toISOString();
+
+      // Capture simulation parameters from app-root
+      let simulationParams: any = {};
+      const paramsEvent = new CustomEvent('get-simulation-params', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          callback: (params: any) => { simulationParams = params; }
+        },
+      });
+      this.dispatchEvent(paramsEvent);
+
+      await savePortfolio({
+        id: this._currentPortfolioId,
+        name: this._currentPortfolioName,
+        assets,
+        modified: now,
+        version: 1,
+        ...simulationParams,
+      });
+
+      // Delete temp portfolio after successful save
+      await deleteTempPortfolio();
+
+      // Clear dirty state
+      this.clearDirty();
+
+      this.showToast(`Saved portfolio: ${this._currentPortfolioName}`, 'success');
+    } catch (error) {
+      this.showToast('Failed to save portfolio', 'error');
+    }
   }
 
   private async savePreset(): Promise<void> {
@@ -1349,9 +1533,12 @@ export class PortfolioComposition extends BaseComponent {
         // Overwriting an existing portfolio - preserve its ID and created timestamp
         portfolioId = existing.id;
         createdTimestamp = existing.created;
-      } else {
-        // Updating current portfolio or creating new
+      } else if (trimmedName === this._currentPortfolioName) {
+        // Same name as current - update current portfolio
         portfolioId = this._currentPortfolioId;
+      } else {
+        // New name, no existing match - create new portfolio
+        portfolioId = undefined;
       }
 
       // Capture simulation parameters from app-root
@@ -1380,6 +1567,9 @@ export class PortfolioComposition extends BaseComponent {
 
       // Delete temp portfolio after successful save
       await deleteTempPortfolio();
+
+      // Clear dirty state after successful save
+      this.clearDirty();
 
       // Refresh preset dropdown
       await this.refreshPresetDropdown();
@@ -1446,10 +1636,12 @@ export class PortfolioComposition extends BaseComponent {
     try {
       await deletePortfolio(this._currentPortfolioId);
 
-      // Clear current portfolio tracking
+      // Clear current portfolio tracking and dirty state
       const deletedName = this._currentPortfolioName;
       this._currentPortfolioId = undefined;
       this._currentPortfolioName = '';
+      this._isDirty = false;
+      this.updateDirtyIndicator();
 
       // Refresh preset dropdown
       await this.refreshPresetDropdown();

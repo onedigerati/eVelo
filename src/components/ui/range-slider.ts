@@ -130,7 +130,23 @@ export class RangeSlider extends BaseComponent {
     const input = this.$('input') as HTMLInputElement | null;
     if (input) {
       input.addEventListener('input', this.handleInput.bind(this));
+      input.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      input.addEventListener('touchend', this.handleMouseUp.bind(this));
     }
+  }
+
+  private handleMouseUp(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value);
+
+    // Dispatch commit event to signal user has finalized slider adjustment
+    this.dispatchEvent(
+      new CustomEvent('commit', {
+        bubbles: true,
+        composed: true,
+        detail: { value },
+      })
+    );
   }
 
   private handleInput(event: Event): void {

@@ -8,14 +8,16 @@ export interface ModalOptions {
   title?: string;
   /** Modal subtitle/description */
   subtitle?: string;
-  /** Modal type: 'prompt' shows text input, 'confirm' shows body text only */
-  type?: 'prompt' | 'confirm';
+  /** Modal type: 'prompt' shows text input, 'confirm' shows body text only, 'choice' shows 3 buttons */
+  type?: 'prompt' | 'confirm' | 'choice';
   /** Default value for prompt input */
   defaultValue?: string;
   /** Text for confirm button (default: "OK") */
   confirmText?: string;
   /** Text for cancel button (default: "Cancel") */
   cancelText?: string;
+  /** Text for alternate button (only for 'choice' type) */
+  alternateText?: string;
 }
 
 /**
@@ -60,7 +62,9 @@ export class ModalDialog extends BaseComponent {
     const subtitle = this._options.subtitle || this.getAttribute('subtitle') || '';
     const confirmText = this._options.confirmText || this.getAttribute('confirm-text') || 'OK';
     const cancelText = this._options.cancelText || this.getAttribute('cancel-text') || 'Cancel';
+    const alternateText = this._options.alternateText || '';
     const isPrompt = this._options.type === 'prompt';
+    const isChoice = this._options.type === 'choice';
     const defaultValue = this._options.defaultValue || '';
 
     return `
@@ -74,8 +78,9 @@ export class ModalDialog extends BaseComponent {
                    value="${this.escapeHtml(defaultValue)}"
                    aria-label="${title || 'Input'}" />
           ` : ''}
-          <div class="modal-buttons">
+          <div class="modal-buttons ${isChoice ? 'three-buttons' : ''}">
             <button type="button" class="modal-btn cancel-btn">${cancelText}</button>
+            ${isChoice && alternateText ? `<button type="button" class="modal-btn alternate-btn">${alternateText}</button>` : ''}
             <button type="button" class="modal-btn confirm-btn">${confirmText}</button>
           </div>
         </div>
@@ -196,6 +201,34 @@ export class ModalDialog extends BaseComponent {
         background: var(--color-primary-hover, #0f766e);
         border-color: var(--color-primary-hover, #0f766e);
       }
+
+      .alternate-btn {
+        background: var(--color-success, #059669);
+        border: 1px solid var(--color-success, #059669);
+        color: var(--text-inverse, #ffffff);
+      }
+
+      .alternate-btn:hover {
+        background: var(--color-success-hover, #047857);
+        border-color: var(--color-success-hover, #047857);
+      }
+
+      .modal-buttons.three-buttons {
+        flex-wrap: wrap;
+        gap: var(--spacing-sm, 8px);
+      }
+
+      .modal-buttons.three-buttons .cancel-btn {
+        order: 1;
+      }
+
+      .modal-buttons.three-buttons .alternate-btn {
+        order: 2;
+      }
+
+      .modal-buttons.three-buttons .confirm-btn {
+        order: 3;
+      }
     `;
   }
 
@@ -203,6 +236,7 @@ export class ModalDialog extends BaseComponent {
     const overlay = this.$('.modal-overlay');
     const cancelBtn = this.$('.cancel-btn');
     const confirmBtn = this.$('.confirm-btn');
+    const alternateBtn = this.$('.alternate-btn');
     const input = this.$('.modal-input') as HTMLInputElement | null;
 
     // Click outside to cancel
@@ -220,6 +254,11 @@ export class ModalDialog extends BaseComponent {
     // Confirm button
     confirmBtn?.addEventListener('click', () => {
       this.confirm();
+    });
+
+    // Alternate button (for 'choice' type)
+    alternateBtn?.addEventListener('click', () => {
+      this.alternate();
     });
 
     // Keyboard handling
@@ -284,7 +323,14 @@ export class ModalDialog extends BaseComponent {
   }
 
   private cancel(): void {
-    const result = this._options.type === 'confirm' ? false : null;
+    let result: string | boolean | null;
+    if (this._options.type === 'choice') {
+      result = 'cancel';
+    } else if (this._options.type === 'confirm') {
+      result = false;
+    } else {
+      result = null;
+    }
     this.hide();
     this._resolve?.(result);
     this._resolve = null;
@@ -296,12 +342,20 @@ export class ModalDialog extends BaseComponent {
     if (this._options.type === 'prompt') {
       const input = this.$('.modal-input') as HTMLInputElement;
       result = input?.value || '';
+    } else if (this._options.type === 'choice') {
+      result = 'confirm';
     } else {
       result = true;
     }
 
     this.hide();
     this._resolve?.(result);
+    this._resolve = null;
+  }
+
+  private alternate(): void {
+    this.hide();
+    this._resolve?.('alternate');
     this._resolve = null;
   }
 

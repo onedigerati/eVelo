@@ -103,6 +103,24 @@ export class NumberInput extends BaseComponent {
     if (input) {
       input.addEventListener('input', this.handleInput.bind(this));
       input.addEventListener('change', this.handleChange.bind(this));
+      input.addEventListener('keydown', this.handleKeydown.bind(this));
+    }
+  }
+
+  private handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const input = event.target as HTMLInputElement;
+      const value = input.valueAsNumber;
+
+      // Dispatch commit event to signal user has finalized input
+      this.dispatchEvent(
+        new CustomEvent('commit', {
+          bubbles: true,
+          composed: true,
+          detail: { value: isNaN(value) ? null : value },
+        })
+      );
     }
   }
 
