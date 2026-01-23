@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 15 of 15 (Dashboard Gap Fixes)
-Plan: 2 of 4 complete (15-01 and 15-02)
+Plan: 3 of 4 complete (15-01, 15-02, 15-03)
 Status: In progress
-Last activity: 2026-01-22 — Verified 15-01-PLAN.md (GAP-01 already fixed in commit 1172a58)
+Last activity: 2026-01-22 — Completed 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing)
 
-Progress: ██████████████████████████████████████░░ 98% (61/62 plans total)
+Progress: ██████████████████████████████████████░░ 98% (62/63 plans total)
 
 ## Performance Metrics
 
@@ -40,10 +40,10 @@ Progress: ███████████████████████�
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
-| 15-dashboard-gap-fixes | 2/4 | 4 min | 2 min | (15-01 verified as already fixed) |
+| 15-dashboard-gap-fixes | 3/4 | 10 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 14-01 (4 min), 14-02 (5 min), 15-01 (2 min), 15-02 (2 min)
+- Last 5 plans: 14-02 (5 min), 15-01 (2 min), 15-02 (2 min), 15-03 (6 min)
 - Trend: Fast gap closure execution
 
 ## Accumulated Context
@@ -494,10 +494,10 @@ None
 - Verified in 15-01 execution (fix was bundled with 15-02 commit)
 - Affects: VIZ-01 (Probability Cone), VIZ-06 (SBLOC Balance), all P10/P50/P90 calculations
 
-**GAP-VIZ-07 (MEDIUM - HIGH PRIORITY):**
-- Array indexing issue in updateComparisonLineChart (uses year value instead of idx)
-- Impact: BBD vs Sell comparison may show incorrect or missing data
-- Fix effort: Very low (one-line fix)
+**GAP-VIZ-07 (MEDIUM - HIGH PRIORITY) - FIXED in 15-03:**
+- Array indexing issue fixed in updateComparisonLineChart and updateSBLOCUtilizationChart
+- Changed: `yearlyPercentiles[year]` to `yearlyPercentiles[idx]` in both functions
+- Commit: 962dbdd
 
 **GAP-02 (MEDIUM) - FIXED in 15-02:**
 - Success rate now uses `>` consistently in both monte-carlo.ts and metrics.ts
@@ -525,10 +525,15 @@ None
 - Success = terminal value strictly above initial value (not at-or-above)
 - Aligns with metrics.ts and JSDoc documentation
 
+**From 15-03:**
+- Fixed array indexing in updateComparisonLineChart and updateSBLOCUtilizationChart
+- yearlyPercentiles[year] changed to yearlyPercentiles[idx]
+- year is actual year number (1, 2, 3...), idx is array index (0, 1, 2...)
+
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Verified 15-01-PLAN.md (GAP-01 already fixed in commit 1172a58)
+Stopped at: Completed 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing)
 Resume file: None
 
-**Next:** 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing in updateComparisonLineChart)
+**Next:** 15-04-PLAN.md (VIZ-04: Fallback value labeling in correlation heatmap)
