@@ -18,3 +18,12 @@ export {
   type InsightConfig,
   type InsightGeneratorInput,
 } from './insight-generator';
+
+// Delta Calculations
+export {
+  calculateDelta,
+  computeComparisonMetrics,
+  type DeltaMetrics,
+  type DeltaDirection,
+  type ComparisonMetrics,
+} from './delta-calculations';
