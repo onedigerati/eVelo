@@ -398,12 +398,24 @@ export class PortfolioComposition extends BaseComponent {
       }
 
       /* Portfolio Visualization */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
       .portfolio-visualization {
         margin-top: var(--spacing-lg, 24px);
         background: #f0fdfa;
         border: 1px solid #99f6e4;
         border-radius: var(--border-radius-lg, 12px);
         padding: var(--spacing-md, 16px);
+        animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
 
       .card-header {
@@ -454,6 +466,12 @@ export class PortfolioComposition extends BaseComponent {
         height: 100%;
       }
 
+      @keyframes subtlePulse {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.05); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+      }
+
       .donut-center {
         position: absolute;
         top: 50%;
@@ -464,6 +482,11 @@ export class PortfolioComposition extends BaseComponent {
         font-weight: 700;
         color: var(--text-secondary, #64748b);
         pointer-events: none;
+        transition: color 0.3s ease;
+      }
+
+      .donut-center.updated {
+        animation: subtlePulse 0.4s ease;
       }
 
       .asset-bars-list {
@@ -483,6 +506,13 @@ export class PortfolioComposition extends BaseComponent {
         border-radius: var(--border-radius-sm, 4px);
         background: white;
         overflow: hidden;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        cursor: default;
+      }
+
+      .asset-bar-row:hover {
+        background: #fafffe;
+        box-shadow: 0 1px 3px rgba(13, 148, 136, 0.1);
       }
 
       .asset-bar-row::before {
@@ -496,7 +526,35 @@ export class PortfolioComposition extends BaseComponent {
         opacity: 0.15;
         border-radius: var(--border-radius-sm, 4px);
         z-index: 0;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       }
+
+      /* Entry animation for asset bars */
+      @keyframes slideInFromLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .asset-bar-row {
+        animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      .asset-bar-row:nth-child(1) { animation-delay: 0ms; }
+      .asset-bar-row:nth-child(2) { animation-delay: 50ms; }
+      .asset-bar-row:nth-child(3) { animation-delay: 100ms; }
+      .asset-bar-row:nth-child(4) { animation-delay: 150ms; }
+      .asset-bar-row:nth-child(5) { animation-delay: 200ms; }
+      .asset-bar-row:nth-child(6) { animation-delay: 250ms; }
+      .asset-bar-row:nth-child(7) { animation-delay: 300ms; }
+      .asset-bar-row:nth-child(8) { animation-delay: 350ms; }
+      .asset-bar-row:nth-child(9) { animation-delay: 400ms; }
+      .asset-bar-row:nth-child(10) { animation-delay: 450ms; }
 
       .asset-bar-swatch {
         width: 12px;
@@ -504,6 +562,11 @@ export class PortfolioComposition extends BaseComponent {
         border-radius: var(--border-radius-xs, 2px);
         flex-shrink: 0;
         z-index: 1;
+        transition: transform 0.2s ease;
+      }
+
+      .asset-bar-row:hover .asset-bar-swatch {
+        transform: scale(1.2);
       }
 
       .asset-bar-name {
@@ -519,6 +582,11 @@ export class PortfolioComposition extends BaseComponent {
         font-weight: 600;
         color: var(--text-primary, #1e293b);
         z-index: 1;
+        transition: transform 0.2s ease;
+      }
+
+      .asset-bar-row:hover .asset-bar-percent {
+        transform: scale(1.05);
       }
 
       /* Selected Assets - weight editing cards */
@@ -527,6 +595,18 @@ export class PortfolioComposition extends BaseComponent {
         flex-direction: column;
         gap: var(--spacing-sm, 8px);
         margin-top: var(--spacing-md, 16px);
+      }
+
+      /* Entry animation for selected asset cards */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .selected-asset-card {
@@ -539,7 +619,25 @@ export class PortfolioComposition extends BaseComponent {
         border-radius: var(--border-radius-lg, 12px);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         flex-wrap: nowrap;
+        animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
       }
+
+      .selected-asset-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+      }
+
+      .selected-asset-card:nth-child(1) { animation-delay: 0ms; }
+      .selected-asset-card:nth-child(2) { animation-delay: 40ms; }
+      .selected-asset-card:nth-child(3) { animation-delay: 80ms; }
+      .selected-asset-card:nth-child(4) { animation-delay: 120ms; }
+      .selected-asset-card:nth-child(5) { animation-delay: 160ms; }
+      .selected-asset-card:nth-child(6) { animation-delay: 200ms; }
+      .selected-asset-card:nth-child(7) { animation-delay: 240ms; }
+      .selected-asset-card:nth-child(8) { animation-delay: 280ms; }
+      .selected-asset-card:nth-child(9) { animation-delay: 320ms; }
+      .selected-asset-card:nth-child(10) { animation-delay: 360ms; }
 
       .color-swatch {
         width: 16px;
@@ -547,6 +645,12 @@ export class PortfolioComposition extends BaseComponent {
         border-radius: var(--border-radius-sm, 4px);
         flex-shrink: 0;
         margin-top: 4px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .selected-asset-card:hover .color-swatch {
+        transform: scale(1.15);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
 
       .selected-asset-info {
@@ -648,7 +752,8 @@ export class PortfolioComposition extends BaseComponent {
         color: white;
         font-size: var(--font-size-sm, 0.875rem);
         font-weight: 600;
-        transition: flex 0.3s ease;
+        transition: flex 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                    background-color 0.3s ease;
         min-width: 40px;
       }
 
@@ -729,6 +834,14 @@ export class PortfolioComposition extends BaseComponent {
       const lastPortfolio = await loadLastPortfolio();
       if (lastPortfolio && lastPortfolio.assets.length > 0) {
         this.populateFromPortfolio(lastPortfolio);
+        // Show toast for restored portfolio (delay to ensure toast container is ready)
+        setTimeout(() => {
+          if (lastPortfolio.name !== TEMP_PORTFOLIO_KEY) {
+            this.showToast(`Restored portfolio: ${lastPortfolio.name}`, 'info');
+          } else {
+            this.showToast('Restored previous session', 'info');
+          }
+        }, 500);
       }
     } catch (error) {
       console.warn('Failed to load last portfolio:', error);
@@ -765,6 +878,15 @@ export class PortfolioComposition extends BaseComponent {
     this.renderSelectedAssets();
     this.updatePresetSelect();
     this.dispatchPortfolioChange();
+
+    // Restore simulation parameters if present
+    if (portfolio.initialValue !== undefined || portfolio.sblocRate !== undefined) {
+      this.dispatchEvent(new CustomEvent('set-simulation-params', {
+        bubbles: true,
+        composed: true,
+        detail: portfolio,
+      }));
+    }
   }
 
   private updatePresetSelect(): void {
@@ -852,12 +974,17 @@ export class PortfolioComposition extends BaseComponent {
 
   private getFilteredAssets(): AssetStats[] {
     const query = this.searchQuery.toLowerCase();
-    if (!query) return this.availableAssets;
+    let filtered = this.availableAssets;
 
-    return this.availableAssets.filter(asset =>
-      asset.symbol.toLowerCase().includes(query) ||
-      asset.name.toLowerCase().includes(query)
-    );
+    if (query) {
+      filtered = this.availableAssets.filter(asset =>
+        asset.symbol.toLowerCase().includes(query) ||
+        asset.name.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort alphabetically by symbol
+    return [...filtered].sort((a, b) => a.symbol.localeCompare(b.symbol));
   }
 
   private renderAvailableAssets(): void {
@@ -925,10 +1052,15 @@ export class PortfolioComposition extends BaseComponent {
       subtitle.textContent = `${this.selectedAssets.length} Asset${this.selectedAssets.length !== 1 ? 's' : ''}`;
     }
 
-    // Update donut center text
+    // Update donut center text with animation
     const donutCenter = visualization.querySelector('.donut-center');
     if (donutCenter) {
-      donutCenter.textContent = `${this.selectedAssets.length} ASSET${this.selectedAssets.length !== 1 ? 'S' : ''}`;
+      const newText = `${this.selectedAssets.length} ASSET${this.selectedAssets.length !== 1 ? 'S' : ''}`;
+      if (donutCenter.textContent !== newText) {
+        donutCenter.textContent = newText;
+        donutCenter.classList.add('updated');
+        setTimeout(() => donutCenter.classList.remove('updated'), 400);
+      }
     }
 
     // Sort assets by weight descending for visualization
@@ -1095,6 +1227,7 @@ export class PortfolioComposition extends BaseComponent {
       const portfolio = portfolios.find(p => p.id === selectedId);
       if (portfolio) {
         this.populateFromPortfolio(portfolio);
+        this.showToast(`Loaded portfolio: ${portfolio.name}`, 'info');
       }
     } catch (error) {
       this.showToast('Failed to load portfolio', 'error');
@@ -1221,6 +1354,16 @@ export class PortfolioComposition extends BaseComponent {
         portfolioId = this._currentPortfolioId;
       }
 
+      // Capture simulation parameters from app-root
+      const paramsEvent = new CustomEvent('get-simulation-params', {
+        bubbles: true,
+        composed: true,
+        detail: { callback: null },
+      });
+      let simulationParams: any = {};
+      paramsEvent.detail.callback = (params: any) => { simulationParams = params; };
+      this.dispatchEvent(paramsEvent);
+
       const id = await savePortfolio({
         id: portfolioId,
         name: trimmedName,
@@ -1228,6 +1371,7 @@ export class PortfolioComposition extends BaseComponent {
         created: createdTimestamp,
         modified: now,
         version: 1,
+        ...simulationParams, // Spread all simulation params
       });
 
       this._currentPortfolioId = id;
@@ -1403,6 +1547,19 @@ export class PortfolioComposition extends BaseComponent {
         responsive: true,
         maintainAspectRatio: true,
         cutout: '70%',
+        animation: {
+          duration: 800,
+          easing: 'easeOutQuart',
+          animateRotate: true,
+          animateScale: false,
+        },
+        transitions: {
+          active: {
+            animation: {
+              duration: 300,
+            },
+          },
+        },
         plugins: {
           legend: {
             display: false,
@@ -1430,17 +1587,20 @@ export class PortfolioComposition extends BaseComponent {
     this.donutChart.data.labels = labels;
     this.donutChart.data.datasets[0].data = values;
     this.donutChart.data.datasets[0].backgroundColor = colors;
-    this.donutChart.update();
+    this.donutChart.update('default');
   }
 
   private renderVisualizationOnly(): void {
     const visualization = this.$('.portfolio-visualization') as HTMLElement;
     if (!visualization) return;
 
-    // Update donut center text
+    // Update donut center text (no animation needed for weight-only updates)
     const donutCenter = visualization.querySelector('.donut-center');
     if (donutCenter) {
-      donutCenter.textContent = `${this.selectedAssets.length} ASSET${this.selectedAssets.length !== 1 ? 'S' : ''}`;
+      const newText = `${this.selectedAssets.length} ASSET${this.selectedAssets.length !== 1 ? 'S' : ''}`;
+      if (donutCenter.textContent !== newText) {
+        donutCenter.textContent = newText;
+      }
     }
 
     // Sort assets by weight descending
