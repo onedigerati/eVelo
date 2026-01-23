@@ -666,6 +666,219 @@ export class AppRoot extends BaseComponent {
   }
 
   /**
+   * Get all simulation parameters for saving to portfolio presets
+   * Returns params in 0-1 scale (NOT percentages) to match storage convention
+   */
+  public getSimulationParams(): Partial<PortfolioRecord> {
+    // Portfolio & Timeline
+    const initialValue = this.getNumberInputValue('initial-investment', 5000000);
+    const initialLocBalance = this.getNumberInputValue('initial-loc-balance', 0);
+    const currentYear = new Date().getFullYear();
+    const startYear = this.getNumberInputValue('start-year', currentYear);
+    const withdrawalStartYear = this.getNumberInputValue('withdrawal-start-year', currentYear);
+    const timeHorizon = this.getRangeSliderValue('time-horizon', 15);
+
+    // Withdrawal Strategy
+    const annualWithdrawal = this.getNumberInputValue('annual-withdrawal', 200000);
+    const annualRaise = this.getRangeSliderValue('annual-raise', 3) / 100; // Convert to 0-1
+    const monthlyWithdrawal = this.getCheckboxValue('monthly-withdrawal', true);
+
+    // SBLOC Terms (convert from % to 0-1 scale)
+    const sblocRate = this.getRangeSliderValue('sbloc-rate', 7) / 100;
+    const maxBorrowing = this.getRangeSliderValue('max-borrowing', 65) / 100;
+    const maintenanceMargin = this.getRangeSliderValue('maintenance-margin', 50) / 100;
+    const liquidationHaircut = this.getRangeSliderValue('liquidation-haircut', 5) / 100;
+
+    // Simulation Settings
+    const iterations = parseInt(this.getSelectInputValue('num-simulations', '10000'), 10);
+    const inflationRate = this.getRangeSliderValue('inflation-rate', 2.5) / 100;
+    const returnModel = this.getSelectInputValue('return-model', 'bootstrap') as 'bootstrap' | 'regime';
+    const regimeCalibration = this._regimeCalibration;
+
+    // Withdrawal Chapters
+    const enableChapters = this.getCheckboxValue('enable-chapters', false);
+    const withdrawalChapters = enableChapters ? {
+      enabled: true,
+      chapter2: {
+        yearsAfterStart: this.getNumberInputValue('chapter2-years', 10),
+        reductionPercent: this.getRangeSliderValue('chapter2-reduction', 20),
+      },
+      chapter3: {
+        yearsAfterStart: this.getNumberInputValue('chapter3-years', 10),
+        reductionPercent: this.getRangeSliderValue('chapter3-reduction', 30),
+      },
+    } : { enabled: false };
+
+    // Tax Modeling
+    const enableTaxModeling = this.getCheckboxValue('enable-tax-modeling', false);
+    const taxAdvantaged = this.getCheckboxValue('tax-advantaged', false);
+    const taxModeling = {
+      enabled: enableTaxModeling,
+      taxAdvantaged,
+      dividendYield: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('dividend-yield', 0.5) / 100 : 0,
+      ordinaryTaxRate: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('ordinary-tax-rate', 37) / 100 : 0,
+      ltcgTaxRate: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('ltcg-tax-rate', 23.8) / 100 : 0,
+    };
+
+    return {
+      initialValue,
+      initialLocBalance,
+      startYear,
+      withdrawalStartYear,
+      timeHorizon,
+      annualWithdrawal,
+      annualRaise,
+      monthlyWithdrawal,
+      sblocRate,
+      maxBorrowing,
+      maintenanceMargin,
+      liquidationHaircut,
+      iterations,
+      inflationRate,
+      returnModel,
+      regimeCalibration,
+      withdrawalChapters,
+      taxModeling,
+    };
+  }
+
+  /**
+   * Set simulation parameters from saved portfolio preset
+   * Converts from 0-1 scale to percentages (0-100) for UI sliders
+   */
+  public setSimulationParams(params: Partial<PortfolioRecord>): void {
+    // Portfolio & Timeline
+    if (params.initialValue !== undefined) {
+      const el = this.$('#initial-investment') as NumberInput;
+      if (el) el.value = params.initialValue;
+    }
+    if (params.initialLocBalance !== undefined) {
+      const el = this.$('#initial-loc-balance') as NumberInput;
+      if (el) el.value = params.initialLocBalance;
+    }
+    if (params.startYear !== undefined) {
+      const el = this.$('#start-year') as NumberInput;
+      if (el) el.value = params.startYear;
+    }
+    if (params.withdrawalStartYear !== undefined) {
+      const el = this.$('#withdrawal-start-year') as NumberInput;
+      if (el) el.value = params.withdrawalStartYear;
+    }
+    if (params.timeHorizon !== undefined) {
+      const el = this.$('#time-horizon') as RangeSlider;
+      if (el) el.value = params.timeHorizon;
+    }
+
+    // Withdrawal Strategy
+    if (params.annualWithdrawal !== undefined) {
+      const el = this.$('#annual-withdrawal') as NumberInput;
+      if (el) el.value = params.annualWithdrawal;
+    }
+    if (params.annualRaise !== undefined) {
+      const el = this.$('#annual-raise') as RangeSlider;
+      if (el) el.value = params.annualRaise * 100; // Convert 0-1 to 0-100
+    }
+    if (params.monthlyWithdrawal !== undefined) {
+      const el = this.$('#monthly-withdrawal') as CheckboxInput;
+      if (el) el.checked = params.monthlyWithdrawal;
+    }
+
+    // SBLOC Terms (convert 0-1 to 0-100 for sliders)
+    if (params.sblocRate !== undefined) {
+      const el = this.$('#sbloc-rate') as RangeSlider;
+      if (el) el.value = params.sblocRate * 100;
+    }
+    if (params.maxBorrowing !== undefined) {
+      const el = this.$('#max-borrowing') as RangeSlider;
+      if (el) el.value = params.maxBorrowing * 100;
+    }
+    if (params.maintenanceMargin !== undefined) {
+      const el = this.$('#maintenance-margin') as RangeSlider;
+      if (el) el.value = params.maintenanceMargin * 100;
+    }
+    if (params.liquidationHaircut !== undefined) {
+      const el = this.$('#liquidation-haircut') as RangeSlider;
+      if (el) el.value = params.liquidationHaircut * 100;
+    }
+
+    // Simulation Settings
+    if (params.iterations !== undefined) {
+      const el = this.$('#num-simulations') as SelectInput;
+      if (el) el.value = params.iterations.toString();
+    }
+    if (params.inflationRate !== undefined) {
+      const el = this.$('#inflation-rate') as RangeSlider;
+      if (el) el.value = params.inflationRate * 100;
+    }
+    if (params.returnModel !== undefined) {
+      const el = this.$('#return-model') as SelectInput;
+      if (el) el.value = params.returnModel;
+      // Trigger visibility update for regime calibration
+      el?.dispatchEvent(new Event('change'));
+    }
+    if (params.regimeCalibration !== undefined) {
+      this._regimeCalibration = params.regimeCalibration;
+      const historicalBtn = this.$('#regime-historical') as HTMLButtonElement;
+      const conservativeBtn = this.$('#regime-conservative') as HTMLButtonElement;
+      const helpText = this.$('#regime-help-text');
+      historicalBtn?.classList.toggle('active', params.regimeCalibration === 'historical');
+      conservativeBtn?.classList.toggle('active', params.regimeCalibration === 'conservative');
+      if (helpText) {
+        helpText.textContent = params.regimeCalibration === 'historical'
+          ? 'Calibrated to historical S&P 500 data (1950-2024)'
+          : 'Stress-testing with extended crash durations';
+      }
+    }
+
+    // Withdrawal Chapters
+    if (params.withdrawalChapters !== undefined) {
+      const enableEl = this.$('#enable-chapters') as CheckboxInput;
+      if (enableEl) {
+        enableEl.checked = params.withdrawalChapters.enabled;
+        enableEl.dispatchEvent(new Event('change')); // Trigger visibility
+      }
+
+      if (params.withdrawalChapters.enabled && params.withdrawalChapters.chapter2) {
+        const yearsEl = this.$('#chapter2-years') as NumberInput;
+        const reductionEl = this.$('#chapter2-reduction') as RangeSlider;
+        if (yearsEl) yearsEl.value = params.withdrawalChapters.chapter2.yearsAfterStart;
+        if (reductionEl) reductionEl.value = params.withdrawalChapters.chapter2.reductionPercent;
+      }
+
+      if (params.withdrawalChapters.enabled && params.withdrawalChapters.chapter3) {
+        const yearsEl = this.$('#chapter3-years') as NumberInput;
+        const reductionEl = this.$('#chapter3-reduction') as RangeSlider;
+        if (yearsEl) yearsEl.value = params.withdrawalChapters.chapter3.yearsAfterStart;
+        if (reductionEl) reductionEl.value = params.withdrawalChapters.chapter3.reductionPercent;
+      }
+    }
+
+    // Tax Modeling
+    if (params.taxModeling !== undefined) {
+      const enableEl = this.$('#enable-tax-modeling') as CheckboxInput;
+      if (enableEl) {
+        enableEl.checked = params.taxModeling.enabled;
+        enableEl.dispatchEvent(new Event('change')); // Trigger visibility
+      }
+
+      const taxAdvantagedEl = this.$('#tax-advantaged') as CheckboxInput;
+      if (taxAdvantagedEl) {
+        taxAdvantagedEl.checked = params.taxModeling.taxAdvantaged;
+        taxAdvantagedEl.dispatchEvent(new Event('change')); // Trigger visibility
+      }
+
+      if (params.taxModeling.enabled && !params.taxModeling.taxAdvantaged) {
+        const dividendEl = this.$('#dividend-yield') as RangeSlider;
+        const ordinaryEl = this.$('#ordinary-tax-rate') as RangeSlider;
+        const ltcgEl = this.$('#ltcg-tax-rate') as RangeSlider;
+        if (dividendEl) dividendEl.value = params.taxModeling.dividendYield * 100;
+        if (ordinaryEl) ordinaryEl.value = params.taxModeling.ordinaryTaxRate * 100;
+        if (ltcgEl) ltcgEl.value = params.taxModeling.ltcgTaxRate * 100;
+      }
+    }
+  }
+
+  /**
    * Collect simulation parameters from UI components
    */
   private collectSimulationParams(): { config: SimulationConfig; portfolio: PortfolioConfig } {
@@ -1040,6 +1253,23 @@ export class AppRoot extends BaseComponent {
         weight: weight / 100 // Convert percent to decimal
       }));
       (e as CustomEvent).detail.assets = assets;
+    });
+
+    // Handle request for simulation parameters (from portfolio-composition)
+    this.addEventListener('get-simulation-params', (e: Event) => {
+      const params = this.getSimulationParams();
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.callback === 'function') {
+        customEvent.detail.callback(params);
+      }
+    });
+
+    // Handle set simulation parameters (from portfolio-composition)
+    this.addEventListener('set-simulation-params', (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        this.setSimulationParams(customEvent.detail);
+      }
     });
 
     // Portfolio preset functionality is now handled internally by portfolio-composition

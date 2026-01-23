@@ -28,4 +28,45 @@ export interface PortfolioRecord {
   created: string; // ISO date string
   modified: string; // ISO date string
   version: number; // For future schema migrations
+
+  // Simulation configuration (all optional for backward compatibility)
+  // Portfolio & Timeline
+  initialValue?: number;
+  initialLocBalance?: number;
+  startYear?: number;
+  withdrawalStartYear?: number;
+  timeHorizon?: number;
+
+  // Withdrawal Strategy
+  annualWithdrawal?: number;
+  annualRaise?: number; // 0-1 scale (not percent)
+  monthlyWithdrawal?: boolean;
+
+  // SBLOC Terms
+  sblocRate?: number; // 0-1 scale (not percent)
+  maxBorrowing?: number; // 0-1 scale (not percent)
+  maintenanceMargin?: number; // 0-1 scale (not percent)
+  liquidationHaircut?: number; // 0-1 scale (not percent)
+
+  // Simulation Settings
+  iterations?: number;
+  inflationRate?: number; // 0-1 scale (not percent)
+  returnModel?: 'bootstrap' | 'regime';
+  regimeCalibration?: 'historical' | 'conservative';
+
+  // Withdrawal Chapters
+  withdrawalChapters?: {
+    enabled: boolean;
+    chapter2?: { yearsAfterStart: number; reductionPercent: number };
+    chapter3?: { yearsAfterStart: number; reductionPercent: number };
+  };
+
+  // Tax Modeling
+  taxModeling?: {
+    enabled: boolean;
+    taxAdvantaged: boolean;
+    dividendYield: number; // 0-1 scale (not percent)
+    ordinaryTaxRate: number; // 0-1 scale (not percent)
+    ltcgTaxRate: number; // 0-1 scale (not percent)
+  };
 }
