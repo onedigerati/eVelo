@@ -270,6 +270,22 @@ export class SBLOCUtilizationChart extends BaseChart {
 
     const maxBorrowing = this._data?.maxBorrowing || 65;
 
+    // Calculate dynamic Y-axis max based on actual data range
+    const dataMax = this._data
+      ? Math.max(
+          ...this._data.p10,
+          ...this._data.p25,
+          ...this._data.p50,
+          ...this._data.p75,
+          ...this._data.p90,
+          this._data.maxBorrowing
+        )
+      : 65;
+
+    // Add 15% padding and round up to nearest 5 for clean tick marks
+    const paddedMax = dataMax * 1.15;
+    const suggestedMax = Math.ceil(paddedMax / 5) * 5;
+
     return {
       type: 'line',
       data: chartData,
@@ -310,7 +326,7 @@ export class SBLOCUtilizationChart extends BaseChart {
                 this.formatPercent(value as number),
             },
             min: 0,
-            suggestedMax: Math.max(100, (this._data?.maxBorrowing || 65) * 2),
+            suggestedMax: suggestedMax,
           },
         },
       },
