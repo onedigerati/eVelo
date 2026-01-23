@@ -27,6 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
 - [x] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
 - [x] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
+- [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
 
 ## Phase Details
 
@@ -351,10 +352,37 @@ Based on research findings:
 - Asset statistics fallback values may be misleading
 - Output: 14-GAP-FINDINGS.md with complete issue documentation
 
+### Phase 15: Dashboard Gap Fixes
+**Goal**: Resolve all 4 gaps identified in 14-GAP-FINDINGS.md to ensure dashboard displays correct data
+**Depends on**: Phase 14
+**Requirements**: CALC-01, CALC-02, VIZ-01, VIZ-04, VIZ-06, VIZ-07
+**Success Criteria** (what must be TRUE):
+  1. GAP-01 FIXED: Percentile scale corrected (0-100) in monte-carlo.ts - all P10/P25/P50/P75/P90 values realistic
+  2. GAP-02 FIXED: Success rate uses consistent operator (> or >=) across codebase
+  3. GAP-VIZ-07 FIXED: Array indexing uses idx instead of year value in updateComparisonLineChart
+  4. VIZ-04 FIXED: Correlation heatmap fallback values clearly labeled as estimates
+  5. VIZ-01 and VIZ-06 display correct percentile data after GAP-01 fix
+  6. All regression tests pass for affected calculations
+**Research**: Not needed (fixes documented in 14-GAP-FINDINGS.md)
+**Plans**: 4 plans
+
+Plans:
+- [x] 15-01-PLAN.md -- Fix GAP-01: Percentile scale mismatch (0-1 to 0-100)
+- [x] 15-02-PLAN.md -- Fix GAP-02: Success rate operator consistency
+- [x] 15-03-PLAN.md -- Fix GAP-VIZ-07: Array indexing in updateComparisonLineChart
+- [x] 15-04-PLAN.md -- Fix VIZ-04: Fallback value labeling in correlation heatmap
+
+**Details:**
+Gap resolution priority from 14-GAP-FINDINGS.md:
+- GAP-01 (HIGH/CRITICAL): Percentile scale mismatch - 13+ call sites in monte-carlo.ts
+- GAP-VIZ-07 (MEDIUM/HIGH): Array indexing issue - 1 line fix in results-dashboard.ts
+- GAP-02 (MEDIUM): Success rate inconsistency - 1 operator change
+- VIZ-04 (LOW): Fallback value labeling - UI enhancement
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -373,6 +401,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 12. Monthly Withdrawal Simulation | 2/2 | Complete | 2026-01-22 |
 | 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
+| 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 
-**Total Plans**: 58
-**Completed Plans**: 58
+**Total Plans**: 62
+**Completed Plans**: 62
