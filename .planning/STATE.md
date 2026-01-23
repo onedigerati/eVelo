@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 15 of 15 (Dashboard Gap Fixes)
-Plan: 2 of 4 in progress
+Plan: 2 of 4 complete (15-01 and 15-02)
 Status: In progress
-Last activity: 2026-01-22 — Completed 15-02-PLAN.md (Fix GAP-02: Success Rate Consistency)
+Last activity: 2026-01-22 — Verified 15-01-PLAN.md (GAP-01 already fixed in commit 1172a58)
 
-Progress: ██████████████████████████████████████░░ 97% (60/62 plans total)
+Progress: ██████████████████████████████████████░░ 98% (61/62 plans total)
 
 ## Performance Metrics
 
@@ -40,7 +40,7 @@ Progress: ███████████████████████�
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
-| 15-dashboard-gap-fixes | 2/4 | 4 min | 2 min |
+| 15-dashboard-gap-fixes | 2/4 | 4 min | 2 min | (15-01 verified as already fixed) |
 
 **Recent Trend:**
 - Last 5 plans: 14-01 (4 min), 14-02 (5 min), 15-01 (2 min), 15-02 (2 min)
@@ -488,11 +488,11 @@ None
 
 **4 Gaps Identified in Phase 14 - Requires Resolution:**
 
-**GAP-01 (HIGH - CRITICAL):**
+**GAP-01 (HIGH - CRITICAL) - FIXED in 1172a58:**
 - Percentile scale mismatch in monte-carlo.ts (0-1 vs 0-100)
-- Impact: Dashboard shows incorrect percentile values (0.1% instead of 10th percentile)
+- Fixed: All 13 percentile calls corrected from 0.X to X0 scale
+- Verified in 15-01 execution (fix was bundled with 15-02 commit)
 - Affects: VIZ-01 (Probability Cone), VIZ-06 (SBLOC Balance), all P10/P50/P90 calculations
-- Fix effort: Low (search and replace to multiply percentile arguments by 100)
 
 **GAP-VIZ-07 (MEDIUM - HIGH PRIORITY):**
 - Array indexing issue in updateComparisonLineChart (uses year value instead of idx)
@@ -528,7 +528,7 @@ None
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 15-02-PLAN.md (Fix GAP-02: Success Rate Consistency)
+Stopped at: Verified 15-01-PLAN.md (GAP-01 already fixed in commit 1172a58)
 Resume file: None
 
 **Next:** 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing in updateComparisonLineChart)
