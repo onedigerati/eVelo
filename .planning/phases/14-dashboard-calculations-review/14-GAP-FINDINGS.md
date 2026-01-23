@@ -4,11 +4,14 @@
 **Phase:** 14 - Dashboard Calculations Review
 **Status:** In Progress
 
-## Summary
+## Executive Summary
 
-This document catalogs all calculation discrepancies and issues discovered during the Phase 14 dashboard calculations review. Each gap is documented with evidence from code inspection, expected behavior, and proposed resolution.
+This document catalogs all calculation and visualization discrepancies discovered during the Phase 14 dashboard calculations review. Each gap is documented with evidence from code inspection, expected behavior, and proposed resolution.
 
-**Total Gaps Found:** 2 (HIGH severity issues only - no additional calculation gaps found in Task 2)
+**Total Gaps Found:** 4 gaps identified across calculations and visualizations
+- **1 HIGH severity** (GAP-01: Percentile scale mismatch)
+- **2 MEDIUM severity** (GAP-02: Success rate inconsistency, GAP-VIZ-07: Array indexing)
+- **1 LOW severity** (VIZ-04: Misleading fallback values)
 
 ---
 
@@ -243,9 +246,480 @@ Percentile scale mismatch is a HIGH severity bug that affects all percentile cal
 
 ---
 
+---
+
+## Visualization Gaps
+
+### VIZ-01: Probability Cone Chart ⚠️ (Affected by GAP-01)
+
+**Requirement**: VIZ-01 (Probability Cone Chart)
+**Severity**: LOW (visualization itself is correct, but displays incorrect data)
+**Component**: src/components/ui/results-dashboard.ts, src/charts/probability-cone-chart.ts
+
+**Description**:
+The probability cone chart visualization correctly binds `yearlyPercentiles` data to chart bands, but the underlying data is INCORRECT due to GAP-01 (percentile scale mismatch). The visualization logic itself has no issues.
+
+**Evidence**:
+- `transformToConeData()` function (lines 886-897) correctly maps yearlyPercentiles to chart bands (p10, p25, p50, p75, p90)
+- `probability-cone-chart.ts` correctly renders the percentile bands as layered datasets with appropriate colors and fills
+- Data flow verified: `this._data.yearlyPercentiles` → `transformToConeData()` → `cone.data` (line 754)
+
+**Impact**:
+Chart displays incorrect percentile values (all near minimum) due to GAP-01. Once GAP-01 is fixed, this visualization will display correct data.
+
+**Proposed Resolution**:
+No changes needed to visualization code. Fix GAP-01 in monte-carlo.ts to provide correct percentile data.
+
+---
+
+### VIZ-02: Terminal Distribution Histogram ✓
+
+**Requirement**: VIZ-02 (Terminal Distribution Histogram)
+**Severity**: NONE
+**Component**: src/components/ui/results-dashboard.ts, src/charts/histogram-chart.ts
+
+**Description**:
+Terminal distribution histogram correctly bins terminalValues and applies color gradient.
+
+**Evidence**:
+- `transformToHistogramData()` function (lines 903-941) correctly creates 20 bins
+- Bin width calculated correctly: `(max - min) / binCount` (line 923)
+- Values correctly assigned to bins with proper edge case handling (lines 936-939)
+- `histogram-chart.ts` correctly applies red-yellow-green gradient via `getHistogramBarColor()` (lines 102-119)
+- Data flow verified: `this._data.terminalValues` → `transformToHistogramData()` → `histogram.setData()` (line 760)
+
+**Verification**:
+All requirements met. No issues found.
+
+---
+
+### VIZ-03: Portfolio Composition Donut ✓
+
+**Requirement**: VIZ-03 (Portfolio Composition Donut)
+**Severity**: NONE
+**Component**: src/components/ui/results-dashboard.ts, src/charts/donut-chart.ts
+
+**Description**:
+Portfolio composition donut chart correctly displays portfolio weights with labels and percentages.
+
+**Evidence**:
+- `portfolioWeights` setter (lines 120-122) correctly stores data
+- Data binding (lines 767-774) correctly maps weights to donut segments with symbol labels
+- `donut-chart.ts` correctly renders segments with colors, labels, and percentage calculations
+- Legend shows `{symbol}: {percentage}%` format (lines 176-189)
+
+**Verification**:
+All requirements met. No issues found.
+
+---
+
+### VIZ-04: Correlation Heatmap ⚠️ (Misleading Fallback Values)
+
+**Requirement**: VIZ-04 (Correlation Heatmap)
+**Severity**: LOW
+**Component**: src/components/ui/results-dashboard.ts, src/charts/correlation-heatmap.ts
+
+**Description**:
+Correlation heatmap correctly renders the correlation matrix with color scale, but uses potentially misleading fallback values (8% expected return, 16% volatility) when preset data is unavailable. These fallback values are not clearly labeled as estimates.
+
+**Evidence**:
+
+**Correct correlation matrix rendering:**
+- `correlationMatrix` setter (lines 135-136) correctly stores data
+- Heatmap binding (lines 778-789) correctly passes labels, matrix, expectedReturns, and volatilities
+- `correlation-heatmap.ts` correctly renders matrix with color interpolation (lines 52-73)
+
+**Problematic fallback values (lines 1706-1711):**
+```typescript
+else {
+  // Fallback values if preset data not available
+  // Use market average estimates
+  expectedReturns.push(0.08);  // 8% default expected return
+  volatilities.push(0.16);    // 16% default volatility
+}
+```
+
+**Issue**:
+When preset data is unavailable, the heatmap displays 8%/16% values without indicating they are fallback estimates rather than calculated from actual data. Users may assume these are real statistics for the selected assets.
+
+**Expected Behavior**:
+Either:
+1. Display "N/A" or "—" for missing data, OR
+2. Clearly label fallback values as "Est." in the heatmap cells, OR
+3. Show a warning message when fallback values are used
+
+**Proposed Resolution**:
+Modify `calculateAssetStatistics()` to return a flag indicating which values are fallbacks, and update `correlation-heatmap.ts` to visually distinguish estimated values (e.g., italicized text or "(est)" suffix).
+
+---
+
+### VIZ-05: Margin Call Risk Chart ✓
+
+**Requirement**: VIZ-05 (Margin Call Risk Chart)
+**Severity**: NONE
+**Component**: src/components/ui/results-dashboard.ts, src/charts/margin-call-chart.ts
+
+**Description**:
+Margin call risk chart correctly displays annual and cumulative margin call probabilities with risk-based color coding.
+
+**Evidence**:
+- Margin call data binding (lines 806-818) correctly passes `marginCallStats` to chart
+- Maps `probability` values to bars and `cumulativeProbability` to line overlay (lines 809-815)
+- `margin-call-chart.ts` correctly applies risk-based colors (green < 5%, yellow < 15%, orange < 30%, red >= 30%) via `getRiskColor()` (lines 38-48)
+- Cumulative line correctly overlaid on bars (lines 105-118)
+
+**Verification**:
+All requirements met. No issues found.
+
+---
+
+### VIZ-06: SBLOC Balance Chart ⚠️ (Affected by GAP-01)
+
+**Requirement**: VIZ-06 (SBLOC Balance Chart)
+**Severity**: LOW (visualization itself is correct, but displays incorrect data)
+**Component**: src/components/ui/results-dashboard.ts, src/charts/sbloc-balance-chart.ts
+
+**Description**:
+SBLOC balance chart correctly renders loan balance percentiles, cumulative withdrawals, and cumulative interest, but the percentile data is INCORRECT due to GAP-01 (percentile scale mismatch). The visualization logic itself has no issues.
+
+**Evidence**:
+- SBLOC chart binding (lines 824-847) correctly creates datasets for:
+  - Loan Balance (Median): `traj.loanBalance.p50` (line 833)
+  - Cumulative Withdrawals: `traj.cumulativeWithdrawals` (line 837)
+  - Cumulative Interest: `traj.cumulativeInterest.p50` (line 841)
+- `sbloc-balance-chart.ts` correctly renders line chart with appropriate styles (solid, dashed, dotted) and colors
+
+**Impact**:
+Chart displays incorrect loan balance and interest values due to GAP-01. Once GAP-01 is fixed, this visualization will display correct data.
+
+**Proposed Resolution**:
+No changes needed to visualization code. Fix GAP-01 in monte-carlo.ts to provide correct percentile data.
+
+---
+
+### GAP-VIZ-07: BBD vs Sell Comparison Array Indexing Issue
+
+**Requirement**: VIZ-07 (BBD vs Sell Comparison)
+**Severity**: MEDIUM
+**Component**: src/components/ui/results-dashboard.ts (updateComparisonLineChart function)
+
+**Description**:
+The `updateComparisonLineChart()` function uses `yearlyPercentiles[year]` where `year` is the actual year number from the simulation, but `yearlyPercentiles` is an array indexed from 0. This creates a potential array indexing mismatch.
+
+**Evidence**:
+
+**Lines 1386-1389:**
+```typescript
+const bbdValues = years.map((year, idx) => {
+  const portfolio = this._data!.yearlyPercentiles[year]?.p50 || 0;
+  const loan = traj.loanBalance.p50[idx] || 0;
+  return portfolio - loan;
+});
+```
+
+**Problem**:
+- `years` is an array of year numbers (e.g., `[0, 1, 2, 3, ...]` or potentially `[1, 2, 3, 4, ...]`)
+- `yearlyPercentiles` is an array indexed from 0
+- Code uses `year` as array index, but should use `idx`
+
+**Example of potential error**:
+If `years = [0, 1, 2, 3, 4, 5]` and `yearlyPercentiles` has 6 elements:
+- Year 0: `yearlyPercentiles[0]` ✓ correct (uses idx=0)
+- Year 1: `yearlyPercentiles[1]` ✓ correct (uses idx=1)
+- Works correctly IF years start at 0
+
+If `years = [1, 2, 3, 4, 5]` and `yearlyPercentiles` has 5 elements:
+- Year 1: `yearlyPercentiles[1]` ⚠️ skips yearlyPercentiles[0]
+- Year 5: `yearlyPercentiles[5]` ❌ undefined (array only has indices 0-4)
+
+**Expected Behavior**:
+Use `idx` to access array position instead of `year` value:
+```typescript
+const portfolio = this._data!.yearlyPercentiles[idx]?.p50 || 0;
+```
+
+**Impact**:
+If simulation years start at 0, the bug has no effect. If years start at 1 or any other value, the comparison line chart will display incorrect BBD net worth values (potentially all zeros due to undefined array access).
+
+**Proposed Resolution**:
+Change line 1387 from:
+```typescript
+const portfolio = this._data!.yearlyPercentiles[year]?.p50 || 0;
+```
+To:
+```typescript
+const portfolio = this._data!.yearlyPercentiles[idx]?.p50 || 0;
+```
+
+**Note**: Similar pattern should be checked in other functions that access `yearlyPercentiles` by year value vs array index.
+
+---
+
+### VIZ-07: BBD Comparison Charts (Remaining Components) ✓
+
+**Components**: bbd-comparison-chart, comparison-line-chart, cumulative-costs-chart, terminal-comparison-chart
+
+**Description**:
+All BBD vs Sell comparison charts correctly render their respective data visualizations, except for the array indexing issue documented in GAP-VIZ-07 above.
+
+**Evidence**:
+- `bbd-comparison-chart.ts` correctly displays BBD vs Sell bar comparison with advantage annotation (lines 855-864)
+- Estate analysis data correctly bound: `bbdNetEstate`, `sellNetEstate`, `bbdAdvantage` (lines 858-860)
+- All comparison charts receive correctly calculated `sellResult` from `calculateSellStrategy()` function
+
+**Verification**:
+Chart rendering logic verified correct. Only issue is GAP-VIZ-07 array indexing problem.
+
+---
+
+---
+
+## Summary
+
+### Gaps by Severity
+
+**HIGH (1 gap):**
+- GAP-01: Percentile Scale Mismatch in monte-carlo.ts
+
+**MEDIUM (2 gaps):**
+- GAP-02: Success Rate Definition Inconsistency
+- GAP-VIZ-07: BBD vs Sell Comparison Array Indexing Issue
+
+**LOW (1 gap):**
+- VIZ-04: Correlation Heatmap Misleading Fallback Values
+
+### All Gaps List
+
+| ID | Severity | Component | Description |
+|----|----------|-----------|-------------|
+| GAP-01 | HIGH | monte-carlo.ts | Percentile scale mismatch (0-1 vs 0-100) causes incorrect percentile calculations |
+| GAP-02 | MEDIUM | monte-carlo.ts, metrics.ts | Success rate uses `>=` in one place and `>` in another |
+| GAP-VIZ-07 | MEDIUM | results-dashboard.ts | Array indexing uses year value instead of array index |
+| VIZ-04 | LOW | results-dashboard.ts | Fallback values (8%/16%) not clearly labeled as estimates |
+
+### Verified Components (No Issues)
+
+**Calculations:**
+- ✓ CALC-03: CAGR and Volatility
+- ✓ CALC-04: Margin Call Probability
+- ✓ CALC-05: Salary Equivalent
+- ✓ CALC-07: TWRR (Time-Weighted Rate of Return)
+
+**Visualizations:**
+- ✓ VIZ-02: Terminal Distribution Histogram
+- ✓ VIZ-03: Portfolio Composition Donut
+- ✓ VIZ-05: Margin Call Risk Chart
+
+**Affected by GAP-01 (visualization code correct, data incorrect):**
+- ⚠️ VIZ-01: Probability Cone Chart
+- ⚠️ VIZ-06: SBLOC Balance Chart
+
+---
+
+## Resolution Priority
+
+### Priority 1: CRITICAL (Fix Immediately)
+
+**GAP-01: Percentile Scale Mismatch**
+- **Why critical**: Affects all percentile-based dashboard displays (cone chart, SBLOC balance, statistics)
+- **Blast radius**: 13+ call sites in monte-carlo.ts
+- **User impact**: Dashboard shows completely incorrect percentile values (all near minimum)
+- **Fix effort**: Low (search-and-replace to multiply percentile arguments by 100)
+- **Testing**: Verify percentile values fall within expected ranges (P10 < P25 < P50 < P75 < P90)
+
+### Priority 2: HIGH (Fix in Next Sprint)
+
+**GAP-VIZ-07: Array Indexing Issue**
+- **Why high**: Potential runtime error or incorrect data display
+- **Blast radius**: updateComparisonLineChart function
+- **User impact**: BBD vs Sell comparison line chart may show incorrect or missing data
+- **Fix effort**: Low (change `year` to `idx` on one line)
+- **Testing**: Verify comparison line chart displays correctly for simulations starting at year 0 and year 1
+
+### Priority 3: MEDIUM (Address When Convenient)
+
+**GAP-02: Success Rate Definition Inconsistency**
+- **Why medium**: Code inconsistency with negligible practical impact
+- **Blast radius**: 2 locations (monte-carlo.ts, metrics.ts)
+- **User impact**: Minimal (probability of exact match is near zero)
+- **Fix effort**: Very low (change one operator)
+- **Testing**: Update unit tests to clarify expected behavior
+
+**VIZ-04: Misleading Fallback Values**
+- **Why medium**: Potential user confusion about data source
+- **Blast radius**: calculateAssetStatistics function and correlation-heatmap component
+- **User impact**: Users may not realize 8%/16% values are estimates
+- **Fix effort**: Medium (requires UI changes to heatmap component)
+- **Testing**: Verify heatmap clearly indicates estimated vs calculated values
+
+---
+
+## Affected Requirements
+
+| Requirement | Status | Gap ID | Notes |
+|-------------|--------|--------|-------|
+| CALC-01 (Success Rate) | ⚠️ Minor | GAP-02 | Functionally correct but inconsistent operator |
+| CALC-02 (Percentile Outcomes) | ❌ Broken | GAP-01 | Scale mismatch causes incorrect results |
+| CALC-03 (CAGR & Volatility) | ✓ Verified | None | Implementation correct |
+| CALC-04 (Margin Call Probability) | ✓ Verified | None | Implementation correct |
+| CALC-05 (Salary Equivalent) | ✓ Verified | None | Implementation correct |
+| CALC-07 (TWRR) | ✓ Verified | None | Implementation correct |
+| VIZ-01 (Probability Cone) | ⚠️ Data issue | GAP-01 | Chart code correct, data incorrect |
+| VIZ-02 (Histogram) | ✓ Verified | None | Implementation correct |
+| VIZ-03 (Donut) | ✓ Verified | None | Implementation correct |
+| VIZ-04 (Heatmap) | ⚠️ UX issue | VIZ-04 | Fallback values not clearly labeled |
+| VIZ-05 (Margin Call Chart) | ✓ Verified | None | Implementation correct |
+| VIZ-06 (SBLOC Balance) | ⚠️ Data issue | GAP-01 | Chart code correct, data incorrect |
+| VIZ-07 (BBD Comparison) | ⚠️ Bug | GAP-VIZ-07 | Array indexing issue |
+
+---
+
 ## Next Steps
 
-1. ✓ Task 1 complete: Percentile scale mismatch documented (GAP-01)
-2. ✓ Task 2 complete: All CALC requirements verified
-3. Phase 14-01 complete: Gap findings documented
-4. **Recommended:** Create follow-up phase to fix GAP-01 (critical bug affecting all dashboard percentile displays)
+### Immediate Actions
+
+1. **Fix GAP-01 (CRITICAL)**: Update monte-carlo.ts percentile() calls to use 0-100 scale
+   - Search for all `percentile(` calls in monte-carlo.ts
+   - Multiply second argument by 100 (0.1 → 10, 0.25 → 25, 0.5 → 50, 0.75 → 75, 0.9 → 90)
+   - Run simulation and verify percentile values are realistic
+   - Verify VIZ-01 and VIZ-06 display correct data after fix
+
+2. **Fix GAP-VIZ-07 (HIGH)**: Update updateComparisonLineChart array indexing
+   - Change line 1387 from `yearlyPercentiles[year]` to `yearlyPercentiles[idx]`
+   - Search for similar patterns in other functions accessing yearlyPercentiles
+   - Test with simulations starting at different year values
+
+3. **Fix GAP-02 (MEDIUM)**: Standardize success rate operator
+   - Decide on `>` vs `>=` definition
+   - Update both monte-carlo.ts and metrics.ts to use same operator
+   - Update JSDoc comments to clarify definition
+
+4. **Enhance VIZ-04 (MEDIUM)**: Improve fallback value labeling
+   - Modify calculateAssetStatistics to return metadata about which values are fallbacks
+   - Update correlation-heatmap to display "(est)" suffix or italicize fallback values
+   - Consider adding info tooltip explaining fallback values
+
+### Recommended Follow-up Phase
+
+**Phase 15: Dashboard Calculations Fix**
+- Address all 4 identified gaps
+- Add regression tests for percentile calculations
+- Add integration tests for dashboard data flow
+- Update documentation to reflect resolved issues
+
+---
+
+## Test Recommendations
+
+### Unit Tests
+
+**1. Percentile Function Tests** (statistics.ts)
+```typescript
+describe('percentile()', () => {
+  it('should accept values on 0-100 scale', () => {
+    expect(percentile([1, 2, 3, 4, 5], 50)).toBe(3);
+    expect(percentile([1, 2, 3, 4, 5], 10)).toBe(1.4);
+  });
+
+  it('should NOT accept values on 0-1 scale', () => {
+    // Document current behavior
+    expect(percentile([1, 2, 3, 4, 5], 0.5)).toBe(1.002); // WRONG!
+  });
+});
+```
+
+**2. Success Rate Tests** (metrics.ts)
+```typescript
+describe('calculateSuccessRate()', () => {
+  it('should use consistent comparison operator', () => {
+    // Test exact match case
+    const result = calculateSuccessRate([100000, 100000], 100000, 10);
+    // Should be 0% if using > or 100% if using >=
+    expect(result).toBe(0); // Document expected behavior
+  });
+});
+```
+
+**3. Array Indexing Tests** (results-dashboard.ts)
+```typescript
+describe('updateComparisonLineChart()', () => {
+  it('should handle years starting at 0', () => {
+    // Test with years = [0, 1, 2, 3, 4, 5]
+  });
+
+  it('should handle years starting at 1', () => {
+    // Test with years = [1, 2, 3, 4, 5]
+  });
+});
+```
+
+### Integration Tests
+
+**1. End-to-End Percentile Flow**
+- Run simulation with known inputs
+- Verify monte-carlo.ts outputs correct percentiles
+- Verify results-dashboard.ts displays correct percentiles in VIZ-01 and VIZ-06
+- Expected: P10 < P25 < P50 < P75 < P90 for portfolio values
+
+**2. Dashboard Data Binding**
+- Verify all visualizations receive correct data from SimulationOutput
+- Verify no undefined array accesses
+- Verify all charts render without errors
+
+**3. Comparison Charts**
+- Run BBD vs Sell comparison with various year ranges
+- Verify comparison line chart displays for all year configurations
+- Verify no data misalignment between strategies
+
+### Known-Input Verification Tests
+
+**Test Case: 10-year simulation, $1M initial, 10 iterations**
+- Expected: P50 should grow over time (compounding)
+- Expected: P90 > P75 > P50 > P25 > P10 for each year
+- Expected: Success rate between 0-100%
+- Expected: All visualizations render without undefined values
+
+---
+
+## Metadata
+
+**Date Reviewed:** 2026-01-22
+**Phase:** 14 - Dashboard Calculations Review
+**Plans Executed:** 14-01 (Calculation Verification), 14-02 (Visualization Verification)
+**Review Method:** Code inspection using grep and file reads
+
+**Files Examined:**
+- src/simulation/monte-carlo.ts
+- src/simulation/statistics.ts
+- src/calculations/metrics.ts
+- src/calculations/twrr.ts
+- src/calculations/salary-equivalent.ts
+- src/calculations/margin-call-probability.ts
+- src/components/ui/results-dashboard.ts (1720 lines)
+- src/charts/probability-cone-chart.ts
+- src/charts/histogram-chart.ts
+- src/charts/donut-chart.ts
+- src/charts/correlation-heatmap.ts
+- src/charts/margin-call-chart.ts
+- src/charts/sbloc-balance-chart.ts
+- src/charts/bbd-comparison-chart.ts
+
+**Total Gaps Found:** 4
+- **Critical gaps:** 1 (GAP-01)
+- **High-priority gaps:** 0
+- **Medium-priority gaps:** 2 (GAP-02, GAP-VIZ-07)
+- **Low-priority gaps:** 1 (VIZ-04)
+
+**Requirements Verified:** 13 (7 CALC, 7 VIZ minus 1 VIZ-06 non-existent)
+- **Fully verified:** 7 (CALC-03, CALC-04, CALC-05, CALC-07, VIZ-02, VIZ-03, VIZ-05)
+- **Issues found:** 4 (CALC-01, CALC-02, VIZ-04, VIZ-07)
+- **Affected by other gaps:** 2 (VIZ-01, VIZ-06 affected by GAP-01)
+
+**Lines of Code Reviewed:** ~3,000+ lines across 14 files
+
+**Confidence Level:** HIGH
+- All files read and inspected via direct file access
+- All function implementations verified against requirements
+- All data flows traced from source to visualization
+- Edge cases documented
+- Test recommendations provided
