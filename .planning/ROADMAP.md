@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 13: E2E Testing with Agent-Browser** - Implement automated UI testing using semantic locators for Shadow DOM and screenshot comparison for Chart.js
 - [x] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
-- [ ] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
+- [x] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
 
 ## Phase Details
 
@@ -397,10 +397,10 @@ Gap resolution priority from 14-GAP-FINDINGS.md:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- State manager and delta calculations (Wave 1)
-- [ ] 16-02-PLAN.md -- Desktop comparison dashboard and delta indicators (Wave 2)
-- [ ] 16-03-PLAN.md -- Mobile tabs and trade-off summary (Wave 2)
-- [ ] 16-04-PLAN.md -- Integration and user flow wiring (Wave 3)
+- [x] 16-01-PLAN.md -- State manager and delta calculations (Wave 1)
+- [x] 16-02-PLAN.md -- Desktop comparison dashboard and delta indicators (Wave 2)
+- [x] 16-03-PLAN.md -- Mobile tabs and trade-off summary (Wave 2)
+- [x] 16-04-PLAN.md -- Integration and user flow wiring (Wave 3)
 
 **Details:**
 User flow:
@@ -442,7 +442,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 13. E2E Testing with Agent-Browser | 6/6 | Complete | 2026-01-22 |
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
-| 16. Dashboard Comparison Mode | 0/4 | Not started | - |
+| 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
 
 **Total Plans**: 66
-**Completed Plans**: 62
+**Completed Plans**: 66
