@@ -5,17 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 14 - Dashboard Calculations Review
+**Current focus:** Phase 15 - Dashboard Gap Fixes
 
 ## Current Position
 
-Phase: 14 of 14 (Dashboard Calculations Review)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-01-22 — Completed 14-02-PLAN.md (Visualization Verification)
-**Next:** Phase 14 complete - ready for gap resolution or next initiative
+Phase: 15 of 15 (Dashboard Gap Fixes)
+Plan: 2 of 4 in progress
+Status: In progress
+Last activity: 2026-01-22 — Completed 15-02-PLAN.md (Fix GAP-02: Success Rate Consistency)
 
-Progress: █████████████████████████████████████ 100% (58/58 plans total)
+Progress: ██████████████████████████████████████░░ 97% (60/62 plans total)
 
 ## Performance Metrics
 
@@ -41,10 +40,11 @@ Progress: ███████████████████████�
 | 12-monthly-withdrawal-simulation | 2/2 | 7 min | 3.5 min |
 | 13-e2e-testing-agent-browser | 6/6 | 21 min | 3.5 min |
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
+| 15-dashboard-gap-fixes | 2/4 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 13-05 (3 min), 13-06 (4 min), 14-01 (4 min), 14-02 (5 min)
-- Trend: Steady execution pace
+- Last 5 plans: 14-01 (4 min), 14-02 (5 min), 15-01 (2 min), 15-02 (2 min)
+- Trend: Fast gap closure execution
 
 ## Accumulated Context
 
@@ -355,6 +355,13 @@ Recent decisions affecting current work:
   - Verify all calculations display correctly
   - Create gap findings for any issues identified
 
+- Phase 15 added: Dashboard Gap Fixes
+  - Resolves all 4 gaps from 14-GAP-FINDINGS.md
+  - GAP-01 (HIGH): Percentile scale mismatch in monte-carlo.ts
+  - GAP-VIZ-07 (MEDIUM): Array indexing in updateComparisonLineChart
+  - GAP-02 (MEDIUM): Success rate operator inconsistency
+  - VIZ-04 (LOW): Fallback value labeling in correlation heatmap
+
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
 - calculateSellStrategy uses BBD percentiles for growth rates
@@ -492,10 +499,10 @@ None
 - Impact: BBD vs Sell comparison may show incorrect or missing data
 - Fix effort: Very low (one-line fix)
 
-**GAP-02 (MEDIUM):**
-- Success rate uses `>=` in monte-carlo.ts but `>` in metrics.ts
-- Impact: Negligible (exact match probability near zero)
-- Fix effort: Very low (one operator change)
+**GAP-02 (MEDIUM) - FIXED in 15-02:**
+- Success rate now uses `>` consistently in both monte-carlo.ts and metrics.ts
+- Fixed: Changed `>=` to `>` in calculateStatistics function
+- Commit: 1172a58
 
 **VIZ-04 (LOW):**
 - Correlation heatmap fallback values (8%/16%) not labeled as estimates
@@ -513,10 +520,15 @@ None
 | 003 | Wire missing SBLOC config parameters in monte-carlo.ts | 2026-01-22 | 4c93afd | [003-resolve-key-missing-simulation-logic](./quick/003-resolve-key-missing-simulation-logic/) |
 | 004 | Research agent-browser integration for UI testing | 2026-01-22 | 6ae2cdf | [004-research-agent-browser-integration](./quick/004-research-agent-browser-integration/) |
 
+**From 15-02:**
+- Standardized success rate to use `>` (strictly greater) operator
+- Success = terminal value strictly above initial value (not at-or-above)
+- Aligns with metrics.ts and JSDoc documentation
+
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 14-02-PLAN.md (Visualization Verification) - Phase 14 complete
+Stopped at: Completed 15-02-PLAN.md (Fix GAP-02: Success Rate Consistency)
 Resume file: None
 
-**All planned phases complete.** Next steps: Address 4 identified gaps or begin new initiative.
+**Next:** 15-03-PLAN.md (Fix GAP-VIZ-07: Array Indexing in updateComparisonLineChart)
