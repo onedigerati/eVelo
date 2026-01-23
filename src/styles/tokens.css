@@ -41,8 +41,14 @@
   --font-size-lg: 1.25rem;
 
   /* Layout */
-  --sidebar-width: 320px;
+  --sidebar-width: 400px;
   --sidebar-collapsed-width: 48px;
+
+  /* Modal */
+  --modal-backdrop: rgba(0, 0, 0, 0.3);
+  --modal-backdrop-blur: 4px;
+  --modal-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --modal-max-width: 360px;
 }
 
 /* Dark theme placeholder (will be implemented in Phase 9) */
