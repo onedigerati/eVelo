@@ -522,6 +522,13 @@ None
 | 002 | Move Run Simulation button to sidebar footer for persistent visibility | 2026-01-21 | 02b38ef | [002-move-run-simulation-button-to-left-pa](./quick/002-move-run-simulation-button-to-left-pa/) |
 | 003 | Wire missing SBLOC config parameters in monte-carlo.ts | 2026-01-22 | 4c93afd | [003-resolve-key-missing-simulation-logic](./quick/003-resolve-key-missing-simulation-logic/) |
 | 004 | Research agent-browser integration for UI testing | 2026-01-22 | 6ae2cdf | [004-research-agent-browser-integration](./quick/004-research-agent-browser-integration/) |
+| 005 | Fix SBLOC chart Y-axis scaling for better readability | 2026-01-22 | 30f44fc | [005-fix-sbloc-chart-y-axis-scaling](./quick/005-fix-sbloc-chart-y-axis-scaling/) |
+
+**From quick-005:**
+- Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
+- 15% padding above highest value with rounding to nearest 5 for clean ticks
+- Y-axis adapts to data: low utilization shows appropriate scale (e.g., 0-75% instead of 0-130%)
+- Always includes maxBorrowing reference line in visible range
 
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
@@ -543,7 +550,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 15-04-PLAN.md (VIZ-04: Estimate labeling) - Phase 15 complete
+Stopped at: Completed quick-005 (Fix SBLOC chart Y-axis scaling)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
+**Quick task 005 complete: SBLOC chart Y-axis now scales dynamically based on actual data.**
