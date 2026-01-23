@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 15 of 15 (Dashboard Gap Fixes)
 Plan: 4 of 4 complete (15-01, 15-02, 15-03, 15-04)
 Status: Phase complete
-Last activity: 2026-01-22 — Completed quick-005: Fix SBLOC chart Y-axis scaling
+Last activity: 2026-01-22 — Completed quick-006: Match reference dashboard style
 
 Progress: ████████████████████████████████████████ 100% (63/63 plans total)
 
@@ -523,12 +523,22 @@ None
 | 003 | Wire missing SBLOC config parameters in monte-carlo.ts | 2026-01-22 | 4c93afd | [003-resolve-key-missing-simulation-logic](./quick/003-resolve-key-missing-simulation-logic/) |
 | 004 | Research agent-browser integration for UI testing | 2026-01-22 | 6ae2cdf | [004-research-agent-browser-integration](./quick/004-research-agent-browser-integration/) |
 | 005 | Fix SBLOC chart Y-axis scaling for better readability | 2026-01-22 | 30f44fc | [005-fix-sbloc-chart-y-axis-scaling](./quick/005-fix-sbloc-chart-y-axis-scaling/) |
+| 006 | Match reference dashboard style | 2026-01-22 | b01a589 | [006-match-reference-dashboard-style](./quick/006-match-reference-dashboard-style/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
 - 15% padding above highest value with rounding to nearest 5 for clean ticks
 - Y-axis adapts to data: low utilization shows appropriate scale (e.g., 0-75% instead of 0-130%)
 - Always includes maxBorrowing reference line in visible range
+
+**From quick-006:**
+- Portfolio composition shows donut chart (70% cutout) with horizontal asset bars
+- Donut center displays asset count (e.g., "5 ASSETS")
+- Horizontal bars sorted by weight descending with color swatches and percentages
+- Light teal card background (#f0fdfa) with teal border for portfolio visualization
+- Correlation table headers use teal background (#0d9488) with white text
+- Alternating row backgrounds in correlation table (#f8fafc / #ffffff) for readability
+- Both visualization and editing cards maintained for better UX
 
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
@@ -550,8 +560,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed quick-005 (Fix SBLOC chart Y-axis scaling)
+Stopped at: Completed quick-006 (Match reference dashboard style)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 005 complete: SBLOC chart Y-axis now scales dynamically based on actual data.**
+**Quick task 006 complete: Dashboard styling now matches reference design with donut chart and teal theme.**
