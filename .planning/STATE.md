@@ -525,6 +525,7 @@ None
 | 005 | Fix SBLOC chart Y-axis scaling for better readability | 2026-01-22 | 30f44fc | [005-fix-sbloc-chart-y-axis-scaling](./quick/005-fix-sbloc-chart-y-axis-scaling/) |
 | 006 | Match reference dashboard style | 2026-01-22 | b01a589 | [006-match-reference-dashboard-style](./quick/006-match-reference-dashboard-style/) |
 | 007 | Replace Portfolio Composition layout with donut+bars card | 2026-01-22 | 09cb38f | [007-replace-portfolio-composition-layout](./quick/007-replace-portfolio-composition-layout/) |
+| 008 | Portfolio preset management with auto-save and persistence | 2026-01-22 | f4dbbbf | [008-portfolio-preset-management-auto-save-pe](./quick/008-portfolio-preset-management-auto-save-pe/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -548,6 +549,15 @@ None
 - Portfolio Composition and Asset Correlations now full width on dashboard
 - PORTFOLIO_COLORS constant for consistent asset coloring
 
+**From quick-008:**
+- Temp portfolio functions: saveTempPortfolio, loadTempPortfolio, loadLastPortfolio, deleteTempPortfolio
+- TEMP_PORTFOLIO_KEY constant ('__temp_portfolio__') for identifying temp portfolios
+- Selected assets hidden (not disabled) from available list
+- Auto-save to temp portfolio on any change when no named preset selected
+- Last portfolio (temp or named) loads on page refresh
+- All 6 preset buttons functional: Save, Load, Import, Export, Delete
+- Weight conversion: 0-1 in storage, 0-100 in UI
+
 **From 15-02:**
 - Standardized success rate to use `>` (strictly greater) operator
 - Success = terminal value strictly above initial value (not at-or-above)
@@ -568,8 +578,8 @@ None
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed quick-007 (Replace Portfolio Composition layout)
+Stopped at: Completed quick-008 (Portfolio preset management with auto-save)
 Resume file: None
 
 **Phase 15 complete. All 4 gaps from Phase 14 have been resolved.**
-**Quick task 007 complete: Dashboard Portfolio Composition now uses donut+bars card at full width.**
+**Quick task 008 complete: Portfolio presets fully functional with auto-save and persistence.**
