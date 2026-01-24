@@ -1,0 +1,126 @@
+/**
+ * Print Styles for eVelo
+ *
+ * Produces clean printable reports by:
+ * - Hiding interactive UI elements (sidebar, buttons, settings)
+ * - Preventing awkward page breaks in charts and tables
+ * - Optimizing layout for paper
+ */
+
+@media print {
+  /* Hide interactive UI elements */
+  sidebar-panel,
+  settings-panel,
+  theme-toggle,
+  .no-print,
+  button:not(.print-visible),
+  [role="navigation"],
+  header nav,
+  footer {
+    display: none !important;
+  }
+
+  /* Reset body for print */
+  body {
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #000 !important;
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Main layout becomes single column */
+  main-layout {
+    display: block !important;
+  }
+
+  /* Results dashboard takes full width */
+  results-dashboard,
+  comparison-dashboard {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent breaking important sections */
+  .chart-container,
+  .metric-card,
+  .key-metrics-banner,
+  .param-summary,
+  .strategy-analysis,
+  .percentile-spectrum,
+  table,
+  [class*="section"],
+  [class*="card"] {
+    break-inside: avoid;
+    page-break-inside: avoid; /* Legacy support */
+  }
+
+  /* Force page breaks before major sections */
+  .section-break,
+  .print-page-break {
+    break-before: page;
+    page-break-before: always; /* Legacy support */
+  }
+
+  /* Ensure charts render at reasonable size */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 200px;
+  }
+
+  /* Tables should be readable */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 4px 8px !important;
+  }
+
+  th {
+    background: #f5f5f5 !important;
+    color: #000 !important;
+  }
+
+  /* Links show URL in print */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+  }
+
+  /* Remove shadows and fancy effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure text is black for readability */
+  h1, h2, h3, h4, h5, h6,
+  p, span, div, li {
+    color: #000 !important;
+  }
+
+  /* Secondary text can be slightly lighter */
+  .text-secondary,
+  [class*="secondary"] {
+    color: #444 !important;
+  }
+}
+
+/* Page setup */
+@page {
+  size: letter portrait;
+  margin: 0.75in;
+}
+
+@page :first {
+  margin-top: 1in;
+}
