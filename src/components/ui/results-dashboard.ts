@@ -15,7 +15,7 @@ import type { CumulativeCostsChartData } from '../../charts/cumulative-costs-cha
 import type { TerminalComparisonChartData } from '../../charts/terminal-comparison-chart';
 import type { SBLOCUtilizationChartData } from '../../charts/sbloc-utilization-chart';
 import type { KeyMetricsData } from './key-metrics-banner';
-import type { ParamSummaryData } from './param-summary';
+import type { ParamSummaryData, PortfolioAsset } from './param-summary';
 import type { StrategyAnalysisProps, StrategyAnalysis } from './strategy-analysis';
 import {
   calculateCAGR,
@@ -283,13 +283,14 @@ export class ResultsDashboard extends BaseComponent {
           </percentile-spectrum>
         </section>
 
-        <section class="portfolio-viz-section full-width">
+        <!-- Portfolio visualization now integrated into param-summary above -->
+        <!-- <section class="portfolio-viz-section full-width">
           <portfolio-viz-card id="portfolio-viz-card"></portfolio-viz-card>
-        </section>
+        </section> -->
 
         <section class="chart-section full-width">
           <h3>Asset Correlations</h3>
-          <div class="chart-container square">
+          <div class="correlation-container">
             <correlation-heatmap id="heatmap-chart"></correlation-heatmap>
           </div>
         </section>
@@ -456,6 +457,10 @@ export class ResultsDashboard extends BaseComponent {
         aspect-ratio: 1;
         height: auto;
         min-height: 300px;
+      }
+
+      .correlation-container {
+        /* No fixed height - let table determine size */
       }
 
       .chart-container probability-cone-chart,
@@ -782,23 +787,7 @@ export class ResultsDashboard extends BaseComponent {
     // Update summary statistics
     this.updateStats(this._data.statistics);
 
-    // Update portfolio visualization card
-    const vizCard = this.$('#portfolio-viz-card') as HTMLElement & {
-      data: { assets: Array<{ symbol: string; name: string; weight: number; color: string }> } | null
-    };
-    if (vizCard && this._portfolioWeights) {
-      // Get asset names from preset data
-      const assets = this._portfolioWeights.map((p, idx) => {
-        const preset = getPresetData(p.symbol);
-        return {
-          symbol: p.symbol,
-          name: preset?.name || p.symbol,
-          weight: p.weight,
-          color: PORTFOLIO_COLORS[idx % PORTFOLIO_COLORS.length],
-        };
-      });
-      vizCard.data = { assets };
-    }
+    // Portfolio visualization now integrated into param-summary (updateParamSummary handles this)
 
     // Update correlation heatmap with per-asset statistics
     const heatmap = this.$('#heatmap-chart') as HTMLElement & { data: HeatmapData | null };
@@ -982,17 +971,21 @@ export class ResultsDashboard extends BaseComponent {
   } | null {
     if (!this._data) return null;
 
+    // Use config values with fallbacks to instance variables
+    const initialValue = this._simulationConfig?.initialValue ?? this._initialValue;
+    const timeHorizon = this._simulationConfig?.timeHorizon ?? this._timeHorizon;
+
     const terminalValues = Array.from(this._data.terminalValues);
     const { median } = this._data.statistics;
 
     // CAGR from median terminal value
-    const cagr = calculateCAGR(this._initialValue, median, this._timeHorizon);
+    const cagr = calculateCAGR(initialValue, median, timeHorizon);
 
     // Annualized volatility from terminal value returns
     // Convert terminal values to annualized returns for volatility calculation
     const annualizedReturns = terminalValues.map(tv => {
-      const totalReturn = (tv - this._initialValue) / this._initialValue;
-      return Math.pow(1 + totalReturn, 1 / this._timeHorizon) - 1;
+      const totalReturn = (tv - initialValue) / initialValue;
+      return Math.pow(1 + totalReturn, 1 / timeHorizon) - 1;
     });
     const volatility = calculateAnnualizedVolatility(annualizedReturns);
 
@@ -1057,6 +1050,7 @@ export class ResultsDashboard extends BaseComponent {
   /**
    * Update Terminal Net Worth Distribution spectrum.
    * Calculates P10/P50/P90 from terminal values.
+   * When SBLOC data is available, shows NET WORTH (portfolio - loan balance).
    */
   private updateNetWorthSpectrum(): void {
     const spectrum = this.$('#net-worth-spectrum') as PercentileSpectrum | null;
@@ -1065,10 +1059,31 @@ export class ResultsDashboard extends BaseComponent {
 
     const values = Array.from(this._data.terminalValues);
 
-    // Calculate percentiles
-    const p10 = percentile(values, 10);
-    const p50 = percentile(values, 50);
-    const p90 = percentile(values, 90);
+    // Calculate portfolio value percentiles
+    const portfolioP10 = percentile(values, 10);
+    const portfolioP50 = percentile(values, 50);
+    const portfolioP90 = percentile(values, 90);
+
+    // If SBLOC data available, subtract loan balance to get NET WORTH
+    // For worst case (P10): low portfolio with high loan
+    // For best case (P90): high portfolio with low loan
+    let p10 = portfolioP10;
+    let p50 = portfolioP50;
+    let p90 = portfolioP90;
+
+    if (this._data.sblocTrajectory) {
+      const traj = this._data.sblocTrajectory;
+      const lastIdx = traj.years.length - 1;
+
+      const loanP10 = traj.loanBalance.p10[lastIdx] || 0;
+      const loanP50 = traj.loanBalance.p50[lastIdx] || 0;
+      const loanP90 = traj.loanBalance.p90[lastIdx] || 0;
+
+      // Net worth = portfolio - loan (invert loan percentiles for worst/best case)
+      p10 = portfolioP10 - loanP90;  // Worst case: low portfolio, high loan
+      p50 = portfolioP50 - loanP50;  // Median case
+      p90 = portfolioP90 - loanP10;  // Best case: high portfolio, low loan
+    }
 
     // Update spectrum component
     spectrum.p10 = p10;
@@ -1123,8 +1138,12 @@ export class ResultsDashboard extends BaseComponent {
 
     if (!section || !salaryComponent) return;
 
+    // Get annual withdrawal from config (primary) or fallback to instance variable
+    // This handles timing issues where simulationConfig is set after annualWithdrawal setter
+    const annualWithdrawal = this._simulationConfig?.sbloc?.annualWithdrawal ?? this._annualWithdrawal;
+
     // Show only when there's a withdrawal configured
-    if (this._annualWithdrawal <= 0) {
+    if (annualWithdrawal <= 0) {
       section.classList.remove('visible');
       return;
     }
@@ -1133,16 +1152,30 @@ export class ResultsDashboard extends BaseComponent {
 
     // Use calculateSalaryEquivalent from existing calculation module
     const result = calculateSalaryEquivalent(
-      this._annualWithdrawal,
+      annualWithdrawal,
       this._effectiveTaxRate
     );
 
     salaryComponent.data = {
-      withdrawal: this._annualWithdrawal,
+      withdrawal: annualWithdrawal,
       taxableEquivalent: result.salaryEquivalent,
       taxSavings: result.taxSavings,
       taxRate: this._effectiveTaxRate,
     };
+  }
+
+  /**
+   * Get the effective time horizon from simulation config or fallback.
+   */
+  private getEffectiveTimeHorizon(): number {
+    return this._simulationConfig?.timeHorizon ?? this._timeHorizon;
+  }
+
+  /**
+   * Get the effective initial value from simulation config or fallback.
+   */
+  private getEffectiveInitialValue(): number {
+    return this._simulationConfig?.initialValue ?? this._initialValue;
   }
 
   /**
@@ -1155,16 +1188,52 @@ export class ResultsDashboard extends BaseComponent {
 
     const extended = this.computeExtendedStats();
     const values = Array.from(this._data.terminalValues);
-    const p10Value = percentile(values, 10);
+    const p10PortfolioValue = percentile(values, 10);
 
-    // Calculate sell strategy success rate (assume 100% success if no comparison data)
-    // In reality, this would come from a parallel sell-strategy simulation
-    const sellSuccessRate = this._data.estateAnalysis
-      ? Math.min(100, this._data.statistics.successRate + 15) // Sell typically has higher success
-      : 100;
+    // Get effective configuration values
+    const timeHorizon = this.getEffectiveTimeHorizon();
+    const initialValue = this.getEffectiveInitialValue();
 
-    // Calculate sell terminal value from estate analysis or estimate
-    const sellTerminal = this._data.estateAnalysis?.sellNetEstate || this._data.statistics.median * 0.85;
+    // Calculate sell strategy metrics using actual simulation
+    let sellSuccessRate = 100;
+    let sellTerminal = this._data.statistics.median * 0.85; // Fallback estimate
+
+    if (this._data.sblocTrajectory && this._data.yearlyPercentiles.length > 0) {
+      // Year 0 represents the portfolio state at simulation start.
+      // All percentiles equal the initial value since no returns have occurred.
+      // This allows growth rate calculation for year 1: (year1Value - initialValue) / initialValue
+      const percentilesWithYear0 = [
+        {
+          year: 0,
+          p10: initialValue,
+          p25: initialValue,
+          p50: initialValue,
+          p75: initialValue,
+          p90: initialValue,
+        },
+        ...this._data.yearlyPercentiles,
+      ];
+
+      // Calculate actual sell strategy result
+      const sellResult = calculateSellStrategy(
+        {
+          initialValue,
+          annualWithdrawal: this._annualWithdrawal,
+          withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
+          timeHorizon,
+          capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
+          costBasisRatio: 0.4,
+        },
+        percentilesWithYear0,
+      );
+      sellSuccessRate = sellResult.successRate;
+      sellTerminal = sellResult.terminalNetWorth;
+    } else if (this._data.estateAnalysis) {
+      // Use estate analysis as fallback (one-time sale calculation)
+      sellTerminal = this._data.estateAnalysis.sellNetEstate;
+      // Estimate success rate based on BBD success (sell typically has similar or slightly higher)
+      sellSuccessRate = Math.min(100, this._data.statistics.successRate + 5);
+    }
 
     // Calculate utilization metrics from SBLOC trajectory if available
     let medianUtilization = 0;
@@ -1172,6 +1241,8 @@ export class ResultsDashboard extends BaseComponent {
     let peakUtilizationP90 = 0;
     let safetyBufferP10 = 100;
     let mostDangerousYear = 1;
+    let medianLoanBalance = 0;
+    let p90LoanBalance = 0;  // For worst-case net worth calculation
 
     if (this._data.sblocTrajectory) {
       const traj = this._data.sblocTrajectory;
@@ -1179,6 +1250,8 @@ export class ResultsDashboard extends BaseComponent {
       // Median utilization is loan / portfolio at median
       const lastYearIdx = traj.years.length - 1;
       const medianLoan = traj.loanBalance.p50[lastYearIdx];
+      medianLoanBalance = medianLoan;
+      p90LoanBalance = traj.loanBalance.p90[lastYearIdx] || 0;
       const medianPortfolio = this._data.statistics.median;
       medianUtilization = medianPortfolio > 0 ? (medianLoan / medianPortfolio) * 100 : 0;
 
@@ -1189,10 +1262,10 @@ export class ResultsDashboard extends BaseComponent {
       safetyBufferP10 = Math.max(0, 100 - peakUtilizationP90);
 
       // Estimate years above 70% utilization (rough estimate)
-      yearsAbove70 = medianUtilization > 70 ? this._timeHorizon * 0.3 : 0;
+      yearsAbove70 = medianUtilization > 70 ? timeHorizon * 0.3 : 0;
 
       // Most dangerous year is typically early years with high drawdown
-      mostDangerousYear = Math.min(5, this._timeHorizon);
+      mostDangerousYear = Math.min(5, timeHorizon);
     }
 
     // Get margin call probability
@@ -1200,16 +1273,21 @@ export class ResultsDashboard extends BaseComponent {
       ? this._data.marginCallStats[this._data.marginCallStats.length - 1].cumulativeProbability
       : 0;
 
+    // Calculate terminal NET WORTH values (portfolio - loan balance)
+    const medianTerminalNetWorth = this._data.statistics.median - medianLoanBalance;
+    // P10 (worst case) net worth: low portfolio with high loan
+    const p10NetWorth = p10PortfolioValue - p90LoanBalance;
+
     banner.data = {
       bbdSuccessRate: this._data.statistics.successRate,
       sellSuccessRate,
       medianUtilization,
       yearsAbove70Pct: yearsAbove70,
       cagr: extended?.cagr || 0,
-      startingValue: this._initialValue,
-      medianTerminal: this._data.statistics.median,
+      startingValue: initialValue,
+      medianTerminal: medianTerminalNetWorth,
       sellTerminal,
-      p10Outcome: p10Value,
+      p10Outcome: p10NetWorth,
       marginCallProbability,
       peakUtilizationP90,
       safetyBufferP10,
@@ -1218,10 +1296,13 @@ export class ResultsDashboard extends BaseComponent {
   }
 
   /**
-   * Update parameter summary with simulation configuration.
+   * Update parameter summary with simulation configuration and portfolio assets.
    */
   private updateParamSummary(): void {
-    const summary = this.$('#param-summary') as HTMLElement & { data: ParamSummaryData | null };
+    const summary = this.$('#param-summary') as HTMLElement & {
+      data: ParamSummaryData | null;
+      portfolioAssets: PortfolioAsset[];
+    };
     if (!summary) return;
 
     // Use simulation config if available, otherwise use stored values
@@ -1237,6 +1318,19 @@ export class ResultsDashboard extends BaseComponent {
       maintenanceMargin: (config?.sbloc?.maintenanceMargin || 0.50) * 100,
       simulationsRun: config?.iterations || this._simulationsRun,
     };
+
+    // Pass portfolio assets for visualization
+    if (this._portfolioWeights) {
+      summary.portfolioAssets = this._portfolioWeights.map((p, idx) => {
+        const preset = getPresetData(p.symbol);
+        return {
+          symbol: p.symbol,
+          name: preset?.name || p.symbol,
+          weight: p.weight, // Already in 0-100 format from portfolio-composition
+          color: PORTFOLIO_COLORS[idx % PORTFOLIO_COLORS.length],
+        };
+      });
+    }
   }
 
   /**
@@ -1257,17 +1351,36 @@ export class ResultsDashboard extends BaseComponent {
 
     section.classList.add('visible');
 
+    // Get effective configuration values
+    const timeHorizon = this.getEffectiveTimeHorizon();
+    const initialValue = this.getEffectiveInitialValue();
+
+    // Year 0 represents the portfolio state at simulation start.
+    // All percentiles equal the initial value since no returns have occurred.
+    // This allows growth rate calculation for year 1: (year1Value - initialValue) / initialValue
+    const percentilesWithYear0 = [
+      {
+        year: 0,
+        p10: initialValue,
+        p25: initialValue,
+        p50: initialValue,
+        p75: initialValue,
+        p90: initialValue,
+      },
+      ...this._data.yearlyPercentiles,
+    ];
+
     // Calculate sell strategy metrics
     const sellResult = calculateSellStrategy(
       {
-        initialValue: this._initialValue,
+        initialValue,
         annualWithdrawal: this._annualWithdrawal,
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
-        timeHorizon: this._timeHorizon,
-        capitalGainsRate: 0.238,
+        timeHorizon,
+        capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
         costBasisRatio: 0.4, // Assume 40% cost basis
       },
-      this._data.yearlyPercentiles,
+      percentilesWithYear0,
     );
 
     // Get SBLOC metrics
@@ -1348,8 +1461,8 @@ export class ResultsDashboard extends BaseComponent {
       verdict,
       differential,
       insights,
-      simulationsRun: this._simulationsRun,
-      timeHorizon: this._timeHorizon,
+      simulationsRun: this._simulationConfig?.iterations ?? this._simulationsRun,
+      timeHorizon,
     };
   }
 
@@ -1370,17 +1483,36 @@ export class ResultsDashboard extends BaseComponent {
 
     section.classList.add('visible');
 
+    // Get effective configuration values
+    const timeHorizon = this.getEffectiveTimeHorizon();
+    const initialValue = this.getEffectiveInitialValue();
+
+    // Year 0 represents the portfolio state at simulation start.
+    // All percentiles equal the initial value since no returns have occurred.
+    // This allows growth rate calculation for year 1: (year1Value - initialValue) / initialValue
+    const percentilesWithYear0 = [
+      {
+        year: 0,
+        p10: initialValue,
+        p25: initialValue,
+        p50: initialValue,
+        p75: initialValue,
+        p90: initialValue,
+      },
+      ...this._data.yearlyPercentiles,
+    ];
+
     // Calculate sell strategy for comparison
     const sellResult = calculateSellStrategy(
       {
-        initialValue: this._initialValue,
+        initialValue,
         annualWithdrawal: this._annualWithdrawal,
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
-        timeHorizon: this._timeHorizon,
-        capitalGainsRate: 0.238,
+        timeHorizon,
+        capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
         costBasisRatio: 0.4,
       },
-      this._data.yearlyPercentiles,
+      percentilesWithYear0,
     );
 
     // Update Comparison Line Chart (Net Worth Over Time)
@@ -1714,7 +1846,7 @@ export class ResultsDashboard extends BaseComponent {
 
   /**
    * Calculate expected return and volatility for each asset from preset data.
-   * Uses bundled historical returns to compute annualized metrics.
+   * Uses bundled historical annual returns to compute metrics.
    *
    * @param symbols - Array of asset symbols (e.g., ['SPY', 'AGG'])
    * @returns Object with expectedReturns, volatilities, and isEstimate arrays
@@ -1732,18 +1864,14 @@ export class ResultsDashboard extends BaseComponent {
       const presetData = getPresetData(symbol);
 
       if (presetData && presetData.returns.length > 0) {
-        // Extract daily returns
-        const dailyReturns = presetData.returns.map(r => r.return);
+        // Extract annual returns (preset data is already annual, not daily)
+        const annualReturns = presetData.returns.map(r => r.return);
 
-        // Calculate expected annual return from daily returns
-        // Annualize: (1 + daily mean)^252 - 1 (252 trading days)
-        const dailyMean = mean(dailyReturns);
-        const annualReturn = Math.pow(1 + dailyMean, 252) - 1;
+        // Calculate expected annual return as arithmetic mean
+        const annualReturn = mean(annualReturns);
 
-        // Calculate annualized volatility
-        // Daily volatility * sqrt(252)
-        const dailyVol = stddev(dailyReturns);
-        const annualVol = dailyVol * Math.sqrt(252);
+        // Calculate annualized volatility as standard deviation of annual returns
+        const annualVol = stddev(annualReturns);
 
         expectedReturns.push(annualReturn);
         volatilities.push(annualVol);
