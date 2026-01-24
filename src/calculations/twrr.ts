@@ -112,6 +112,25 @@ export function annualizeReturn(totalReturn: number, periods: number): number {
  * TWRR (Time-Weighted Rate of Return) is the CFA-standard metric that
  * measures portfolio performance independent of external cash flows.
  *
+ * **Current Implementation: Median Path Only**
+ *
+ * This function calculates TWRR using only the median (P50) simulation path.
+ * This provides a single representative return figure, but has limitations:
+ *
+ * Limitations:
+ * - Shows only one path from the distribution (median)
+ * - Does not capture the range of possible TWRR outcomes
+ * - P10/P90 scenarios could have very different TWRR values
+ *
+ * Future Enhancement:
+ * Consider adding calculateTWRRDistribution() that returns:
+ * - TWRR at P10 (pessimistic scenario)
+ * - TWRR at P50 (median scenario) - current implementation
+ * - TWRR at P90 (optimistic scenario)
+ *
+ * This would provide users with a range of TWRR outcomes consistent
+ * with how we display terminal value distributions.
+ *
  * Process:
  * 1. Extract median (p50) values from each year as representative values
  * 2. Calculate period returns between consecutive years
