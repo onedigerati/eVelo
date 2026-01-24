@@ -52,11 +52,12 @@
   --modal-max-width: 360px;
 }
 
-/* Dark theme placeholder (will be implemented in Phase 9) */
+/* Dark theme */
 [data-theme="dark"] {
   /* Colors */
   --color-primary: #14b8a6;
   --color-primary-hover: #2dd4bf;
+  --section-icon-color: #14b8a6;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
@@ -65,6 +66,7 @@
   --surface-primary: #0f172a;
   --surface-secondary: #1e293b;
   --surface-tertiary: #334155;
+  --surface-hover: rgba(255, 255, 255, 0.1);
 
   /* Text */
   --text-primary: #f1f5f9;
@@ -73,4 +75,8 @@
 
   /* Borders */
   --border-color: #334155;
+
+  /* Modal - same as light theme for now */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }

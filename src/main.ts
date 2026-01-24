@@ -1,4 +1,9 @@
 import './style.css';
-import './components/app-root';
+import { initTheme } from './services/theme-service';
+
+// Initialize theme before components render to prevent FOUC
+initTheme().then(() => {
+  import('./components/app-root');
+});
 
 console.log('eVelo starting...');
