@@ -291,22 +291,9 @@ function runSingleSellScenario(
       yearlyValues.push(0);
       continue;
     }
+
     // 1. DIVIDEND TAX FIRST (before withdrawal)
     // Dividend taxes reduce portfolio (in Sell strategy, unlike BBD which borrows to pay)
-    const dividendIncome = portfolioValue * dividendYield;
-    const dividendTax = dividendIncome * dividendTaxRate;
-    portfolioValue -= dividendTax;
-    totalDividendTaxes += dividendTax;
-
-    if (portfolioValue <= 0) {
-      depleted = true;
-      portfolioValue = 0;
-      yearlyValues.push(0);
-      continue;
-    }
-
-    // 2. WITHDRAWAL + CAPITAL GAINS TAX
-        // 1. DIVIDEND TAXES (if yield > 0)
     if (dividendYield > 0) {
       const dividendIncome = portfolioValue * dividendYield;
       const dividendTax = dividendIncome * dividendTaxRate;
@@ -469,7 +456,21 @@ function runInterpolatedScenario(
       continue;
     }
 
-    // 1. WITHDRAWAL FIRST
+    // 1. DIVIDEND TAX FIRST (before withdrawal)
+    if (dividendYield > 0) {
+      const dividendIncome = portfolioValue * dividendYield;
+      const dividendTax = dividendIncome * dividendTaxRate;
+      totalDividendTaxes += dividendTax;
+      portfolioValue -= dividendTax;
+
+      if (portfolioValue <= 0) {
+        depleted = true;
+        yearlyValues.push(0);
+        continue;
+      }
+    }
+
+    // 2. WITHDRAWAL + CAPITAL GAINS TAX
     const adjustedWithdrawal = currentWithdrawal;
     currentWithdrawal *= (1 + withdrawalGrowth);
 
