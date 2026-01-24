@@ -94,9 +94,9 @@ export interface SellStrategyConfig {
  * 2. Withdrawal + capital gains tax reduces portfolio
  * 3. Market returns applied to reduced portfolio
  *
- * @param config - Sell strategy configuration including dividend tax params including dividend tax params
+ * @param config - Sell strategy configuration including dividend tax params including dividend tax params including dividend tax params
  * @param yearlyPercentiles - Portfolio percentiles from BBD simulation (for growth rates)
- * @returns Sell strategy result with all metrics including dividend taxes including dividend taxes
+ * @returns Sell strategy result with all metrics including dividend taxes including dividend taxes including dividend taxes
  *
  * @example
  * ```typescript
@@ -215,6 +215,8 @@ function runSellScenarios(
   capitalGainsRate: number,
   costBasisRatio: number,
   yearlyPercentiles: YearlyPercentiles[],
+  dividendYield: number,
+  dividendTaxRate: number,
 ): SellScenario[] {
   const scenarios: SellScenario[] = [];
 
@@ -231,6 +233,8 @@ function runSellScenarios(
       costBasisRatio,
       yearlyPercentiles,
       percentileKey,
+      dividendYield,
+      dividendTaxRate,
     );
     scenarios.push(scenario);
   }
@@ -270,11 +274,14 @@ function runSingleSellScenario(
   costBasisRatio: number,
   yearlyPercentiles: YearlyPercentiles[],
   percentileKey: 'p10' | 'p25' | 'p50' | 'p75' | 'p90',
+  dividendYield: number,
+  dividendTaxRate: number,
 ): SellScenario {
   let portfolioValue = initialValue;
   let costBasis = initialValue * costBasisRatio;
   let currentWithdrawal = annualWithdrawal;
   let totalTaxes = 0;
+  let totalDividendTaxes = 0;
   let depleted = false;
   const yearlyValues: number[] = [initialValue];
 
@@ -284,8 +291,36 @@ function runSingleSellScenario(
       yearlyValues.push(0);
       continue;
     }
+    // 1. DIVIDEND TAX FIRST (before withdrawal)
+    // Dividend taxes reduce portfolio (in Sell strategy, unlike BBD which borrows to pay)
+    const dividendIncome = portfolioValue * dividendYield;
+    const dividendTax = dividendIncome * dividendTaxRate;
+    portfolioValue -= dividendTax;
+    totalDividendTaxes += dividendTax;
 
-    // 1. WITHDRAWAL FIRST
+    if (portfolioValue <= 0) {
+      depleted = true;
+      portfolioValue = 0;
+      yearlyValues.push(0);
+      continue;
+    }
+
+    // 2. WITHDRAWAL + CAPITAL GAINS TAX
+        // 1. DIVIDEND TAXES (if yield > 0)
+    if (dividendYield > 0) {
+      const dividendIncome = portfolioValue * dividendYield;
+      const dividendTax = dividendIncome * dividendTaxRate;
+      totalDividendTaxes += dividendTax;
+      portfolioValue -= dividendTax;
+
+      if (portfolioValue <= 0) {
+        depleted = true;
+        yearlyValues.push(0);
+        continue;
+      }
+    }
+
+    // 2. WITHDRAWAL + CAPITAL GAINS TAX
     // Calculate withdrawal with inflation adjustment
     const adjustedWithdrawal = currentWithdrawal;
     currentWithdrawal *= (1 + withdrawalGrowth);
@@ -326,7 +361,7 @@ function runSingleSellScenario(
     portfolioValue -= grossSale;
     costBasis *= (1 - saleFraction);
 
-    // 2. GROWTH APPLIED TO REDUCED PORTFOLIO
+    // 3. GROWTH APPLIED TO REDUCED PORTFOLIO
     // Get growth rate from BBD simulation for this year
     const yearData = yearlyPercentiles[year];
     const prevYearData = yearlyPercentiles[year - 1];
@@ -351,6 +386,7 @@ function runSingleSellScenario(
   return {
     terminalValue: portfolioValue,
     totalTaxes,
+    totalDividendTaxes,
     depleted,
     yearlyValues,
   };
@@ -367,6 +403,8 @@ function runInterpolatedScenarios(
   capitalGainsRate: number,
   costBasisRatio: number,
   yearlyPercentiles: YearlyPercentiles[],
+  dividendYield: number,
+  dividendTaxRate: number,
 ): SellScenario[] {
   const scenarios: SellScenario[] = [];
 
@@ -390,6 +428,8 @@ function runInterpolatedScenarios(
       interp.lower,
       interp.upper,
       interp.weight,
+      dividendYield,
+      dividendTaxRate,
     );
     scenarios.push(scenario);
   }
@@ -411,11 +451,14 @@ function runInterpolatedScenario(
   lowerKey: 'p10' | 'p25' | 'p50' | 'p75' | 'p90',
   upperKey: 'p10' | 'p25' | 'p50' | 'p75' | 'p90',
   weight: number,
+  dividendYield: number,
+  dividendTaxRate: number,
 ): SellScenario {
   let portfolioValue = initialValue;
   let costBasis = initialValue * costBasisRatio;
   let currentWithdrawal = annualWithdrawal;
   let totalTaxes = 0;
+  let totalDividendTaxes = 0;
   let depleted = false;
   const yearlyValues: number[] = [initialValue];
 
@@ -461,7 +504,7 @@ function runInterpolatedScenario(
     portfolioValue -= grossSale;
     costBasis *= (1 - saleFraction);
 
-    // 2. GROWTH APPLIED TO REDUCED PORTFOLIO
+    // 3. GROWTH APPLIED TO REDUCED PORTFOLIO
     const yearData = yearlyPercentiles[year];
     const prevYearData = yearlyPercentiles[year - 1];
 
@@ -488,6 +531,7 @@ function runInterpolatedScenario(
   return {
     terminalValue: portfolioValue,
     totalTaxes,
+    totalDividendTaxes,
     depleted,
     yearlyValues,
   };
