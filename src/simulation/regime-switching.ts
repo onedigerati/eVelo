@@ -7,6 +7,10 @@
  * Markets transition between bull, bear, and crash regimes according to
  * a configurable transition matrix, with each regime having distinct
  * return distributions.
+ *
+ * Note: Returns are floored at -100% (total loss) since a portfolio position
+ * cannot lose more than 100% of its value. This is necessary because normal
+ * distribution sampling can produce extreme values when stddev is high.
  */
 
 import { normalRandom, correlatedSamples } from '../math';
@@ -96,7 +100,9 @@ export function generateRegimeReturns(
 
     // Generate return from current regime's distribution
     const { mean, stddev } = effectiveParams[currentRegime];
-    const yearReturn = normalRandom(mean, stddev, rng);
+    const rawReturn = normalRandom(mean, stddev, rng);
+    // Floor at -1 (total loss) - cannot lose more than 100%
+    const yearReturn = Math.max(-1, rawReturn);
     returns.push(yearReturn);
 
     // Transition to next regime
@@ -186,7 +192,9 @@ export function generateCorrelatedRegimeReturns(
       // Combine: use correlated structure but scale by asset-specific params
       for (let asset = 0; asset < numAssets; asset++) {
         const { mean, stddev } = assetRegimeParams[asset][regime];
-        returns[asset][year] = mean + stddev * correlated[asset];
+        const rawReturn = mean + stddev * correlated[asset];
+        // Floor at -1 (total loss) - cannot lose more than 100%
+        returns[asset][year] = Math.max(-1, rawReturn);
       }
     } else {
       // Shared parameters (original behavior)
@@ -199,9 +207,9 @@ export function generateCorrelatedRegimeReturns(
         stddev
       );
 
-      // Assign to each asset
+      // Assign to each asset (floor at -1 for total loss protection)
       for (let asset = 0; asset < numAssets; asset++) {
-        returns[asset][year] = yearReturns[asset];
+        returns[asset][year] = Math.max(-1, yearReturns[asset]);
       }
     }
   }
