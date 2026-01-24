@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 10 - PWA & Export (next)
+**Current focus:** Phase 17 - Welcome Page & User Guide (executing)
 
 ## Current Position
 
-Phase: 9 of 10 (Theming & Polish) - COMPLETE
-Plan: 3 of 3 complete (09-03)
-Status: Phase complete, verified
-Last activity: 2026-01-23 — Completed Phase 9
+Phase: 17 of 17 (Welcome Page & User Guide) - EXECUTING
+Plan: 1 of 3 complete (17-01)
+Status: In progress
+Last activity: 2026-01-24 — Completed 17-01-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (69/69 plans total)
+Progress: ████████████████████████████████████████ 100% (70/72 plans total)
 
 ## Performance Metrics
 
@@ -43,10 +43,11 @@ Progress: ███████████████████████�
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
+| 17-welcome-page-user-guide | 1/3 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 16-04 (3 min), 09-01 (3 min), 09-02 (5 min), 09-03 (6 min)
-- Trend: Phase 9 COMPLETE - print layout and help tooltips ready
+- Last 5 plans: 09-01 (3 min), 09-02 (5 min), 09-03 (6 min), 17-01 (4 min)
+- Trend: Phase 17 started - welcome screen component complete
 
 ## Accumulated Context
 
@@ -363,6 +364,12 @@ Recent decisions affecting current work:
   - GAP-VIZ-07 (MEDIUM): Array indexing in updateComparisonLineChart
   - GAP-02 (MEDIUM): Success rate operator inconsistency
   - VIZ-04 (LOW): Fallback value labeling in correlation heatmap
+
+- Phase 17 added: Welcome Page & User Guide
+  - User request: Transform empty dashboard into welcoming introduction
+  - BBD strategy overview and educational content
+  - Comprehensive user guide with parameter documentation
+  - Research needed for BBD content and UX patterns
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -686,11 +693,19 @@ None
 - Dark theme inverts tooltip colors (light bg on dark mode) for readability
 - Inline-flex labels with 4px gap for help tooltip alignment
 
+**From 17-01:**
+- WelcomeScreen component with hero, BBD steps, benefits/risks, CTAs, disclaimer
+- Emoji icons for BBD steps (chart, bank, scales) - avoids SVG complexity
+- CustomEvents with bubbles/composed:true for quick-start and show-guide
+- Responsive 768px breakpoint: 3-column to 1-column layout
+- Dark theme support with rgba backgrounds for step cards and disclaimer
+- show()/hide() public methods for external visibility control
+
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed 09-03-PLAN.md (Print Layout & Help Tooltips)
+Stopped at: Completed 17-01-PLAN.md (Welcome Screen Component)
 Resume file: None
 
-**Phase 9 COMPLETE (3/3 plans complete).**
-**Print-friendly layout and accessible help tooltips ready. Theming & Polish phase finished.**
+**Phase 17 IN PROGRESS (1/3 plans complete).**
+**WelcomeScreen component ready. Next: Integration with app-root (17-02).**
