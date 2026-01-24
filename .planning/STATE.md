@@ -609,6 +609,7 @@ None
 | 010 | Prevent duplicate portfolio preset names | 2026-01-23 | e2caede | [010-prevent-duplicate-portfolio-preset-names](./quick/010-prevent-duplicate-portfolio-preset-names/) |
 | 011 | Reorganize parameter sections UX | 2026-01-23 | 26abaac | [011-reorganize-parameter-sections-ux](./quick/011-reorganize-parameter-sections-ux/) |
 | 012 | Save all params to portfolio presets | 2026-01-23 | 7626f22 | [012-save-all-params-to-portfolio-presets](./quick/012-save-all-params-to-portfolio-presets/) |
+| 013 | Sell Strategy yearly analysis table | 2026-01-24 | e4d9ef7 | [013-sell-strategy-yearly-analysis-table](./quick/013-sell-strategy-yearly-analysis-table/) |
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
@@ -801,10 +802,18 @@ None
 - Tolerance-based validation (<$100 for taxes, <$1000 for terminal values)
 - All 3 tests PASS - sell strategy accuracy verified
 
+**From quick-013:**
+- SellYearlyPercentiles interface for year-by-year portfolio value tracking
+- SellStrategyResult extended with yearlyPercentiles and cumulativeTaxes fields
+- extractYearlyPercentiles collects P10/P25/P50/P75/P90 from all scenarios per year
+- extractCumulativeTaxes uses progressive accumulation (^1.2 power curve)
+- SellYearlyAnalysisTable component with orange tax column for cost emphasis
+- Table uses sbloc-section class (only visible when BBD comparison relevant)
+
 ## Session Continuity
 
-Last session: 2026-01-24T19:58:03Z
-Stopped at: Completed 19-04-PLAN.md (Gross-Up Formula & Integration Tests)
+Last session: 2026-01-24T21:03:54Z
+Stopped at: Completed quick-013-PLAN.md (Sell Strategy Yearly Analysis Table)
 Resume file: None
 
 **ALL PHASES COMPLETE 🎉**
