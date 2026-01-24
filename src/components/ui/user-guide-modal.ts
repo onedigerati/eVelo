@@ -125,6 +125,161 @@ export class UserGuideModal extends BaseComponent {
                 </dd>
               </dl>
             </help-section>
+
+            <!-- Section 5: Simulation Settings -->
+            <help-section title="Simulation Settings" icon="⚙️">
+              <dl>
+                <dt>Iterations</dt>
+                <dd>
+                  The number of random scenarios to simulate. More iterations provide more
+                  statistically robust results but take longer to compute. 10,000 iterations
+                  is typically sufficient for reliable percentile estimates.
+                </dd>
+
+                <dt>Return Distribution Model</dt>
+                <dd>
+                  <strong>Bootstrap:</strong> Randomly samples from historical returns,
+                  preserving actual market behavior including fat tails and clustering.
+                  <br><br>
+                  <strong>Regime-Switching:</strong> Models distinct market states (bull,
+                  bear, crash) with different return characteristics and transition
+                  probabilities. Better captures market regime changes.
+                </dd>
+
+                <dt>Expected Inflation</dt>
+                <dd>
+                  The assumed annual inflation rate for calculating real (inflation-adjusted)
+                  returns. Used to show purchasing power outcomes alongside nominal values.
+                  Historical average is around 3%.
+                </dd>
+              </dl>
+            </help-section>
+
+            <!-- Section 6: Understanding Charts -->
+            <help-section title="Understanding Charts" icon="📊">
+              <dl>
+                <dt>Probability Cone</dt>
+                <dd>
+                  Shows the range of possible portfolio values over time. The bands represent
+                  different percentile outcomes: P90 (optimistic, only 10% do better), P50
+                  (median, typical outcome), and P10 (pessimistic, only 10% do worse). Wider
+                  bands indicate more uncertainty.
+                </dd>
+
+                <dt>Terminal Value Distribution</dt>
+                <dd>
+                  A histogram showing the distribution of final portfolio values across all
+                  simulations. Helps visualize the range of possible outcomes and their
+                  relative likelihood. A right-skewed distribution indicates positive
+                  expected returns with asymmetric upside.
+                </dd>
+
+                <dt>Margin Call Risk</dt>
+                <dd>
+                  Shows the probability of experiencing a margin call by year. Higher
+                  probabilities indicate greater risk that market downturns could force
+                  liquidation. Rising probability over time reflects loan growth relative
+                  to portfolio.
+                </dd>
+
+                <dt>SBLOC Balance Over Time</dt>
+                <dd>
+                  Tracks the growth of your loan balance with percentile bands. Shows how
+                  withdrawals plus compounding interest grow the debt over time. Compare
+                  against the maximum borrowing limit to gauge margin call risk.
+                </dd>
+              </dl>
+            </help-section>
+
+            <!-- Section 7: Key Metrics Explained -->
+            <help-section title="Key Metrics Explained" icon="📈">
+              <dl>
+                <dt>Success Rate</dt>
+                <dd>
+                  The percentage of simulations that end with a positive net worth
+                  (portfolio value exceeds loan balance). A higher success rate indicates
+                  a more robust strategy, though 100% success is rare with leverage.
+                </dd>
+
+                <dt>Median Final Value</dt>
+                <dd>
+                  The 50th percentile outcome - half of simulations end higher, half lower.
+                  A better measure of "typical" outcome than average because it's not
+                  skewed by extreme results.
+                </dd>
+
+                <dt>CAGR (Compound Annual Growth Rate)</dt>
+                <dd>
+                  The smoothed annual return that would produce the median final value
+                  from your initial investment. Useful for comparing against benchmarks
+                  and other investment strategies.
+                </dd>
+
+                <dt>Max Drawdown</dt>
+                <dd>
+                  The largest peak-to-trough decline experienced during the simulation.
+                  Important for understanding worst-case scenarios and whether you could
+                  emotionally and financially withstand such losses.
+                </dd>
+
+                <dt>Salary Equivalent</dt>
+                <dd>
+                  The pre-tax salary you'd need to earn to net the same amount as your
+                  tax-free SBLOC withdrawals. Calculated using your effective tax rate.
+                  Illustrates the tax advantage of borrowing vs. earning income.
+                </dd>
+              </dl>
+            </help-section>
+
+            <!-- Section 8: Glossary -->
+            <help-section title="Glossary" icon="📖">
+              <dl>
+                <dt>Buy-Borrow-Die (BBD)</dt>
+                <dd>
+                  A wealth strategy where you buy appreciating assets, borrow against them
+                  for living expenses (avoiding capital gains taxes), and pass them to heirs
+                  at death when the cost basis "steps up" to market value, potentially
+                  eliminating the embedded capital gains.
+                </dd>
+
+                <dt>SBLOC (Securities-Backed Line of Credit)</dt>
+                <dd>
+                  A loan collateralized by your investment portfolio. You can borrow up to
+                  a percentage (typically 50-70%) of your portfolio's value. Interest rates
+                  are typically lower than unsecured loans because of the collateral.
+                </dd>
+
+                <dt>LTV (Loan-to-Value)</dt>
+                <dd>
+                  The ratio of your loan balance to your portfolio value, expressed as a
+                  percentage. For example, a $300K loan against a $1M portfolio is 30% LTV.
+                  Higher LTV means higher margin call risk.
+                </dd>
+
+                <dt>Margin Call</dt>
+                <dd>
+                  A demand from your lender to either deposit more collateral or pay down
+                  your loan when your LTV exceeds the warning threshold. Failure to meet
+                  a margin call can result in forced liquidation of assets.
+                </dd>
+
+                <dt>Stepped-Up Basis</dt>
+                <dd>
+                  A tax provision where inherited assets receive a new cost basis equal to
+                  their market value at the time of the owner's death. This effectively
+                  eliminates capital gains taxes on appreciation during the original
+                  owner's lifetime.
+                </dd>
+
+                <dt>Monte Carlo Simulation</dt>
+                <dd>
+                  A computational technique that runs thousands of random scenarios to
+                  estimate the probability distribution of outcomes. By simulating many
+                  possible market paths, it provides a realistic range of potential results
+                  rather than a single projection.
+                </dd>
+              </dl>
+            </help-section>
           </div>
 
           <footer class="modal-footer">
@@ -333,3 +488,6 @@ export class UserGuideModal extends BaseComponent {
     }
   }
 }
+
+// Register the custom element
+customElements.define('user-guide-modal', UserGuideModal);
