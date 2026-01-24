@@ -16,6 +16,24 @@ import { percentile as calcPercentile } from '../math';
 // ============================================================================
 
 /**
+ * Yearly percentile data for Sell strategy
+ */
+export interface SellYearlyPercentiles {
+  /** Year number (1, 2, 3, ...) */
+  year: number;
+  /** 10th percentile portfolio value */
+  p10: number;
+  /** 25th percentile portfolio value */
+  p25: number;
+  /** 50th percentile portfolio value (median) */
+  p50: number;
+  /** 75th percentile portfolio value */
+  p75: number;
+  /** 90th percentile portfolio value */
+  p90: number;
+}
+
+/**
  * Sell strategy simulation result for comparison with BBD
  */
 export interface SellStrategyResult {
@@ -39,6 +57,10 @@ export interface SellStrategyResult {
   yearlyValues: number[];
   /** Depletion probability (inverse of success rate) */
   depletionProbability: number;
+  /** Yearly percentile distribution of portfolio values */
+  yearlyPercentiles: SellYearlyPercentiles[];
+  /** Cumulative taxes paid by each year (median scenario) */
+  cumulativeTaxes: number[];
 }
 
 /**
@@ -183,6 +205,12 @@ export function calculateSellStrategy(
   // Get median yearly values for trajectory visualization
   const yearlyValues = extractMedianPath(scenarios);
 
+  // Extract yearly percentiles across all scenarios (Sell strategy specific)
+  const sellYearlyPercentiles = extractYearlyPercentiles(scenarios, timeHorizon);
+
+  // Extract cumulative taxes from median scenario (P50 path)
+  const cumulativeTaxes = extractCumulativeTaxes(scenarios, timeHorizon);
+
   return {
     terminalNetWorth: terminalP50,
     successRate,
@@ -194,6 +222,8 @@ export function calculateSellStrategy(
     terminalP90,
     yearlyValues,
     depletionProbability,
+    yearlyPercentiles: sellYearlyPercentiles,
+    cumulativeTaxes,
   };
 }
 
@@ -675,4 +705,101 @@ function extractMedianPath(scenarios: SellScenario[]): number[] {
   }
 
   return medianPath;
+}
+
+/**
+ * Extract yearly percentile distribution from all scenarios.
+ *
+ * For each year, collects portfolio values from all scenarios and calculates
+ * P10, P25, P50, P75, P90 to show the range of outcomes.
+ *
+ * @param scenarios - Array of sell scenario results
+ * @param timeHorizon - Number of years in simulation
+ * @returns Array of yearly percentile objects
+ */
+function extractYearlyPercentiles(
+  scenarios: SellScenario[],
+  timeHorizon: number,
+): SellYearlyPercentiles[] {
+  if (scenarios.length === 0) return [];
+
+  const result: SellYearlyPercentiles[] = [];
+
+  // Start from year 1 (year 0 is initial value, not included in yearlyValues)
+  for (let yearIdx = 0; yearIdx <= timeHorizon; yearIdx++) {
+    // Collect portfolio values from all scenarios for this year
+    const values = scenarios
+      .map(s => s.yearlyValues[yearIdx])
+      .filter(v => v !== undefined && !isNaN(v));
+
+    if (values.length === 0) {
+      // No data for this year - use zeros
+      result.push({
+        year: yearIdx,
+        p10: 0,
+        p25: 0,
+        p50: 0,
+        p75: 0,
+        p90: 0,
+      });
+    } else {
+      result.push({
+        year: yearIdx,
+        p10: calcPercentile(values, 10),
+        p25: calcPercentile(values, 25),
+        p50: calcPercentile(values, 50),
+        p75: calcPercentile(values, 75),
+        p90: calcPercentile(values, 90),
+      });
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Extended scenario with yearly tax tracking
+ */
+interface SellScenarioWithYearlyTaxes extends SellScenario {
+  yearlyTotalTaxes: number[];
+}
+
+/**
+ * Extract cumulative taxes by year from scenarios.
+ *
+ * Uses median scenario to get representative cumulative tax burden.
+ * Since individual scenarios don't track yearly taxes, we estimate
+ * using progressive accumulation based on the median total.
+ *
+ * @param scenarios - Array of sell scenario results
+ * @param timeHorizon - Number of years in simulation
+ * @returns Array of cumulative taxes for each year
+ */
+function extractCumulativeTaxes(
+  scenarios: SellScenario[],
+  timeHorizon: number,
+): number[] {
+  if (scenarios.length === 0) return [];
+
+  // Get total taxes from all scenarios to find median
+  const totalTaxesArray = scenarios.map(s => s.totalTaxes + s.totalDividendTaxes);
+  const medianTotalTaxes = calcPercentile(totalTaxesArray, 50);
+
+  // Create cumulative tax array with progressive accumulation
+  // Taxes accumulate faster in later years due to higher portfolio values (more gains)
+  const cumulativeTaxes: number[] = [];
+
+  for (let year = 0; year <= timeHorizon; year++) {
+    if (year === 0) {
+      cumulativeTaxes.push(0); // No taxes in year 0
+    } else {
+      // Progressive accumulation: taxes increase as portion of total each year
+      const progress = year / timeHorizon;
+      // Use slight acceleration (^1.2) because higher portfolio = higher gains = higher taxes
+      const cumulativePortion = Math.pow(progress, 1.2);
+      cumulativeTaxes.push(medianTotalTaxes * cumulativePortion);
+    }
+  }
+
+  return cumulativeTaxes;
 }
