@@ -222,8 +222,8 @@ export class HelpTooltip extends BaseComponent {
     tooltip.addEventListener('mouseleave', hide);
 
     // Dismiss on Escape
-    trigger.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    trigger.addEventListener('keydown', (e: Event) => {
+      if ((e as KeyboardEvent).key === 'Escape') {
         hide();
         (trigger as HTMLElement).blur();
       }

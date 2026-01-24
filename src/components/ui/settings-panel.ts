@@ -14,6 +14,7 @@ import {
 } from '../../data/services/settings-service';
 import type { ApiSource } from '../../data/schemas/market-data';
 import type { CorsProxyType } from '../../data/schemas/settings';
+import './theme-toggle';
 
 /**
  * API provider information for settings UI
@@ -128,6 +129,12 @@ export class SettingsPanel extends BaseComponent {
             <h2>Settings</h2>
             <button id="btn-close" aria-label="Close">&times;</button>
           </header>
+
+          <section class="theme-section">
+            <h3>Appearance</h3>
+            <p class="section-info">Choose your preferred color theme.</p>
+            <theme-toggle></theme-toggle>
+          </section>
 
           <section class="api-keys-section">
             <h3>API Keys</h3>
