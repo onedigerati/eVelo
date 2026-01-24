@@ -21,6 +21,7 @@ export {
   generateRegimeReturns,
   generateCorrelatedRegimeReturns
 } from './regime-switching';
+export * from './regime-calibration';
 
 /**
  * Lazy-initialized worker instance
