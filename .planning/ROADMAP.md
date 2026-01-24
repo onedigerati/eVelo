@@ -30,7 +30,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
 - [x] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
 - [x] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
-- [ ] **Phase 18: Fix Regime-Switching Model** - Connect asset historical returns to regime parameters, implement calibration modes, fix preset data year labels
+- [x] **Phase 18: Fix Regime-Switching Model** - Connect asset historical returns to regime parameters, implement calibration modes, fix preset data year labels
+- [x] **Phase 19: Sell Strategy Accuracy** - Match reference application order of operations, add dividend tax modeling, ensure apples-to-apples comparison
 
 ## Phase Details
 
@@ -475,10 +476,10 @@ Based on research findings:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 18-01-PLAN.md -- Fix preset year labels (shift 2025→1995 in all preset JSON files)
-- [ ] 18-02-PLAN.md -- Create regime calibration module (threshold classification, parameter estimation)
-- [ ] 18-03-PLAN.md -- Implement Conservative calibration mode (stress-test adjustments)
-- [ ] 18-04-PLAN.md -- Wire regimeCalibration to simulation engine (connect calibration to monte-carlo.ts)
+- [x] 18-01-PLAN.md -- Fix preset year labels (shift 2025→1995 in all preset JSON files)
+- [x] 18-02-PLAN.md -- Create regime calibration module (threshold classification, parameter estimation)
+- [x] 18-03-PLAN.md -- Implement Conservative calibration mode (stress-test adjustments)
+- [x] 18-04-PLAN.md -- Wire regimeCalibration to simulation engine (connect calibration to monte-carlo.ts)
 
 **Details:**
 Issues identified during CAGR review:
@@ -493,10 +494,46 @@ Based on research findings:
 - Conservative mode applies Federal Reserve stress test-style adjustments
 - No new dependencies - uses existing math module (mean, stddev, percentile)
 
+### Phase 19: Sell Strategy Accuracy
+**Goal**: Match reference application mechanics for accurate BBD vs Sell Assets comparison
+**Depends on**: Phase 18
+**Requirements**: CALC-05 (BBD vs Sell comparison), ESTATE-02 (BBD advantage)
+**Success Criteria** (what must be TRUE):
+  1. Sell strategy applies withdrawal BEFORE returns (matching reference order of operations)
+  2. Dividend taxes modeled for Sell strategy (liquidated from portfolio, not borrowed)
+  3. Both strategies use identical market returns for apples-to-apples comparison
+  4. Gross-up formula correctly calculates amount to sell for net withdrawal after taxes
+  5. BBD advantage reflects accurate tax savings and compounding difference
+  6. Results match reference application within reasonable tolerance
+**Research**: Complete (see conversation analysis of PortfolioStrategySimulator.html)
+**Plans**: 4 plans
+
+Plans:
+- [x] 19-01-PLAN.md -- Fix order of operations (withdrawal before returns in Sell strategy)
+- [x] 19-02-PLAN.md -- Add dividend tax modeling to Sell strategy
+- [x] 19-03-PLAN.md -- Ensure identical returns path for both strategies
+- [x] 19-04-PLAN.md -- Verify gross-up formula and add integration tests
+
+**Details:**
+Issues identified during reference application analysis:
+1. **Order of operations differs**: eVelo applies returns FIRST then withdrawal. Reference applies withdrawal FIRST then returns. This makes eVelo's Sell strategy more favorable than reality.
+2. **Missing dividend tax in Sell**: Reference BBD borrows to pay dividend taxes (portfolio whole), Sell liquidates (portfolio reduced). eVelo doesn't model this for Sell.
+3. **Return derivation indirect**: eVelo derives growth rates from BBD percentile data rather than using identical raw returns array. Should pass same returns to both strategies.
+4. **Gross-up formula verified correct**: Both implementations use `withdrawal / (1 - gainPct * taxRate)` formula.
+
+Reference application order (correct):
+1. Dividend tax reduces portfolio
+2. Withdrawal + capital gains tax reduces portfolio
+3. Returns applied to reduced portfolio
+
+eVelo current order (too favorable to Sell):
+1. Returns applied to full portfolio
+2. Withdrawal + capital gains tax reduces portfolio
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -518,7 +555,8 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
 | 17. Welcome Page & User Guide | 3/3 | Complete | 2026-01-24 |
-| 18. Fix Regime-Switching Model | 0/4 | Not started | - |
+| 18. Fix Regime-Switching Model | 4/4 | Complete | 2026-01-24 |
+| 19. Sell Strategy Accuracy | 4/4 | Complete | 2026-01-24 |
 
-**Total Plans**: 76
-**Completed Plans**: 72
+**Total Plans**: 80
+**Completed Plans**: 80
