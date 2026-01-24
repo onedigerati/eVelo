@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 17 - Welcome Page & User Guide (executing)
+**Current focus:** Phase 17 - Welcome Page & User Guide (COMPLETE)
 
 ## Current Position
 
-Phase: 17 of 17 (Welcome Page & User Guide) - EXECUTING
-Plan: 2 of 3 complete (17-02)
-Status: In progress
-Last activity: 2026-01-23 — Completed 17-02-PLAN.md
+Phase: 17 of 17 (Welcome Page & User Guide) - COMPLETE
+Plan: 3 of 3 complete (17-03)
+Status: Phase complete
+Last activity: 2026-01-23 — Completed 17-03-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (71/72 plans total)
+Progress: ████████████████████████████████████████ 100% (72/72 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 69
+- Total plans completed: 72
 - Average duration: 3.6 min
-- Total execution time: 253 min
+- Total execution time: 266 min
 
 **By Phase:**
 
@@ -43,11 +43,11 @@ Progress: ███████████████████████�
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
-| 17-welcome-page-user-guide | 2/3 | 8 min | 4.0 min |
+| 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-02 (5 min), 09-03 (6 min), 17-01 (4 min), 17-02 (4 min)
-- Trend: Phase 17 progressing - user guide modal complete
+- Last 5 plans: 09-03 (6 min), 17-01 (4 min), 17-02 (4 min), 17-03 (5 min)
+- Trend: Phase 17 COMPLETE - all plans executed successfully
 
 ## Accumulated Context
 
@@ -709,11 +709,18 @@ None
 - Keyboard cleanup pattern: store handler reference, remove in disconnectedCallback
 - Glossary with 6 key terms: BBD, SBLOC, LTV, margin call, stepped-up basis, Monte Carlo
 
+**From 17-03:**
+- Header buttons grouped in div.header-buttons for proper spacing with flex gap
+- Welcome screen visibility controlled via hidden CSS class toggle
+- Inline BBD help section uses sibling selector to show only when welcome is hidden
+- Event bubbling pattern: quick-start and show-guide events bubble up from welcome-screen to app-root
+- Welcome screen auto-hides after simulation completes via classList.add('hidden')
+
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 17-02-PLAN.md (User Guide Modal)
+Stopped at: Completed 17-03-PLAN.md (Wire Integration)
 Resume file: None
 
-**Phase 17 IN PROGRESS (2/3 plans complete).**
-**UserGuideModal component ready. Next: Wire integration with app-root (17-03).**
+**Phase 17 COMPLETE (3/3 plans).**
+**Welcome Page & User Guide feature fully integrated. All project phases complete.**
