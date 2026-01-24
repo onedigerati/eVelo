@@ -69,3 +69,10 @@ export {
   stepSBLOCMonth,
   stepSBLOCYear,
 } from './monthly';
+
+// State validation
+export {
+  validateSBLOCState,
+  validateLTV,
+  SBLOCStateValidationError,
+} from './validation';
