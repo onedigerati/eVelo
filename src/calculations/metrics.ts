@@ -23,13 +23,22 @@ import type { MetricsSummary, PercentileDistribution } from './types';
 /**
  * Calculate Compound Annual Growth Rate (CAGR)
  *
- * CAGR measures the mean annual growth rate of an investment
+ * CAGR measures the geometric mean annual growth rate of an investment
  * assuming profits are reinvested at the end of each period.
+ *
+ * **Monte Carlo Context:**
+ * In Monte Carlo simulations, CAGR is typically calculated using the MEDIAN
+ * terminal value (P50), not the mean. This is intentional because:
+ * - Median is more robust to extreme outliers in simulation results
+ * - Median represents the "typical" outcome a user would experience
+ * - Mean can be skewed by extreme positive scenarios due to compounding
+ *
+ * For mean-based CAGR (less common), use calculateMeanCAGR().
  *
  * Formula: CAGR = (endValue / startValue)^(1/years) - 1
  *
  * @param startValue - Initial investment value
- * @param endValue - Final investment value
+ * @param endValue - Final investment value (typically median terminal value)
  * @param years - Time period in years
  * @returns Annual growth rate as decimal (e.g., 0.0718 for 7.18%)
  *
@@ -68,6 +77,46 @@ export function calculateCAGR(
   const cagr = Math.pow(ratio, 1 / years) - 1;
 
   return cagr;
+}
+
+/**
+ * Calculate CAGR using the mean (average) terminal value
+ *
+ * This calculates CAGR from the arithmetic mean of terminal values rather
+ * than the median. Useful for scenarios where you want to account for
+ * the full distribution including extreme positive outcomes.
+ *
+ * **Important:** Mean-based CAGR will typically be HIGHER than median-based
+ * CAGR in Monte Carlo simulations because positive compounding creates
+ * right-skewed distributions with extreme high values.
+ *
+ * @param startValue - Initial investment value
+ * @param terminalValues - Array of terminal values from simulation
+ * @param years - Time period in years
+ * @returns Annual growth rate as decimal based on mean terminal value
+ *
+ * @example
+ * ```typescript
+ * const terminals = new Float64Array([800000, 1200000, 1500000, 2000000, 5000000]);
+ * // Mean = 2,100,000 (skewed by 5M outlier)
+ * // Median = 1,500,000
+ * calculateMeanCAGR(1000000, terminals, 10);  // Higher than median CAGR
+ * ```
+ */
+export function calculateMeanCAGR(
+  startValue: number,
+  terminalValues: Float64Array | number[],
+  years: number
+): number {
+  if (terminalValues.length === 0) {
+    return NaN;
+  }
+
+  // Calculate mean terminal value
+  const meanTerminal = mean(Array.from(terminalValues));
+
+  // Use standard CAGR formula with mean
+  return calculateCAGR(startValue, meanTerminal, years);
 }
 
 /**
