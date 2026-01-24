@@ -252,11 +252,11 @@ export class ResultsDashboard extends BaseComponent {
               <span class="stat-value" id="stat-success">-</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">CAGR</span>
+              <span class="stat-label">Median CAGR</span>
               <span class="stat-value" id="stat-cagr">-</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">TWRR</span>
+              <span class="stat-label">TWRR (Median)</span>
               <span class="stat-value" id="stat-twrr">-</span>
             </div>
             <!-- Row 2: Additional stats -->
@@ -1189,6 +1189,13 @@ export class ResultsDashboard extends BaseComponent {
   }
 
   /**
+   * Get the effective annual withdrawal from simulation config or fallback.
+   */
+  private getEffectiveAnnualWithdrawal(): number {
+    return this._simulationConfig?.sbloc?.annualWithdrawal ?? this._annualWithdrawal;
+  }
+
+  /**
    * Update key metrics banner with summary statistics.
    * Computes metrics from simulation data and estate analysis.
    */
@@ -1228,7 +1235,7 @@ export class ResultsDashboard extends BaseComponent {
       const sellResult = calculateSellStrategy(
         {
           initialValue,
-          annualWithdrawal: this._annualWithdrawal,
+          annualWithdrawal: this.getEffectiveAnnualWithdrawal(),
           withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
           timeHorizon,
           capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
@@ -1384,7 +1391,7 @@ export class ResultsDashboard extends BaseComponent {
     const sellResult = calculateSellStrategy(
       {
         initialValue,
-        annualWithdrawal: this._annualWithdrawal,
+        annualWithdrawal: this.getEffectiveAnnualWithdrawal(),
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
@@ -1430,7 +1437,7 @@ export class ResultsDashboard extends BaseComponent {
     const sellData = {
       terminalNetWorth: sellResult.terminalNetWorth,
       successRate: sellResult.successRate,
-      lifetimeCost: sellResult.lifetimeTaxes,
+      lifetimeCost: sellResult.totalLifetimeTaxes,
       primaryRisk: sellResult.primaryRisk,
       depletionProbability: sellResult.depletionProbability,
     };
@@ -1516,7 +1523,7 @@ export class ResultsDashboard extends BaseComponent {
     const sellResult = calculateSellStrategy(
       {
         initialValue,
-        annualWithdrawal: this._annualWithdrawal,
+        annualWithdrawal: this.getEffectiveAnnualWithdrawal(),
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
@@ -1736,7 +1743,7 @@ export class ResultsDashboard extends BaseComponent {
     // Calculate withdrawal data with user-specified annual growth
     const withdrawalGrowth = this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0;
     const withdrawals = calculateWithdrawals(
-      this._annualWithdrawal,
+      this.getEffectiveAnnualWithdrawal(),
       withdrawalGrowth,
       this._timeHorizon
     );
@@ -1807,10 +1814,11 @@ export class ResultsDashboard extends BaseComponent {
     ];
 
     // Calculate sell strategy result with full yearly data
+    const annualWithdrawal = this.getEffectiveAnnualWithdrawal();
     const sellResult = calculateSellStrategy(
       {
         initialValue,
-        annualWithdrawal: this._annualWithdrawal,
+        annualWithdrawal,
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
@@ -1825,7 +1833,7 @@ export class ResultsDashboard extends BaseComponent {
     // Calculate withdrawal data with user-specified annual growth
     const withdrawalGrowth = this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03;
     const withdrawals = calculateWithdrawals(
-      this._annualWithdrawal,
+      annualWithdrawal,
       withdrawalGrowth,
       timeHorizon
     );
