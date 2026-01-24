@@ -83,6 +83,22 @@ export interface SBLOCConfig {
    * Useful for modeling accumulation phase before retirement draws
    */
   startYear: number;
+
+  /**
+   * Annual growth rate for withdrawal amounts (e.g., 0.03 for 3%)
+   * Models inflation-adjusted spending to maintain purchasing power.
+   *
+   * Year 0 withdrawal = annualWithdrawal
+   * Year N withdrawal = annualWithdrawal * (1 + withdrawalGrowthRate)^N
+   *
+   * Note: When used with Monte Carlo simulation (monte-carlo.ts), growth is
+   * computed externally via SBLOCSimConfig.annualWithdrawalRaise and passed
+   * as an adjusted annualWithdrawal each year. This field is for standalone
+   * SBLOC engine use only.
+   *
+   * @default 0.03 (3% annual growth)
+   */
+  withdrawalGrowthRate?: number;
 }
 
 // ============================================================================
@@ -280,6 +296,7 @@ export const DEFAULT_SBLOC_CONFIG: SBLOCConfig = {
   annualWithdrawal: 50000,      // $50k annual draw
   compoundingFrequency: 'annual',
   startYear: 0,
+  withdrawalGrowthRate: 0.03,   // 3% annual growth (inflation adjustment)
 };
 
 /**
