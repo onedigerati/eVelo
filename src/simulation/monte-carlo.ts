@@ -16,6 +16,10 @@ import { mean, stddev, percentile } from '../math';
 import { simpleBootstrap, blockBootstrap } from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
 import {
+  calibrateRegimeModelWithMode,
+  calculatePortfolioRegimeParams,
+} from './regime-calibration';
+import {
   initializeSBLOCState,
   stepSBLOCYear,
   type SBLOCConfig as SBLOCEngineConfig,
@@ -29,7 +33,10 @@ import type {
   SimulationStatistics,
   SBLOCTrajectory,
   MarginCallStats,
+  RegimeCalibrationMode,
+  RegimeParamsMap,
 } from './types';
+import { DEFAULT_REGIME_PARAMS } from './types';
 
 /** Batch size for progress reporting */
 const BATCH_SIZE = 1000;
@@ -82,6 +89,22 @@ export async function runMonteCarlo(
   const numAssets = portfolio.assets.length;
   const weights = portfolio.assets.map(a => a.weight);
 
+  // Calibrate regime parameters if using regime method
+  let assetRegimeParams: RegimeParamsMap[] | undefined;
+
+  if (resamplingMethod === 'regime') {
+    const calibrationMode = config.regimeCalibration ?? 'historical';
+
+    // Calibrate each asset's regime parameters from its historical data
+    assetRegimeParams = portfolio.assets.map(asset => {
+      if (asset.historicalReturns.length >= 10) {
+        return calibrateRegimeModelWithMode(asset.historicalReturns, calibrationMode);
+      }
+      // Fall back to default params if insufficient data
+      return DEFAULT_REGIME_PARAMS;
+    });
+  }
+
   // Track SBLOC state per iteration per year (only if sbloc config provided)
   let sblocStates: SBLOCState[][] | null = null;
   let marginCallYears: number[] | null = null; // First margin call year per iteration (-1 if none)
@@ -112,7 +135,9 @@ export async function runMonteCarlo(
         timeHorizon,
         portfolio,
         rng,
-        blockSize
+        blockSize,
+        config.regimeCalibration,
+        assetRegimeParams
       );
 
       // Simulate portfolio growth
@@ -203,6 +228,14 @@ export async function runMonteCarlo(
     await new Promise(resolve => setTimeout(resolve, 0));
   }
 
+  // Report entering post-processing phase
+  if (onProgress) {
+    onProgress(100); // Ensure 100% is shown before post-processing
+  }
+
+  // Yield to allow progress update to render
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   // Calculate statistics
   const terminalArray = Array.from(terminalValues);
   const statistics = calculateStatistics(terminalArray, initialValue);
@@ -287,17 +320,23 @@ function generateIterationReturns(
   years: number,
   portfolio: PortfolioConfig,
   rng: () => number,
-  blockSize?: number
+  blockSize?: number,
+  regimeCalibration?: RegimeCalibrationMode,
+  assetRegimeParams?: RegimeParamsMap[]
 ): number[][] {
   const numAssets = portfolio.assets.length;
 
   if (method === 'regime') {
-    // Use regime-switching with correlation
+    // Use regime-switching with correlation and calibrated params
     const { returns } = generateCorrelatedRegimeReturns(
       years,
       numAssets,
       portfolio.correlationMatrix,
-      rng
+      rng,
+      'bull', // initialRegime
+      undefined, // matrix (use default)
+      undefined, // shared params (not used when assetRegimeParams provided)
+      assetRegimeParams
     );
     return returns;
   }
