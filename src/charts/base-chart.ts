@@ -5,6 +5,7 @@
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
 import { BaseComponent } from '../components/base-component';
+import { getChartTheme } from './theme';
 
 // Register all Chart.js components (controllers, elements, scales, plugins)
 Chart.register(...registerables);
@@ -70,6 +71,15 @@ export abstract class BaseChart extends BaseComponent {
   }
 
   /**
+   * Lifecycle: component connected to DOM
+   * Registers theme change listener
+   */
+  connectedCallback(): void {
+    super.connectedCallback();
+    window.addEventListener('theme-change', this.handleThemeChange);
+  }
+
+  /**
    * Creates the Chart.js instance after DOM is ready.
    * Called automatically by BaseComponent after render().
    */
@@ -98,6 +108,7 @@ export abstract class BaseChart extends BaseComponent {
    */
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    window.removeEventListener('theme-change', this.handleThemeChange);
     if (this.chart) {
       this.chart.destroy();
       this.chart = null;
@@ -145,4 +156,42 @@ export abstract class BaseChart extends BaseComponent {
       this.chart.resize();
     }
   }
+
+  /**
+   * Handle theme changes - update chart colors dynamically
+   * Called when window 'theme-change' event fires
+   * Subclasses can override to customize theme update behavior
+   */
+  private handleThemeChange = (): void => {
+    if (!this.chart) return;
+
+    const theme = getChartTheme();
+    const options = this.chart.options;
+
+    // Update scale colors
+    if (options.scales) {
+      const xScale = options.scales.x;
+      const yScale = options.scales.y;
+
+      if (xScale) {
+        if (xScale.grid) xScale.grid.color = theme.grid;
+        if (xScale.ticks) xScale.ticks.color = theme.text;
+        if ('title' in xScale && xScale.title) xScale.title.color = theme.text;
+      }
+
+      if (yScale) {
+        if (yScale.grid) yScale.grid.color = theme.grid;
+        if (yScale.ticks) yScale.ticks.color = theme.text;
+        if ('title' in yScale && yScale.title) yScale.title.color = theme.text;
+      }
+    }
+
+    // Update legend colors
+    if (options.plugins?.legend?.labels) {
+      options.plugins.legend.labels.color = theme.text;
+    }
+
+    // Update chart without animation
+    this.chart.update('none');
+  };
 }
