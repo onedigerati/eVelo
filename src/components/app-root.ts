@@ -9,8 +9,6 @@ import { getPresetData } from '../data/services/preset-service';
 import type { PortfolioComposition } from './ui/portfolio-composition';
 // Import portfolio types
 import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
-// Import comparison state manager
-import { comparisonState } from '../services/comparison-state';
 // Import comparison dashboard
 import type { ComparisonDashboard } from './ui/comparison-dashboard';
 
@@ -51,11 +49,6 @@ export class AppRoot extends BaseComponent {
   /** Track regime calibration mode */
   private _regimeCalibration: RegimeCalibrationMode = 'historical';
 
-  /** Flag for pending comparison mode after simulation */
-  private _pendingComparisonMode: boolean = false;
-
-  /** Current preset name for comparison tracking */
-  private _currentPresetName: string = '';
   protected template(): string {
     const currentYear = new Date().getFullYear();
     return `
@@ -90,7 +83,10 @@ export class AppRoot extends BaseComponent {
 
           <param-section title="Your Spending Needs" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='6' width='20' height='12' rx='2'/><circle cx='12' cy='12' r='2'/><path d='M6 12h.01M18 12h.01'/></svg>" open>
             <div class="param-group">
-              <label>Annual Cash Need ($)</label>
+              <label>
+                Annual Cash Need ($)
+                <help-tooltip content="Tax-free income from borrowing against your portfolio. Unlike selling, this doesn't trigger capital gains taxes."></help-tooltip>
+              </label>
               <number-input
                 id="annual-withdrawal"
                 value="200000"
@@ -142,7 +138,10 @@ export class AppRoot extends BaseComponent {
               ></number-input>
             </div>
             <div class="param-group">
-              <label>Period (Years)</label>
+              <label>
+                Period (Years)
+                <help-tooltip content="Investment period in years. Longer horizons typically show more benefit from the Buy-Borrow-Die strategy."></help-tooltip>
+              </label>
               <range-slider
                 id="time-horizon"
                 value="15"
@@ -156,7 +155,10 @@ export class AppRoot extends BaseComponent {
 
           <param-section title="Line of Credit Terms" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10'/><path d='m9 12 2 2 4-4'/></svg>" open>
             <div class="param-group">
-              <label>Annual Interest Rate (%)</label>
+              <label>
+                Annual Interest Rate (%)
+                <help-tooltip content="Annual interest rate charged on your securities-backed line of credit. Typically SOFR + 1-3%."></help-tooltip>
+              </label>
               <range-slider
                 id="sbloc-rate"
                 value="7"
@@ -167,7 +169,10 @@ export class AppRoot extends BaseComponent {
               ></range-slider>
             </div>
             <div class="param-group">
-              <label>Max LTV / Hard Margin (%)</label>
+              <label>
+                Max LTV / Hard Margin (%)
+                <help-tooltip content="Loan-to-Value ratio. Maximum percentage of your portfolio value you can borrow. Lower LTV = more conservative."></help-tooltip>
+              </label>
               <range-slider
                 id="max-borrowing"
                 value="65"
@@ -179,7 +184,10 @@ export class AppRoot extends BaseComponent {
               <span class="help-text">Portfolio liquidated if LTV exceeds this threshold</span>
             </div>
             <div class="param-group">
-              <label>Warning Zone LTV (%)</label>
+              <label>
+                Warning Zone LTV (%)
+                <help-tooltip content="LTV threshold that triggers a margin call. If your loan exceeds this ratio of portfolio value, you must repay or liquidate."></help-tooltip>
+              </label>
               <range-slider
                 id="maintenance-margin"
                 value="50"
@@ -210,7 +218,10 @@ export class AppRoot extends BaseComponent {
 
           <param-section title="Simulation Settings" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'/></svg>">
             <div class="param-group">
-              <label>Simulation Iterations</label>
+              <label>
+                Simulation Iterations
+                <help-tooltip content="Number of Monte Carlo scenarios to simulate. More iterations = more accurate results but slower computation."></help-tooltip>
+              </label>
               <select-input
                 id="num-simulations"
                 value="10000"
@@ -419,7 +430,9 @@ export class AppRoot extends BaseComponent {
       }
 
       .param-group label {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font-size: var(--font-size-sm, 0.875rem);
         font-weight: 500;
         color: var(--text-secondary, #475569);
@@ -1042,24 +1055,6 @@ export class AppRoot extends BaseComponent {
       }
     }) as EventListener);
 
-    // Listen for preset-loaded to capture pending comparison flag
-    this.addEventListener('preset-loaded', (e: Event) => {
-      const customEvent = e as CustomEvent;
-      this._pendingComparisonMode = customEvent.detail.pendingComparisonMode || false;
-      this._currentPresetName = customEvent.detail.presetName || '';
-    });
-
-    // Listen for exit-comparison-mode from dashboard
-    this.addEventListener('exit-comparison-mode', () => {
-      comparisonState.exitComparisonMode();
-      const dashboard = this.$('#results') as ComparisonDashboard;
-      const currentResult = comparisonState.getCurrentResult();
-      dashboard.exitComparisonMode();
-      if (currentResult) {
-        dashboard.data = currentResult;
-      }
-    });
-
     // Settings button handler
     const settingsBtn = this.$('#btn-settings');
     const settingsPanel = this.$('#settings-panel') as any;
@@ -1237,50 +1232,32 @@ export class AppRoot extends BaseComponent {
           effectiveTaxRate: number;
         };
         if (dashboard) {
-          if (this._pendingComparisonMode && comparisonState.getCurrentResult()) {
-            // Enter comparison mode
-            comparisonState.enterComparisonMode(result, config, this._currentPresetName);
-            const state = comparisonState.getState();
-            dashboard.enterComparisonMode(
-              state.previousResult!,
-              state.currentResult!,
-              state.previousConfig!,
-              state.currentConfig!,
-              state.previousPresetName,
-              state.currentPresetName
-            );
-          } else {
-            // Normal mode - replace results
-            comparisonState.replaceResults(result, config, this._currentPresetName);
+          // Set configuration values for extended stats calculation
+          dashboard.initialValue = config.initialValue;
+          dashboard.timeHorizon = config.timeHorizon;
+          dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
+          dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
 
-            // Set configuration values for extended stats calculation
-            dashboard.initialValue = config.initialValue;
-            dashboard.timeHorizon = config.timeHorizon;
-            dashboard.annualWithdrawal = config.sbloc?.annualWithdrawal ?? 50000;
-            dashboard.effectiveTaxRate = 0.37; // Default federal tax rate
+          // Set simulation config for yearly analysis table (annualWithdrawalRaise, etc.)
+          (dashboard as any).simulationConfig = config;
 
-            // Set simulation config for yearly analysis table (annualWithdrawalRaise, etc.)
-            (dashboard as any).simulationConfig = config;
+          // Set simulation data (triggers chart updates)
+          dashboard.data = this._simulationResult;
 
-            // Set simulation data (triggers chart updates)
-            dashboard.data = this._simulationResult;
+          // Set portfolio composition for donut chart
+          const portfolioCompTyped = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
+          const currentWeights = portfolioCompTyped?.getWeights() ?? {};
+          const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
+            symbol,
+            weight: weight as number
+          }));
+          dashboard.portfolioWeights = portfolioWeights;
 
-            // Set portfolio composition for donut chart
-            const portfolioCompTyped = this.$('#portfolio-composition') as (PortfolioComposition & { getWeights(): Record<string, number> }) | null;
-            const currentWeights = portfolioCompTyped?.getWeights() ?? {};
-            const portfolioWeights = Object.entries(currentWeights).map(([symbol, weight]) => ({
-              symbol,
-              weight: weight as number
-            }));
-            dashboard.portfolioWeights = portfolioWeights;
-
-            // Set correlation matrix for heatmap
-            dashboard.correlationMatrix = {
-              labels: portfolioWeights.map(w => w.symbol),
-              matrix: portfolio.correlationMatrix
-            };
-          }
-          this._pendingComparisonMode = false;
+          // Set correlation matrix for heatmap
+          dashboard.correlationMatrix = {
+            labels: portfolioWeights.map(w => w.symbol),
+            matrix: portfolio.correlationMatrix
+          };
         }
 
         // Hide progress
