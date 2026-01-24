@@ -15,6 +15,19 @@
 
 /**
  * Compounding frequency for interest calculations
+ *
+ * The compounding frequency determines how often interest is calculated and
+ * added to the principal, which affects the Effective Annual Rate (EAR).
+ *
+ * - 'annual': Interest calculated once per year. EAR = nominal rate.
+ * - 'monthly': Interest calculated 12x/year. EAR = (1 + r/12)^12 - 1.
+ *
+ * Example at 7.4% nominal rate:
+ * - Annual:  EAR = 7.40% ($7,400 interest on $100,000)
+ * - Monthly: EAR = 7.66% ($7,660 interest on $100,000)
+ *
+ * Most real SBLOCs use daily or monthly compounding. Users should select
+ * 'monthly' for more realistic/conservative simulations.
  */
 export type CompoundingFrequency = 'annual' | 'monthly';
 
@@ -73,8 +86,19 @@ export interface SBLOCConfig {
 
   /**
    * How interest compounds on the loan balance
-   * - 'annual': Interest calculated and added once per year
-   * - 'monthly': Interest calculated and added monthly (rate/12 per month)
+   *
+   * - 'annual': Interest calculated once per year. EAR equals nominal rate.
+   * - 'monthly': Interest calculated 12x/year at (rate/12) per month.
+   *              EAR = (1 + r/12)^12 - 1, roughly 0.26% higher than nominal.
+   *
+   * Impact example at 7.4% nominal over 30 years on $1M loan:
+   * - Annual:  Final balance = $8.5M
+   * - Monthly: Final balance = $9.2M (8% more debt)
+   *
+   * Most real SBLOCs compound daily or monthly. Select 'monthly' for
+   * more realistic/conservative projections.
+   *
+   * @default 'annual'
    */
   compoundingFrequency: CompoundingFrequency;
 
