@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 17 - Welcome Page & User Guide (COMPLETE)
+**Current focus:** Phase 18 - Fix Regime-Switching Model
 
 ## Current Position
 
-Phase: 17 of 17 (Welcome Page & User Guide) - COMPLETE
-Plan: 3 of 3 complete (17-03)
-Status: Phase complete, verified
-Last activity: 2026-01-24 — Completed Phase 17
+Phase: 18 of 18 (Fix Regime-Switching Model)
+Plan: 0 of 4 complete
+Status: Not started
+Last activity: 2026-01-24 — Added Phase 18 to roadmap
 
-Progress: ████████████████████████████████████████ 100% (72/72 plans total)
+Progress: ████████████████████████████████████████ 95% (72/76 plans total)
 
 ## Performance Metrics
 

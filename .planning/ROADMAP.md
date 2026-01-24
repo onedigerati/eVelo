@@ -30,6 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
 - [x] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
 - [x] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
+- [ ] **Phase 18: Fix Regime-Switching Model** - Connect asset historical returns to regime parameters, implement calibration modes, fix preset data year labels
 
 ## Phase Details
 
@@ -459,10 +460,38 @@ Based on research findings:
 - User guide button in header for persistent access
 - Disclaimer required for educational content
 
+### Phase 18: Fix Regime-Switching Model
+**Goal**: Make regime-switching model use asset-specific historical data and implement calibration modes
+**Depends on**: Phase 17
+**Requirements**: SIM-06 (regime-switching returns)
+**Success Criteria** (what must be TRUE):
+  1. Regime-switching model derives parameters from actual asset historical returns (not generic S&P 500 defaults)
+  2. "Historical" calibration mode uses actual historical regime parameters
+  3. "Conservative" calibration mode uses more pessimistic parameters (lower returns, higher volatility)
+  4. Preset data year labels corrected (2025→1995, representing 1995-2025 historical data)
+  5. CAGR values reflect actual portfolio asset characteristics, not generic market parameters
+  6. regimeCalibration config parameter is actually used in simulation
+**Research**: Likely (regime parameter derivation from historical returns)
+**Research topics**: Derive bull/bear/crash regime parameters from historical return series, statistical methods for regime detection
+**Plans**: TBD
+
+Plans:
+- [ ] 18-01: Fix preset data year labels (shift 2025→1995)
+- [ ] 18-02: Derive regime parameters from asset historical returns
+- [ ] 18-03: Implement Conservative calibration mode
+- [ ] 18-04: Wire regimeCalibration to simulation engine
+
+**Details:**
+Issues identified during CAGR review:
+1. **Regime-Switching ignores asset data**: `generateCorrelatedRegimeReturns` uses `DEFAULT_REGIME_PARAMS` (S&P 500 calibrated: 12% bull, -8% bear, -30% crash) for ALL assets regardless of actual historical returns
+2. **regimeCalibration has no effect**: The setting is stored but never passed to regime-switching functions - both "Historical" and "Conservative" produce identical results
+3. **Preset year labels incorrect**: stocks.json shows 2025-2055 (future years) but should be 1995-2025 (actual historical data shifted by 30 years)
+4. **CAGR doesn't reflect portfolio**: 10.8% CAGR for tech portfolio (AAPL, GOOGL, MSFT, AMD) is generic S&P 500 behavior, not tech-stock-specific
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -484,6 +513,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
 | 17. Welcome Page & User Guide | 3/3 | Complete | 2026-01-24 |
+| 18. Fix Regime-Switching Model | 0/4 | Not started | - |
 
-**Total Plans**: 72
+**Total Plans**: 76
 **Completed Plans**: 72
