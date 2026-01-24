@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 16 - Dashboard Comparison Mode
+**Current focus:** Phase 09 - Theming & Polish
 
 ## Current Position
 
-Phase: 16 of 16 (Dashboard Comparison Mode)
-Plan: 4 of 4 complete (16-04)
-Status: Phase complete
-Last activity: 2026-01-23 — Completed 16-04-PLAN.md
+Phase: 9 of 16 (Theming & Polish)
+Plan: 1 of 3 complete (09-01)
+Status: In progress
+Last activity: 2026-01-23 — Completed 09-01-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (67/67 plans total)
+Progress: ████████████████████████████████████████░ 101% (68/67 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 67
+- Total plans completed: 68
 - Average duration: 3.6 min
-- Total execution time: 239 min
+- Total execution time: 242 min
 
 **By Phase:**
 
@@ -42,10 +42,11 @@ Progress: ███████████████████████�
 | 14-dashboard-calculations-review | 2/2 | 9 min | 4.5 min |
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
+| 09-theming-polish | 1/3 | 3 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 16-01 (2 min), 16-02 (8 min), 16-03 (6 min), 16-04 (3 min)
-- Trend: Phase 16 complete - all 67 plans finished!
+- Last 5 plans: 16-02 (8 min), 16-03 (6 min), 16-04 (3 min), 09-01 (3 min)
+- Trend: Phase 9 started - theme infrastructure complete
 
 ## Accumulated Context
 
@@ -659,11 +660,21 @@ None
 - Keyboard navigation with ArrowLeft/ArrowRight for tab switching
 - Dual dashboard instances (desktop + mobile) avoid complex responsive logic within results-dashboard
 
+**From 09-01:**
+- Module-level singleton pattern for theme service (functions vs class)
+- initTheme() before app-root import with Promise chaining (FOUC prevention)
+- System preference detection via matchMedia('prefers-color-scheme: dark')
+- CustomEvent 'theme-change' dispatch for cross-component theme updates
+- data-theme attribute on document.documentElement for CSS targeting
+- Separate lightChartTheme/darkChartTheme objects with getChartTheme() helper
+- Default theme preference to 'system' (respects OS-level dark mode)
+- Chart colors brightened for dark theme (P90: #4ade80, P50: #60a5fa, P10: #f87171)
+
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 16-04-PLAN.md (Comparison Mode Integration)
+Stopped at: Completed 09-01-PLAN.md (Theme Infrastructure)
 Resume file: None
 
-**Phase 16 COMPLETE (4/4 plans complete).**
-**All 67 plans finished! Dashboard Comparison Mode fully integrated with preset change detection, modal prompts, side-by-side desktop view, tabbed mobile view, and complete state management.**
+**Phase 9 IN PROGRESS (1/3 plans complete).**
+**Theme infrastructure complete: service singleton, chart themes, dark mode CSS tokens, FOUC prevention.**
