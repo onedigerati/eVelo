@@ -39,7 +39,16 @@ export interface SellYearlyPercentiles {
 export interface SellStrategyResult {
   /** Terminal net worth at median (P50) outcome */
   terminalNetWorth: number;
-  /** Success rate - percentage of scenarios not depleted (0-100) */
+  /**
+   * Success rate - percentage of scenarios where terminal value > initial value (0-100)
+   *
+   * This uses the SAME definition as BBD strategy for apples-to-apples comparison:
+   * Success = terminal value strictly greater than initial portfolio value
+   *
+   * This is stricter than "not depleted" because it requires the portfolio to grow,
+   * not just survive. A scenario that ends at 90% of initial value is NOT successful
+   * even though it didn't deplete.
+   */
   successRate: number;
   /** Cumulative lifetime capital gains taxes paid */
   lifetimeTaxes: number;
@@ -176,10 +185,14 @@ export function calculateSellStrategy(
     dividendTaxRate,
   );
 
-  // Calculate success rate (scenarios not depleted)
-  const successCount = scenarios.filter(s => !s.depleted).length;
+  // Calculate success rate using same definition as BBD: terminal > initial
+  // This ensures apples-to-apples comparison between strategies
+  const successCount = scenarios.filter(s => s.terminalValue > initialValue).length;
   const successRate = (successCount / scenarios.length) * 100;
-  const depletionProbability = 100 - successRate;
+
+  // Keep depletion probability as separate metric (still useful for risk assessment)
+  const depletedCount = scenarios.filter(s => s.depleted).length;
+  const depletionProbability = (depletedCount / scenarios.length) * 100;
 
   // Extract terminal values
   const terminalValues = scenarios.map(s => s.terminalValue);
