@@ -71,14 +71,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **UI-04**: App displays correctly on mobile devices (responsive layout)
 - [ ] **UI-05**: User can access expandable help/guide sections
 - [ ] **UI-06**: User receives toast notifications for feedback
-- [ ] **UI-07**: User can view print-friendly report
+- [x] **UI-07**: User can view print-friendly report
 - [ ] **UI-08**: User can visualize weight distribution with balance/clear controls
 
 ### Theming & Build
 
-- [ ] **THEME-01**: User can toggle between Light and Dark themes
-- [ ] **THEME-02**: Theme preference persists across sessions
-- [ ] **THEME-03**: Charts use theme-aware colors
+- [x] **THEME-01**: User can toggle between Light and Dark themes
+- [x] **THEME-02**: Theme preference persists across sessions
+- [x] **THEME-03**: Charts use theme-aware colors
 - [ ] **BUILD-01**: App works offline after initial load (PWA with service worker)
 - [ ] **BUILD-02**: App can be exported as single-file HTML (fully self-contained)
 - [ ] **BUILD-03**: App uses TypeScript + Web Components architecture
@@ -173,11 +173,11 @@ Which phases cover which requirements. Updated by create-roadmap.
 | UI-04 | Phase 7 | Pending |
 | UI-05 | Phase 7 | Pending |
 | UI-06 | Phase 7 | Pending |
-| UI-07 | Phase 9 | Pending |
+| UI-07 | Phase 9 | Complete |
 | UI-08 | Phase 7 | Pending |
-| THEME-01 | Phase 9 | Pending |
-| THEME-02 | Phase 9 | Pending |
-| THEME-03 | Phase 9 | Pending |
+| THEME-01 | Phase 9 | Complete |
+| THEME-02 | Phase 9 | Complete |
+| THEME-03 | Phase 9 | Complete |
 | BUILD-01 | Phase 10 | Pending |
 | BUILD-02 | Phase 10 | Pending |
 | BUILD-03 | Phase 1 | Complete |

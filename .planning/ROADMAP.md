@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: UI Components** - Input forms, sidebar, progress indicators, responsive layout
 - [x] **Phase 7.1: Application Integration** - Wire UI to simulation, results dashboard, portfolio management (INSERTED)
 - [x] **Phase 8: Data Layer** - IndexedDB, API integrations, caching, bundled presets
-- [ ] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
+- [x] **Phase 9: Theming & Polish** - Light/dark themes, help sections, print layout
 - [ ] **Phase 10: PWA & Export** - Service worker, single-file export, offline capability
 - [x] **Phase 11: Complete Results Dashboard** - Add missing charts and statistics to results dashboard
 - [x] **Phase 12: Monthly Withdrawal Simulation** - Refactor SBLOC engine for monthly time steps and withdrawal compounding
@@ -443,7 +443,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 7. UI Components | 4/4 | Complete | 2026-01-18 |
 | 7.1. Application Integration | 5/5 | Complete | 2026-01-18 |
 | 8. Data Layer | 5/5 | Complete | 2026-01-18 |
-| 9. Theming & Polish | 0/3 | Not started | - |
+| 9. Theming & Polish | 3/3 | Complete | 2026-01-23 |
 | 10. PWA & Export | 0/2 | Not started | - |
 | 11. Complete Results Dashboard | 13/13 | Complete | 2026-01-20 |
 | 12. Monthly Withdrawal Simulation | 2/2 | Complete | 2026-01-22 |
@@ -453,4 +453,4 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
 
 **Total Plans**: 69
-**Completed Plans**: 66
+**Completed Plans**: 69
