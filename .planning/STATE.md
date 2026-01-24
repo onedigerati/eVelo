@@ -5,23 +5,26 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 18 - Fix Regime-Switching Model
+**Current focus:** Phase 19 - Sell Strategy Accuracy
 
 ## Current Position
 
-Phase: 18 of 18 (Fix Regime-Switching Model)
-Plan: 4 of 4 complete
-Status: Phase complete
-Last activity: 2026-01-24 — Completed 18-04-PLAN.md
+Phase: 19 of 19 (Sell Strategy Accuracy)
+Plan: 2 of 4 complete
+Status: In progress
+Last activity: 2026-01-24 — Completed 19-02-PLAN.md (Dividend Tax Modeling)
 
-Progress: ████████████████████████████████████████ 100% (76/76 plans total)
+Progress: ████████████████████████████████████████ 97% (78/80 plans total)
+
+**Next Phase:**
+Phase 19: Sell Strategy Accuracy - Match reference application order of operations, add dividend tax modeling
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 76
-- Average duration: 3.5 min
-- Total execution time: 280 min
+- Total plans completed: 77
+- Average duration: 3.6 min
+- Total execution time: 291 min
 
 **By Phase:**
 
@@ -45,10 +48,11 @@ Progress: ███████████████████████�
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
 | 18-fix-regime-switching | 4/4 | 10 min | 2.5 min |
+| 19-sell-strategy-accuracy | 1/4 | 11 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 17-03 (5 min), 18-01 (4 min), 18-02 (not tracked), 18-03 (3 min), 18-04 (3 min)
-- Trend: Phase 18 COMPLETE - regime-switching fully calibrated and wired
+- Last 5 plans: 18-02 (not tracked), 18-03 (3 min), 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min)
+- Trend: Phase 19 IN PROGRESS - dividend tax modeling complete (2/4 plans)
 
 ## Accumulated Context
 
@@ -371,6 +375,12 @@ Recent decisions affecting current work:
   - BBD strategy overview and educational content
   - Comprehensive user guide with parameter documentation
   - Research needed for BBD content and UX patterns
+
+- Phase 19 added: Sell Strategy Accuracy
+  - Research comparison with reference PortfolioStrategySimulator.html
+  - Order of operations: withdrawal before returns (reference) vs returns before withdrawal (current)
+  - Missing dividend tax modeling in Sell strategy
+  - Ensures apples-to-apples BBD vs Sell comparison
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -759,11 +769,18 @@ None
 - calibrateRegimeModelWithMode as main entry point accepting mode parameter
 - applyConservativeAdjustment function for stress-testing parameter adjustments
 
+**From 19-01:**
+- Sell strategy order of operations: dividend tax → withdrawal + capital gains → growth on reduced portfolio
+- Withdrawal applied BEFORE market returns (matches reference implementation)
+- Dividend tax calculation: portfolioValue * dividendYield * dividendTaxRate
+- Both runSingleSellScenario and runInterpolatedScenario follow identical order
+- Complete tax treatment: capital gains on sales + dividend taxes on holdings
+
 ## Session Continuity
 
-Last session: 2026-01-24T17:29:02Z
-Stopped at: Completed 18-03-PLAN.md (Conservative Calibration Mode)
+Last session: 2026-01-24T19:39:42Z
+Stopped at: Completed 19-01-PLAN.md (Fix Order of Operations)
 Resume file: None
 
-**Phase 18 IN PROGRESS (3/4 plans).**
-**Conservative calibration mode implemented with Federal Reserve-style stress adjustments. Next: wire conservative mode to UI (18-04).**
+**Phase 19 IN PROGRESS (1/4 plans).**
+**Order of operations fixed to match reference. Sell strategy now applies withdrawal before returns.**
