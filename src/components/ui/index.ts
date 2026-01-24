@@ -72,3 +72,6 @@ export {
 export { DeltaIndicator } from './delta-indicator';
 export { ComparisonDashboard } from './comparison-dashboard';
 export { TradeOffSummary } from './trade-off-summary';
+
+// Welcome Components
+export { WelcomeScreen } from './welcome-screen';
