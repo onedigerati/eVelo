@@ -210,3 +210,22 @@ export function calibrateRegimeModelWithMode(
 
   return historicalParams;
 }
+
+/**
+ * Expected behavior verification (development reference):
+ *
+ * Given historical params:
+ *   bull: { mean: 0.12, stddev: 0.12 }
+ *   bear: { mean: -0.05, stddev: 0.15 }
+ *   crash: { mean: -0.25, stddev: 0.30 }
+ *
+ * Conservative adjustment produces:
+ *   bull: { mean: 0.00, stddev: 0.138 }  // -0.12 (1 stddev), +15%
+ *   bear: { mean: -0.07, stddev: 0.18 }  // -0.02 (2pp), +20%
+ *   crash: { mean: -0.28, stddev: 0.375 } // -0.03 (3pp), +25%
+ *
+ * Net effect:
+ * - Bull regime mean drops from +12% to 0%
+ * - All regimes have higher volatility
+ * - Expected long-term return is lower in conservative mode
+ */
