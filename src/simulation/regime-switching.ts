@@ -119,8 +119,8 @@ export interface CorrelatedRegimeReturnsResult {
 /**
  * Generate correlated returns across multiple assets using regime model
  *
- * All assets share the same regime sequence but returns are
- * correlated according to the provided correlation matrix.
+ * All assets share the same regime sequence but each asset can have
+ * its own regime parameters (mean/stddev per regime).
  *
  * @param years Number of years to generate
  * @param numAssets Number of assets in portfolio
@@ -128,7 +128,8 @@ export interface CorrelatedRegimeReturnsResult {
  * @param rng Random number generator
  * @param initialRegime Starting regime
  * @param matrix Transition matrix
- * @param params Regime parameters (applied to all assets)
+ * @param params Shared regime parameters (used if assetRegimeParams not provided)
+ * @param assetRegimeParams Optional per-asset regime parameters
  * @returns Object with 2D returns array [asset][year] and regime sequence
  */
 export function generateCorrelatedRegimeReturns(
@@ -138,7 +139,8 @@ export function generateCorrelatedRegimeReturns(
   rng: () => number,
   initialRegime: MarketRegime = 'bull',
   matrix?: TransitionMatrix,
-  params?: RegimeParamsMap
+  params?: RegimeParamsMap,
+  assetRegimeParams?: RegimeParamsMap[]
 ): CorrelatedRegimeReturnsResult {
   const effectiveMatrix = matrix ?? DEFAULT_TRANSITION_MATRIX;
   const effectiveParams = params ?? DEFAULT_REGIME_PARAMS;
@@ -158,23 +160,49 @@ export function generateCorrelatedRegimeReturns(
     () => new Array(years)
   );
 
-  // Generate correlated returns for each year
+  // Generate returns for each year
   for (let year = 0; year < years; year++) {
     const regime = regimes[year];
-    const { mean, stddev } = effectiveParams[regime];
 
-    // Generate correlated samples with regime-appropriate mean/stddev
-    const yearReturns = correlatedSamples(
-      numAssets,
-      correlationMatrix,
-      rng,
-      mean,
-      stddev
-    );
+    if (assetRegimeParams && assetRegimeParams.length === numAssets) {
+      // Asset-specific parameters: generate individual returns, then correlate
+      // First generate uncorrelated returns for each asset
+      const uncorrelated = assetRegimeParams.map(assetParams => {
+        const { mean, stddev } = assetParams[regime];
+        return normalRandom(mean, stddev, rng);
+      });
 
-    // Assign to each asset
-    for (let asset = 0; asset < numAssets; asset++) {
-      returns[asset][year] = yearReturns[asset];
+      // Apply correlation using Cholesky decomposition
+      // Note: For simplicity, we scale by target stddev after correlation
+      // This is an approximation that preserves correlation structure
+      const correlated = correlatedSamples(
+        numAssets,
+        correlationMatrix,
+        rng,
+        0, // mean=0 for correlation transform
+        1  // stddev=1 for correlation transform
+      );
+
+      // Combine: use correlated structure but scale by asset-specific params
+      for (let asset = 0; asset < numAssets; asset++) {
+        const { mean, stddev } = assetRegimeParams[asset][regime];
+        returns[asset][year] = mean + stddev * correlated[asset];
+      }
+    } else {
+      // Shared parameters (original behavior)
+      const { mean, stddev } = effectiveParams[regime];
+      const yearReturns = correlatedSamples(
+        numAssets,
+        correlationMatrix,
+        rng,
+        mean,
+        stddev
+      );
+
+      // Assign to each asset
+      for (let asset = 0; asset < numAssets; asset++) {
+        returns[asset][year] = yearReturns[asset];
+      }
     }
   }
 
