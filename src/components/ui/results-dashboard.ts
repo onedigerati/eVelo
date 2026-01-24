@@ -54,6 +54,9 @@ import './salary-equivalent-section';
 import './strategy-analysis';
 // Import yearly analysis table
 import './yearly-analysis-table';
+// Import sell yearly analysis table
+import './sell-yearly-analysis-table';
+import type { SellYearlyAnalysisTable, SellYearlyAnalysisTableProps } from './sell-yearly-analysis-table';
 // Import performance tables
 import './performance-table';
 import './return-probability-table';
@@ -407,6 +410,10 @@ export class ResultsDashboard extends BaseComponent {
 
         <section class="table-section full-width" id="yearly-analysis-section">
           <yearly-analysis-table id="yearly-analysis-table"></yearly-analysis-table>
+        </section>
+
+        <section class="table-section full-width sbloc-section" id="sell-yearly-analysis-section">
+          <sell-yearly-analysis-table id="sell-yearly-analysis-table"></sell-yearly-analysis-table>
         </section>
       </div>
 
@@ -894,6 +901,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update yearly analysis table
     this.updateYearlyAnalysisTable();
+
+    // Update Sell strategy yearly analysis table
+    this.updateSellYearlyAnalysisTable();
   }
 
   /**
@@ -1757,6 +1767,89 @@ export class ResultsDashboard extends BaseComponent {
       withdrawals,
       percentiles,
       isSBLOCLoanBalance: hasSBLOCData,
+    };
+  }
+
+  /**
+   * Update Sell strategy yearly analysis table with year-by-year breakdown.
+   * Displays withdrawals, cumulative taxes, and portfolio percentiles.
+   * Only shows when SBLOC data is present (comparison mode relevant).
+   */
+  private updateSellYearlyAnalysisTable(): void {
+    const section = this.$('#sell-yearly-analysis-section');
+    const table = this.$('#sell-yearly-analysis-table') as SellYearlyAnalysisTable | null;
+
+    if (!section || !table) return;
+
+    // Only show when SBLOC data is available (BBD vs Sell comparison relevant)
+    if (!this._data?.sblocTrajectory) {
+      section.classList.remove('visible');
+      return;
+    }
+
+    section.classList.add('visible');
+
+    // Get effective configuration values
+    const timeHorizon = this.getEffectiveTimeHorizon();
+    const initialValue = this.getEffectiveInitialValue();
+
+    // Year 0 represents the portfolio state at simulation start.
+    const percentilesWithYear0 = [
+      {
+        year: 0,
+        p10: initialValue,
+        p25: initialValue,
+        p50: initialValue,
+        p75: initialValue,
+        p90: initialValue,
+      },
+      ...this._data.yearlyPercentiles,
+    ];
+
+    // Calculate sell strategy result with full yearly data
+    const sellResult = calculateSellStrategy(
+      {
+        initialValue,
+        annualWithdrawal: this._annualWithdrawal,
+        withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
+        timeHorizon,
+        capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
+        costBasisRatio: 0.4,
+      },
+      percentilesWithYear0,
+    );
+
+    // Calculate start year (current year)
+    const startYear = new Date().getFullYear();
+
+    // Calculate withdrawal data with user-specified annual growth
+    const withdrawalGrowth = this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03;
+    const withdrawals = calculateWithdrawals(
+      this._annualWithdrawal,
+      withdrawalGrowth,
+      timeHorizon
+    );
+
+    // Transform sell result yearly percentiles to include calendar year
+    // Skip year 0 (initial value) to align with display starting from year 1
+    const percentiles = sellResult.yearlyPercentiles.slice(1).map((p, index) => ({
+      year: startYear + index,
+      p10: p.p10,
+      p25: p.p25,
+      p50: p.p50,
+      p75: p.p75,
+      p90: p.p90,
+    }));
+
+    // Get cumulative taxes (skip year 0)
+    const cumulativeTaxes = sellResult.cumulativeTaxes.slice(1);
+
+    // Set table data
+    table.data = {
+      startYear,
+      withdrawals,
+      cumulativeTaxes,
+      percentiles,
     };
   }
 
