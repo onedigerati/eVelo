@@ -75,3 +75,4 @@ export { TradeOffSummary } from './trade-off-summary';
 
 // Welcome Components
 export { WelcomeScreen } from './welcome-screen';
+export { UserGuideModal } from './user-guide-modal';
