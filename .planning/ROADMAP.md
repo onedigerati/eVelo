@@ -29,6 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
 - [x] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
+- [ ] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
 
 ## Phase Details
 
@@ -225,9 +226,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- Theme infrastructure (service, Chart.js configs, FOUC prevention)
-- [ ] 09-02-PLAN.md -- Theme toggle component and settings integration
-- [ ] 09-03-PLAN.md -- Print layout and help tooltips
+- [x] 09-01-PLAN.md -- Theme infrastructure (service, Chart.js configs, FOUC prevention)
+- [x] 09-02-PLAN.md -- Theme toggle component and settings integration
+- [x] 09-03-PLAN.md -- Print layout and help tooltips
 
 **Details:**
 Based on research findings:
@@ -427,10 +428,41 @@ Key components:
 - Desktop: Two-panel CSS Grid layout
 - Mobile: ARIA-compliant tabbed interface
 
+### Phase 17: Welcome Page & User Guide
+**Goal**: Transform empty dashboard into a welcoming introduction page with BBD strategy overview and comprehensive user guide
+**Depends on**: Phase 16
+**Requirements**: UI-07, USER-01 (new)
+**Success Criteria** (what must be TRUE):
+  1. Welcome page displays on app load (before first simulation)
+  2. BBD strategy introduction explains Buy-Borrow-Die concept clearly
+  3. Quick-start section guides users to run their first simulation
+  4. User guide accessible via dedicated button/link
+  5. User guide documents all simulation parameters with explanations
+  6. User guide explains chart interpretations and metrics
+  7. Navigation between welcome/guide/dashboard is intuitive
+  8. Design is elegant and matches application aesthetic
+**Research**: Complete (see 17-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 17-01-PLAN.md -- Welcome screen component with BBD introduction
+- [ ] 17-02-PLAN.md -- User guide modal with parameter documentation
+- [ ] 17-03-PLAN.md -- Integration into app-root and event wiring
+
+**Details:**
+Based on research findings:
+- Empty state pattern for welcome screen (displays when no simulation run)
+- Existing UI primitives: help-section, modal-dialog, help-tooltip (no new dependencies)
+- Three-step BBD explanation (Buy, Borrow, Die) with benefits/risks balance
+- Progressive disclosure using accordions for parameter documentation
+- Quick-start CTA triggers first simulation
+- User guide button in header for persistent access
+- Disclaimer required for educational content
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -451,6 +483,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
+| 17. Welcome Page & User Guide | 0/3 | Planned | - |
 
-**Total Plans**: 69
+**Total Plans**: 72
 **Completed Plans**: 69
