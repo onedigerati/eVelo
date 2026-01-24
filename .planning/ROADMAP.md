@@ -221,13 +221,21 @@ Plans:
   2. Theme preference persists across sessions
   3. Charts use theme-aware colors
   4. Print-friendly report generates correctly
-**Research**: Unlikely (CSS custom properties, standard patterns)
-**Plans**: TBD
+**Research**: Complete (see 09-RESEARCH.md)
+**Plans**: 3 plans
 
 Plans:
-- [ ] 09-01: Theme system (CSS custom properties)
-- [ ] 09-02: Theme toggle and persistence
-- [ ] 09-03: Print layout and help content
+- [ ] 09-01-PLAN.md -- Theme infrastructure (service, Chart.js configs, FOUC prevention)
+- [ ] 09-02-PLAN.md -- Theme toggle component and settings integration
+- [ ] 09-03-PLAN.md -- Print layout and help tooltips
+
+**Details:**
+Based on research findings:
+- CSS custom properties pierce Shadow DOM automatically
+- Theme service loads preference before app renders (prevents FOUC)
+- Chart.js `.update()` method for dynamic color updates
+- `@media print` with `break-inside: avoid` for clean reports
+- WCAG 1.4.13 compliant tooltips for help content
 
 ### Phase 10: PWA & Export
 **Goal**: Offline capability and single-file HTML export
@@ -444,5 +452,5 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
 
-**Total Plans**: 66
+**Total Plans**: 69
 **Completed Plans**: 66
