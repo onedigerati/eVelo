@@ -340,8 +340,39 @@ function runSingleSellScenario(
     const tax = gain > 0 ? gain * capitalGainsRate : 0;
     totalTaxes += tax;
 
+    // ============================================================================
+    // Gross-Up Tax Calculation
+    // ============================================================================
+    //
+    // When withdrawing from a taxable portfolio, you must sell MORE than the
+    // desired withdrawal amount to cover taxes on gains.
+    //
+    // FORMULA: grossSale = withdrawal + capitalGainsTax
+    //
+    // Where:
+    //   capitalGainsTax = (saleAmount - basisSold) * taxRate
+    //   basisSold = costBasis * (saleAmount / portfolioValue)
+    //   gain = saleAmount - basisSold
+    //
+    // The gross-up accounts for:
+    // 1. The amount you actually want to receive (withdrawal)
+    // 2. The taxes due on the gains portion of what you sell
+    //
+    // EXAMPLE:
+    // - Portfolio: $1,000,000 (60% gain, 40% basis)
+    // - Withdrawal needed: $100,000
+    // - Sell $100,000 worth of assets
+    // - Basis portion: $100,000 * 0.4 = $40,000
+    // - Gain portion: $100,000 - $40,000 = $60,000
+    // - Tax on gain: $60,000 * 0.238 = $14,280
+    // - Gross sale needed: $100,000 + $14,280 = $114,280
+    //
+    // The portfolio is reduced by the GROSS amount ($114,280), not just
+    // the withdrawal amount, because you must liquidate extra to pay taxes.
+    // ============================================================================
+
     // Net withdrawal needs (gross up for taxes)
-    const grossSale = saleAmount + tax;
+    const grossSale = saleAmount + tax;  // = withdrawal + capitalGainsTax
 
     if (grossSale >= portfolioValue) {
       // Depleted after accounting for taxes
@@ -504,6 +535,7 @@ function runInterpolatedScenario(
     const tax = gain > 0 ? gain * capitalGainsRate : 0;
     totalTaxes += tax;
 
+    // Gross-up calculation: withdrawal + tax (see detailed comment in runSingleSellScenario)
     const grossSale = saleAmount + tax;
 
     if (grossSale >= portfolioValue) {
