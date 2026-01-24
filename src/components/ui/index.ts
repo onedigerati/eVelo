@@ -61,6 +61,12 @@ export {
   type WithdrawalData,
   calculateWithdrawals,
 } from './yearly-analysis-table';
+export {
+  SellYearlyAnalysisTable,
+  type SellYearlyAnalysisTableProps,
+  type SellYearlyPercentileData,
+  type SellWithdrawalData,
+} from './sell-yearly-analysis-table';
 export { PerformanceTable } from './performance-table';
 export { ReturnProbabilityTable } from './return-probability-table';
 export {
