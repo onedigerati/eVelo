@@ -446,9 +446,9 @@ Key components:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 17-01-PLAN.md -- Welcome screen component with BBD introduction
-- [ ] 17-02-PLAN.md -- User guide modal with parameter documentation
-- [ ] 17-03-PLAN.md -- Integration into app-root and event wiring
+- [x] 17-01-PLAN.md -- Welcome screen component with BBD introduction
+- [x] 17-02-PLAN.md -- User guide modal with parameter documentation
+- [x] 17-03-PLAN.md -- Integration into app-root and event wiring
 
 **Details:**
 Based on research findings:
@@ -471,15 +471,14 @@ Based on research findings:
   4. Preset data year labels corrected (2025→1995, representing 1995-2025 historical data)
   5. CAGR values reflect actual portfolio asset characteristics, not generic market parameters
   6. regimeCalibration config parameter is actually used in simulation
-**Research**: Likely (regime parameter derivation from historical returns)
-**Research topics**: Derive bull/bear/crash regime parameters from historical return series, statistical methods for regime detection
-**Plans**: TBD
+**Research**: Complete (see 18-RESEARCH.md)
+**Plans**: 4 plans
 
 Plans:
-- [ ] 18-01: Fix preset data year labels (shift 2025→1995)
-- [ ] 18-02: Derive regime parameters from asset historical returns
-- [ ] 18-03: Implement Conservative calibration mode
-- [ ] 18-04: Wire regimeCalibration to simulation engine
+- [ ] 18-01-PLAN.md -- Fix preset year labels (shift 2025→1995 in all preset JSON files)
+- [ ] 18-02-PLAN.md -- Create regime calibration module (threshold classification, parameter estimation)
+- [ ] 18-03-PLAN.md -- Implement Conservative calibration mode (stress-test adjustments)
+- [ ] 18-04-PLAN.md -- Wire regimeCalibration to simulation engine (connect calibration to monte-carlo.ts)
 
 **Details:**
 Issues identified during CAGR review:
@@ -487,6 +486,12 @@ Issues identified during CAGR review:
 2. **regimeCalibration has no effect**: The setting is stored but never passed to regime-switching functions - both "Historical" and "Conservative" produce identical results
 3. **Preset year labels incorrect**: stocks.json shows 2025-2055 (future years) but should be 1995-2025 (actual historical data shifted by 30 years)
 4. **CAGR doesn't reflect portfolio**: 10.8% CAGR for tech portfolio (AAPL, GOOGL, MSFT, AMD) is generic S&P 500 behavior, not tech-stock-specific
+
+Based on research findings:
+- Threshold-based regime classification (10/30 percentile split for crash/bear/bull)
+- Asset-specific parameter estimation from classified historical data
+- Conservative mode applies Federal Reserve stress test-style adjustments
+- No new dependencies - uses existing math module (mean, stddev, percentile)
 
 ## Progress
 
