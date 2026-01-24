@@ -550,8 +550,52 @@ function calculateCapitalGainsTax(
   return gain > 0 ? gain * taxRate : 0;
 }
 
+// ============================================================================
+// Return Derivation
+// ============================================================================
+//
+// The Sell strategy derives market returns from BBD simulation percentiles.
+// This ensures both strategies experience identical market conditions for
+// comparison purposes.
+//
+// Approach:
+// - For each percentile path (P10, P25, P50, P75, P90), extract year-over-year
+//   growth rates from the BBD portfolio values
+// - Apply these same growth rates to the Sell portfolio (after accounting for
+//   dividend taxes, withdrawals, and capital gains taxes)
+//
+// This creates a fair comparison where BBD advantage comes purely from:
+// 1. Tax deferral (no capital gains on withdrawals)
+// 2. Compound growth on full portfolio (no reduction from taxes)
+// 3. Stepped-up basis at death
+//
+// And NOT from different market return assumptions.
+// ============================================================================
+
 /**
- * Extract growth rates from yearly percentiles
+ * Extract year-over-year growth rates from BBD simulation percentile data.
+ *
+ * This function calculates the annual growth rate for each percentile path
+ * by comparing consecutive years in the BBD simulation results. These growth
+ * rates are then applied to the Sell strategy portfolio, ensuring both
+ * strategies experience identical market return sequences.
+ *
+ * Formula: growth_rate = (value_year_N - value_year_N-1) / value_year_N-1
+ *
+ * Note: The function extracts from median (P50) path but individual scenario
+ * functions apply growth rates from their respective percentile paths (P10,
+ * P25, P50, P75, P90) to ensure consistent comparison at each percentile level.
+ *
+ * @param yearlyPercentiles - Array of percentile values by year from BBD simulation
+ * @returns Array of annual growth rates (one per year transition)
+ *
+ * @example
+ * ```typescript
+ * // If BBD P50 goes from $5M (year 1) to $5.35M (year 2)
+ * // Growth rate = (5.35M - 5M) / 5M = 0.07 (7%)
+ * const rates = extractGrowthRates(yearlyPercentiles);
+ * // rates[0] = 0.07 for year 1->2 transition
+ * ```
  */
 function extractGrowthRates(yearlyPercentiles: YearlyPercentiles[]): number[] {
   const rates: number[] = [];
