@@ -163,6 +163,8 @@ export function calculateSellStrategy(
     terminalNetWorth: terminalP50,
     successRate,
     lifetimeTaxes,
+    lifetimeDividendTaxes: 0, // TODO: Implement in plan 19-02
+    totalLifetimeTaxes: lifetimeTaxes, // TODO: Add dividend taxes in plan 19-02
     primaryRisk,
     terminalP10,
     terminalP90,
@@ -398,26 +400,7 @@ function runInterpolatedScenario(
       continue;
     }
 
-    const yearData = yearlyPercentiles[year];
-    const prevYearData = yearlyPercentiles[year - 1];
-
-    if (!yearData || !prevYearData) {
-      const growthRate = 0.07;
-      portfolioValue *= (1 + growthRate);
-    } else {
-      // Interpolate between two percentile paths
-      const lowerPrev = prevYearData[lowerKey];
-      const lowerCurr = yearData[lowerKey];
-      const upperPrev = prevYearData[upperKey];
-      const upperCurr = yearData[upperKey];
-
-      const prevValue = lowerPrev + (upperPrev - lowerPrev) * weight;
-      const currValue = lowerCurr + (upperCurr - lowerCurr) * weight;
-      const growthRate = prevValue > 0 ? (currValue - prevValue) / prevValue : 0;
-
-      portfolioValue *= (1 + growthRate);
-    }
-
+    // 1. WITHDRAWAL FIRST
     const adjustedWithdrawal = currentWithdrawal;
     currentWithdrawal *= (1 + withdrawalGrowth);
 
@@ -451,6 +434,27 @@ function runInterpolatedScenario(
     const saleFraction = grossSale / portfolioValue;
     portfolioValue -= grossSale;
     costBasis *= (1 - saleFraction);
+
+    // 2. GROWTH APPLIED TO REDUCED PORTFOLIO
+    const yearData = yearlyPercentiles[year];
+    const prevYearData = yearlyPercentiles[year - 1];
+
+    if (!yearData || !prevYearData) {
+      const growthRate = 0.07;
+      portfolioValue *= (1 + growthRate);
+    } else {
+      // Interpolate between two percentile paths
+      const lowerPrev = prevYearData[lowerKey];
+      const lowerCurr = yearData[lowerKey];
+      const upperPrev = prevYearData[upperKey];
+      const upperCurr = yearData[upperKey];
+
+      const prevValue = lowerPrev + (upperPrev - lowerPrev) * weight;
+      const currValue = lowerCurr + (upperCurr - lowerCurr) * weight;
+      const growthRate = prevValue > 0 ? (currValue - prevValue) / prevValue : 0;
+
+      portfolioValue *= (1 + growthRate);
+    }
 
     yearlyValues.push(portfolioValue);
   }
