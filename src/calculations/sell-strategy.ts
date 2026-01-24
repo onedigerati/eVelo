@@ -94,9 +94,9 @@ export interface SellStrategyConfig {
  * 2. Withdrawal + capital gains tax reduces portfolio
  * 3. Market returns applied to reduced portfolio
  *
- * @param config - Sell strategy configuration including dividend tax params including dividend tax params including dividend tax params
+ * @param config - Sell strategy configuration including dividend tax params
  * @param yearlyPercentiles - Portfolio percentiles from BBD simulation (for growth rates)
- * @returns Sell strategy result with all metrics including dividend taxes including dividend taxes including dividend taxes
+ * @returns Sell strategy result with all metrics including dividend taxes
  *
  * @example
  * ```typescript
