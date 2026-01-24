@@ -104,6 +104,38 @@ export interface SellStrategyConfig {
 }
 
 // ============================================================================
+// Success Rate Definition (IMPORTANT)
+// ============================================================================
+//
+// Both BBD and Sell strategies use the SAME success definition for fair comparison:
+//
+//   SUCCESS = terminal portfolio value > initial portfolio value
+//
+// This means the portfolio must GROW (even by $1) to be considered successful.
+//
+// Example with $5M initial portfolio:
+// | Terminal Value | Success? | Reason                               |
+// |----------------|----------|--------------------------------------|
+// | $6,000,000     | YES      | Grew above $5M initial               |
+// | $5,000,001     | YES      | Grew above $5M initial (barely)      |
+// | $5,000,000     | NO       | Equal to initial (no growth)         |
+// | $4,999,999     | NO       | Below initial                        |
+// | $1,000,000     | NO       | Significant loss but not depleted    |
+// | $0             | NO       | Depleted                             |
+//
+// Note: depletionProbability is tracked SEPARATELY as a distinct risk metric.
+// A scenario can fail (terminal <= initial) without being depleted (terminal = 0).
+//
+// This unified definition ensures BBD vs Sell comparisons are apples-to-apples.
+// Both strategies answer the same question: "Did my portfolio grow?"
+//
+// Historical note: Prior to Phase 20, Sell strategy used !depleted as success,
+// which was a lower bar (surviving vs growing). This made Sell artificially
+// look better in success rate comparisons.
+//
+// ============================================================================
+
+// ============================================================================
 // Main Calculation Function
 // ============================================================================
 
