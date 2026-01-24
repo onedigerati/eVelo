@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 18 of 18 (Fix Regime-Switching Model)
-Plan: 3 of 4 complete
-Status: In progress
-Last activity: 2026-01-24 — Completed 18-03-PLAN.md
+Plan: 4 of 4 complete
+Status: Phase complete
+Last activity: 2026-01-24 — Completed 18-04-PLAN.md
 
-Progress: ████████████████████████████████████████ 99% (75/76 plans total)
+Progress: ████████████████████████████████████████ 100% (76/76 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 75
+- Total plans completed: 76
 - Average duration: 3.5 min
-- Total execution time: 277 min
+- Total execution time: 280 min
 
 **By Phase:**
 
@@ -44,11 +44,11 @@ Progress: ███████████████████████�
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
-| 18-fix-regime-switching | 3/4 | 7 min | 2.3 min |
+| 18-fix-regime-switching | 4/4 | 10 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 17-02 (4 min), 17-03 (5 min), 18-01 (4 min), 18-02 (not tracked), 18-03 (3 min)
-- Trend: Phase 18 IN PROGRESS - conservative calibration mode implemented
+- Last 5 plans: 17-03 (5 min), 18-01 (4 min), 18-02 (not tracked), 18-03 (3 min), 18-04 (3 min)
+- Trend: Phase 18 COMPLETE - regime-switching fully calibrated and wired
 
 ## Accumulated Context
 
@@ -554,6 +554,34 @@ None
 - Modal dialog choice type for 3-button decisions (Compare/Replace/Cancel)
 - State machine pattern: normal → comparison → exit
 - _pendingComparisonMode flag for async workflow coordination between components
+
+**From 18-01:**
+- Regime-switching model research completed
+- classifyRegimes uses percentile thresholds (10%/30%) for bull/bear/crash
+- estimateRegimeParams calculates mean/stddev from classified returns
+- calibrateRegimeModel provides complete calibration workflow
+- DEFAULT_REGIME_PARAMS (12%/-8%/-30%) based on historical S&P 500
+- DEFAULT_TRANSITION_MATRIX based on Hamilton (1989) methodology
+
+**From 18-02:**
+- calculatePortfolioRegimeParams derives weighted portfolio-level parameters
+- Portfolio variance calculation uses correlation matrix for accuracy
+- Asset-specific regime parameters enable multi-asset calibration
+
+**From 18-03:**
+- Conservative mode applies stress adjustments to regime parameters
+- Bull: reduce mean by 1 stddev (min 1pp), increase volatility 15%
+- Bear: reduce mean by 2pp, increase volatility 20%
+- Crash: reduce mean by 3pp, increase volatility 25%
+- calibrateRegimeModelWithMode provides mode-aware calibration entry point
+
+**From 18-04:**
+- Asset-specific regime parameters derived from historical data
+- Calibration happens once per simulation run (not per iteration) for performance
+- generateCorrelatedRegimeReturns accepts assetRegimeParams array
+- Fall back to DEFAULT_REGIME_PARAMS for assets with <10 years of data
+- Console logging for calibration verification (developer debugging aid)
+- Historical vs Conservative modes produce observably different CAGR results
 
 ### Quick Tasks Completed
 
