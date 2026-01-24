@@ -392,16 +392,27 @@ export class AppRoot extends BaseComponent {
 
         <div slot="header" class="header-content">
           <h1>eVelo Portfolio Simulator</h1>
-          <button id="btn-settings" class="header-btn" aria-label="Settings" title="Settings">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
+          <div class="header-buttons">
+            <button id="btn-guide" class="header-btn" aria-label="User Guide" title="User Guide">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </button>
+            <button id="btn-settings" class="header-btn" aria-label="Settings" title="Settings">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="dashboard">
-          <help-section title="What is Buy-Borrow-Die?">
+          <welcome-screen id="welcome"></welcome-screen>
+
+          <help-section class="bbd-inline-help" title="What is Buy-Borrow-Die?">
             The Buy-Borrow-Die strategy is a wealth preservation technique where you:
             <ol>
               <li><strong>Buy</strong> appreciating assets (stocks, real estate)</li>
@@ -416,6 +427,7 @@ export class AppRoot extends BaseComponent {
       </main-layout>
       <toast-container position="bottom-right"></toast-container>
       <settings-panel id="settings-panel"></settings-panel>
+      <user-guide-modal id="user-guide"></user-guide-modal>
     `;
   }
 
@@ -426,7 +438,11 @@ export class AppRoot extends BaseComponent {
       }
 
       .param-group {
-        margin-bottom: var(--spacing-md, 16px);
+        margin-bottom: var(--spacing-lg, 24px);
+      }
+
+      .param-group:last-child {
+        margin-bottom: 0;
       }
 
       .param-group label {
@@ -434,17 +450,18 @@ export class AppRoot extends BaseComponent {
         align-items: center;
         gap: 4px;
         font-size: var(--font-size-sm, 0.875rem);
-        font-weight: 500;
-        color: var(--text-secondary, #475569);
-        margin-bottom: var(--spacing-xs, 4px);
+        font-weight: 600;
+        color: var(--text-primary, #1e293b);
+        margin-bottom: var(--spacing-sm, 8px);
       }
 
       .param-group .help-text {
         display: block;
-        font-size: var(--font-size-xs, 0.75rem);
-        color: var(--text-muted, #94a3b8);
-        margin-top: var(--spacing-xs, 4px);
+        font-size: var(--font-size-sm, 0.875rem);
+        color: var(--text-secondary, #64748b);
+        margin-top: var(--spacing-sm, 8px);
         font-style: italic;
+        line-height: 1.4;
       }
 
       .dashboard {
@@ -456,13 +473,13 @@ export class AppRoot extends BaseComponent {
       .section-divider {
         display: flex;
         align-items: center;
-        gap: var(--spacing-sm, 8px);
-        padding: var(--spacing-md, 16px) var(--spacing-md, 16px);
+        gap: var(--spacing-md, 16px);
+        padding: var(--spacing-lg, 24px) var(--spacing-md, 16px);
         color: var(--text-secondary, #64748b);
-        font-size: var(--font-size-sm, 0.875rem);
-        font-weight: 500;
+        font-size: var(--font-size-xs, 0.75rem);
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
       }
 
       .section-divider::before,
@@ -555,6 +572,32 @@ export class AppRoot extends BaseComponent {
         outline-offset: 2px;
       }
 
+      /* Header buttons container */
+      .header-buttons {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm, 8px);
+      }
+
+      /* Welcome screen visibility */
+      welcome-screen {
+        display: block;
+      }
+
+      welcome-screen.hidden {
+        display: none;
+      }
+
+      /* Hide inline BBD help when welcome is visible */
+      .bbd-inline-help {
+        display: none;
+      }
+
+      /* Show inline help only when welcome is hidden */
+      welcome-screen.hidden ~ .bbd-inline-help {
+        display: block;
+      }
+
       /* Toggle Group for Regime Calibration */
       .toggle-group {
         display: flex;
@@ -602,10 +645,10 @@ export class AppRoot extends BaseComponent {
       /* Chapters Configuration */
       .chapters-config {
         display: none;
-        margin-top: var(--spacing-md, 16px);
-        padding: var(--spacing-md, 16px);
-        background: var(--surface-secondary, #f8fafc);
-        border-radius: var(--radius-md, 6px);
+        margin-top: var(--spacing-lg, 24px);
+        padding: var(--spacing-lg, 24px);
+        background: var(--surface-primary, #ffffff);
+        border-radius: var(--border-radius-md, 8px);
         border: 1px solid var(--border-color, #e2e8f0);
       }
 
@@ -614,25 +657,31 @@ export class AppRoot extends BaseComponent {
       }
 
       .chapter-group {
-        margin-bottom: var(--spacing-lg, 24px);
+        margin-bottom: var(--spacing-xl, 32px);
+        padding-bottom: var(--spacing-lg, 24px);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
       }
 
       .chapter-group:last-child {
         margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
       }
 
       .chapter-label {
         display: block;
-        font-weight: 600;
-        color: var(--text-primary, #1e293b);
-        margin-bottom: var(--spacing-sm, 8px);
+        font-weight: 700;
+        color: var(--color-primary, #0d9488);
+        margin-bottom: var(--spacing-md, 16px);
         font-size: var(--font-size-sm, 0.875rem);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
       /* Tax Configuration */
       .tax-config {
         display: none;
-        margin-top: var(--spacing-md, 16px);
+        margin-top: var(--spacing-lg, 24px);
       }
 
       .tax-config.visible {
@@ -640,11 +689,11 @@ export class AppRoot extends BaseComponent {
       }
 
       .tax-rates-group {
-        padding: var(--spacing-md, 16px);
-        background: var(--surface-secondary, #f8fafc);
-        border-radius: var(--radius-md, 6px);
+        padding: var(--spacing-lg, 24px);
+        background: var(--surface-primary, #ffffff);
+        border-radius: var(--border-radius-md, 8px);
         border: 1px solid var(--border-color, #e2e8f0);
-        margin-top: var(--spacing-sm, 8px);
+        margin-top: var(--spacing-md, 16px);
       }
 
       .tax-rates-group.hidden {
@@ -1064,6 +1113,42 @@ export class AppRoot extends BaseComponent {
     });
 
     // =========================================================================
+    // User guide button handler
+    // =========================================================================
+    const guideBtn = this.$('#btn-guide');
+    const userGuide = this.$('#user-guide') as any;
+
+    guideBtn?.addEventListener('click', () => {
+      userGuide?.show();
+    });
+
+    // =========================================================================
+    // Welcome screen management
+    // =========================================================================
+    const welcome = this.$('#welcome') as any;
+
+    // Show welcome if no simulation has been run
+    // Hide if simulation exists
+    const hasSimulationResults = this._simulationResult !== null;
+    if (hasSimulationResults) {
+      welcome?.classList.add('hidden');
+    } else {
+      welcome?.classList.remove('hidden');
+    }
+
+    // Quick-start: trigger simulation with current/default parameters
+    this.addEventListener('quick-start', () => {
+      welcome?.classList.add('hidden');
+      // Trigger simulation
+      runBtn?.click();
+    });
+
+    // Show guide: open user guide modal
+    this.addEventListener('show-guide', () => {
+      userGuide?.show();
+    });
+
+    // =========================================================================
     // Notify portfolio-composition when parameters change (for dirty state tracking)
     // =========================================================================
     const notifyParamsChanged = () => {
@@ -1220,6 +1305,9 @@ export class AppRoot extends BaseComponent {
 
         // Store result for charts
         this._simulationResult = result;
+
+        // Hide welcome screen after successful simulation
+        welcome?.classList.add('hidden');
 
         // Update results dashboard with simulation data
         const dashboard = this.$('#results') as ComparisonDashboard & {
