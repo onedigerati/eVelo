@@ -20,6 +20,7 @@ import type { SBLOCConfig, SBLOCState, LiquidationEvent } from './types';
 import { calculateLTV } from './ltv';
 import { detectMarginCall, isInWarningZone } from './margin-call';
 import { executeForcedLiquidation } from './liquidation';
+import { validateSBLOCState, SBLOCStateValidationError } from './validation';
 
 // ============================================================================
 // State Initialization
@@ -219,6 +220,8 @@ export function stepSBLOC(
   // This models the typical scenario where withdrawal happens first in a period.
   //
   if (newLoanBalance > 0 && config.annualInterestRate > 0) {
+    const balanceBeforeInterest = newLoanBalance;
+
     if (config.compoundingFrequency === 'annual') {
       // Annual compounding: interest calculated once per year
       // EAR = nominalRate (no compounding effect)
@@ -233,6 +236,30 @@ export function stepSBLOC(
         newLoanBalance = newLoanBalance * (1 + monthlyRate);
       }
       interestCharged = newLoanBalance - startBalance;
+    }
+
+    // Debug logging for interest compounding verification (development only)
+    // Enable by setting window.DEBUG_SBLOC_INTEREST = true in browser console
+    if (
+      typeof window !== 'undefined' &&
+      (window as unknown as { DEBUG_SBLOC_INTEREST?: boolean }).DEBUG_SBLOC_INTEREST &&
+      currentYear === 0 // Only log first year to avoid spam
+    ) {
+      const nominalRate = config.annualInterestRate;
+      const effectiveRate = interestCharged / balanceBeforeInterest;
+      console.log('[SBLOC Interest Debug]', {
+        year: currentYear,
+        compoundingFrequency: config.compoundingFrequency,
+        nominalRate: `${(nominalRate * 100).toFixed(2)}%`,
+        effectiveRate: `${(effectiveRate * 100).toFixed(4)}%`,
+        balanceBeforeInterest: balanceBeforeInterest.toFixed(2),
+        interestCharged: interestCharged.toFixed(2),
+        balanceAfterInterest: newLoanBalance.toFixed(2),
+        expectedDifference:
+          config.compoundingFrequency === 'monthly'
+            ? `EAR should be ~${((Math.pow(1 + nominalRate / 12, 12) - 1) * 100).toFixed(2)}%`
+            : 'EAR equals nominal rate',
+      });
     }
   }
 
