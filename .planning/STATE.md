@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 18 of 18 (Fix Regime-Switching Model)
-Plan: 1 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-01-24 — Completed 18-01-PLAN.md
+Last activity: 2026-01-24 — Completed 18-03-PLAN.md
 
-Progress: ████████████████████████████████████████ 96% (73/76 plans total)
+Progress: ████████████████████████████████████████ 99% (75/76 plans total)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 73
-- Average duration: 3.6 min
-- Total execution time: 270 min
+- Total plans completed: 75
+- Average duration: 3.5 min
+- Total execution time: 277 min
 
 **By Phase:**
 
@@ -44,11 +44,11 @@ Progress: ███████████████████████�
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
-| 18-fix-regime-switching | 1/4 | 4 min | 4.0 min |
+| 18-fix-regime-switching | 3/4 | 7 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 17-01 (4 min), 17-02 (4 min), 17-03 (5 min), 18-01 (4 min)
-- Trend: Phase 18 IN PROGRESS - preset data year labels corrected
+- Last 5 plans: 17-02 (4 min), 17-03 (5 min), 18-01 (4 min), 18-02 (not tracked), 18-03 (3 min)
+- Trend: Phase 18 IN PROGRESS - conservative calibration mode implemented
 
 ## Accumulated Context
 
@@ -717,11 +717,25 @@ None
 - Event bubbling pattern: quick-start and show-guide events bubble up from welcome-screen to app-root
 - Welcome screen auto-hides after simulation completes via classList.add('hidden')
 
+**From 18-02:**
+- Regime classification based on percentile thresholds (10%/30% for crash/bear boundaries)
+- classifyRegimes uses bottom 10% for crash, 10-30% for bear, top 70% for bull
+- estimateRegimeParams calculates mean/stddev with fallback defaults for insufficient observations
+- calibrateRegimeModel workflow: classify → estimate → return RegimeParamsMap
+- calculatePortfolioRegimeParams aggregates multi-asset regimes using correlation matrix
+
+**From 18-03:**
+- Conservative calibration mode uses Federal Reserve stress test methodology
+- Bull regime reduced by 1 stddev (minimum 1pp), bear/crash by 2-3pp fixed amounts
+- Volatility increases proportional to regime severity (15%/20%/25%)
+- calibrateRegimeModelWithMode as main entry point accepting mode parameter
+- applyConservativeAdjustment function for stress-testing parameter adjustments
+
 ## Session Continuity
 
-Last session: 2026-01-24T17:21:53Z
-Stopped at: Completed 18-01-PLAN.md (Fix Preset Data Year Labels)
+Last session: 2026-01-24T17:29:02Z
+Stopped at: Completed 18-03-PLAN.md (Conservative Calibration Mode)
 Resume file: None
 
-**Phase 18 IN PROGRESS (1/4 plans).**
-**Preset data year labels corrected to historical period (1995-2025). Next: remaining regime-switching model fixes.**
+**Phase 18 IN PROGRESS (3/4 plans).**
+**Conservative calibration mode implemented with Federal Reserve-style stress adjustments. Next: wire conservative mode to UI (18-04).**
