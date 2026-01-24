@@ -116,6 +116,14 @@ export function calculateSellStrategy(
   config: SellStrategyConfig,
   yearlyPercentiles: YearlyPercentiles[],
 ): SellStrategyResult {
+  // Validate percentile data completeness
+  if (yearlyPercentiles.length < config.timeHorizon) {
+    console.warn(
+      `Sell strategy: yearlyPercentiles length (${yearlyPercentiles.length}) ` +
+      `is less than timeHorizon (${config.timeHorizon}). Results may be incomplete.`
+    );
+  }
+
   const {
     initialValue,
     annualWithdrawal,
@@ -355,6 +363,10 @@ function runSingleSellScenario(
 
     if (!yearData || !prevYearData) {
       // Fallback: use average historical growth
+      console.warn(
+        `Sell strategy: Missing percentile data for year ${year}. ` +
+        `Using fallback 7% growth rate.`
+      );
       const growthRate = 0.07;
       portfolioValue *= (1 + growthRate);
     } else {
@@ -510,6 +522,10 @@ function runInterpolatedScenario(
     const prevYearData = yearlyPercentiles[year - 1];
 
     if (!yearData || !prevYearData) {
+      console.warn(
+        `Sell strategy (interpolated): Missing percentile data for year ${year}. ` +
+        `Using fallback 7% growth rate.`
+      );
       const growthRate = 0.07;
       portfolioValue *= (1 + growthRate);
     } else {
