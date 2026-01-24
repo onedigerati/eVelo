@@ -25,6 +25,10 @@ export interface SellStrategyResult {
   successRate: number;
   /** Cumulative lifetime capital gains taxes paid */
   lifetimeTaxes: number;
+  /** Cumulative lifetime dividend taxes paid (Sell strategy only) */
+  lifetimeDividendTaxes: number;
+  /** Total lifetime taxes (capital gains + dividends) */
+  totalLifetimeTaxes: number;
   /** Primary risk description with percentage */
   primaryRisk: string;
   /** Terminal wealth at P10 (pessimistic) scenario */
@@ -53,6 +57,19 @@ export interface SellStrategyConfig {
   capitalGainsRate?: number;
   /** Initial cost basis as fraction of portfolio (default: 0.4 for 40%) */
   costBasisRatio?: number;
+
+  // Dividend tax configuration
+  /**
+   * Annual dividend yield as decimal (default: 0.02 for 2%)
+   * S&P 500 historical average is ~1.5-2%
+   */
+  dividendYield?: number;
+  /**
+   * Dividend tax rate as decimal (default: 0.238 for 23.8%)
+   * Uses capital gains rate for qualified dividends
+   * Note: For simplicity, treating all dividends as qualified
+   */
+  dividendTaxRate?: number;
 }
 
 // ============================================================================
