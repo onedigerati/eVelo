@@ -94,13 +94,20 @@ export async function runMonteCarlo(
 
   if (resamplingMethod === 'regime') {
     const calibrationMode = config.regimeCalibration ?? 'historical';
+    console.log(`Regime calibration mode: ${calibrationMode}`);
 
     // Calibrate each asset's regime parameters from its historical data
-    assetRegimeParams = portfolio.assets.map(asset => {
+    assetRegimeParams = portfolio.assets.map((asset, idx) => {
       if (asset.historicalReturns.length >= 10) {
-        return calibrateRegimeModelWithMode(asset.historicalReturns, calibrationMode);
+        const params = calibrateRegimeModelWithMode(asset.historicalReturns, calibrationMode);
+        console.log(`Asset ${asset.id} regime params (${calibrationMode}):`, {
+          bull: { mean: (params.bull.mean * 100).toFixed(1) + '%', stddev: (params.bull.stddev * 100).toFixed(1) + '%' },
+          bear: { mean: (params.bear.mean * 100).toFixed(1) + '%', stddev: (params.bear.stddev * 100).toFixed(1) + '%' },
+          crash: { mean: (params.crash.mean * 100).toFixed(1) + '%', stddev: (params.crash.stddev * 100).toFixed(1) + '%' },
+        });
+        return params;
       }
-      // Fall back to default params if insufficient data
+      console.log(`Asset ${asset.id}: Using default params (insufficient data)`);
       return DEFAULT_REGIME_PARAMS;
     });
   }
