@@ -8,7 +8,7 @@
  */
 
 import { mean, stddev, percentile } from '../math';
-import type { RegimeParamsMap, MarketRegime } from './types';
+import type { RegimeParamsMap, MarketRegime, RegimeCalibrationMode } from './types';
 
 /**
  * Classified returns by regime
@@ -143,4 +143,70 @@ export function calculatePortfolioRegimeParams(
   }
 
   return result;
+}
+
+/**
+ * Apply conservative stress-testing adjustments to regime parameters
+ *
+ * Conservative adjustments based on Federal Reserve stress test methodology:
+ * - Bull: Reduce mean by 1 stddev (or 1pp min), increase volatility 15%
+ * - Bear: Reduce mean by 2pp, increase volatility 20%
+ * - Crash: Reduce mean by 3pp, increase volatility 25%
+ *
+ * The rationale:
+ * - Lower returns account for possibility of worse-than-historical outcomes
+ * - Higher volatility increases uncertainty bands
+ * - More aggressive adjustment for negative regimes (crash > bear > bull)
+ *
+ * @param historicalParams Regime parameters from historical calibration
+ * @returns Adjusted parameters for conservative simulation
+ */
+export function applyConservativeAdjustment(
+  historicalParams: RegimeParamsMap
+): RegimeParamsMap {
+  return {
+    bull: {
+      // Reduce mean by 1 stddev (minimum 1 percentage point)
+      mean: historicalParams.bull.mean - Math.max(0.01, historicalParams.bull.stddev),
+      // Increase volatility by 15%
+      stddev: historicalParams.bull.stddev * 1.15,
+    },
+    bear: {
+      // Make bear returns more negative (reduce by 2pp)
+      mean: historicalParams.bear.mean - 0.02,
+      // Increase bear volatility by 20%
+      stddev: historicalParams.bear.stddev * 1.20,
+    },
+    crash: {
+      // Make crashes worse (reduce by 3pp)
+      mean: historicalParams.crash.mean - 0.03,
+      // Increase crash volatility by 25%
+      stddev: historicalParams.crash.stddev * 1.25,
+    },
+  };
+}
+
+/**
+ * Calibrate regime model with explicit mode selection
+ *
+ * Main entry point for regime calibration that respects the user's
+ * calibration mode preference (historical or conservative).
+ *
+ * @param historicalReturns Array of historical annual returns
+ * @param mode Calibration mode: 'historical' for actual data, 'conservative' for stress-adjusted
+ * @returns Regime parameters appropriate for the selected mode
+ */
+export function calibrateRegimeModelWithMode(
+  historicalReturns: number[],
+  mode: RegimeCalibrationMode
+): RegimeParamsMap {
+  // Step 1: Derive historical parameters from data
+  const historicalParams = calibrateRegimeModel(historicalReturns);
+
+  // Step 2: Apply mode-specific adjustment
+  if (mode === 'conservative') {
+    return applyConservativeAdjustment(historicalParams);
+  }
+
+  return historicalParams;
 }
