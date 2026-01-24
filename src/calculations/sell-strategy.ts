@@ -85,12 +85,18 @@ export interface SellStrategyConfig {
  * Key differences from BBD:
  * - No loan, no interest accrual
  * - Capital gains taxes paid on each sale
- * - Portfolio depletes faster due to tax drag
+ * - Dividend taxes paid from portfolio (BBD borrows to pay dividends)
+ * - Portfolio depletes faster due to combined tax drag
  * - No stepped-up basis benefit at death
  *
- * @param config - Sell strategy configuration
+ * Order of operations per year (matches reference):
+ * 1. Dividend income generates tax liability, paid from portfolio
+ * 2. Withdrawal + capital gains tax reduces portfolio
+ * 3. Market returns applied to reduced portfolio
+ *
+ * @param config - Sell strategy configuration including dividend tax params including dividend tax params
  * @param yearlyPercentiles - Portfolio percentiles from BBD simulation (for growth rates)
- * @returns Sell strategy result with all metrics
+ * @returns Sell strategy result with all metrics including dividend taxes including dividend taxes
  *
  * @example
  * ```typescript
@@ -119,6 +125,10 @@ export function calculateSellStrategy(
     costBasisRatio = 0.4,  // Assume 40% cost basis (60% embedded gain)
   } = config;
 
+  // Extract dividend config with defaults
+  const dividendYield = config.dividendYield ?? 0.02;  // 2% default
+  const dividendTaxRate = config.dividendTaxRate ?? capitalGainsRate;  // Use cap gains rate
+
   // Extract growth rates from yearly percentiles (using median path)
   const growthRates = extractGrowthRates(yearlyPercentiles);
 
@@ -132,6 +142,8 @@ export function calculateSellStrategy(
     capitalGainsRate,
     costBasisRatio,
     yearlyPercentiles,
+    dividendYield,
+    dividendTaxRate,
   );
 
   // Calculate success rate (scenarios not depleted)
@@ -151,6 +163,10 @@ export function calculateSellStrategy(
   const lifetimeTaxesArray = scenarios.map(s => s.totalTaxes);
   const lifetimeTaxes = calcPercentile(lifetimeTaxesArray, 50);
 
+  // Calculate median dividend taxes
+  const dividendTaxesArray = scenarios.map(s => s.totalDividendTaxes);
+  const lifetimeDividendTaxes = calcPercentile(dividendTaxesArray, 50);
+
   // Determine primary risk
   const primaryRisk = depletionProbability > 0
     ? `Portfolio Depletion (${depletionProbability.toFixed(1)}%)`
@@ -163,8 +179,8 @@ export function calculateSellStrategy(
     terminalNetWorth: terminalP50,
     successRate,
     lifetimeTaxes,
-    lifetimeDividendTaxes: 0, // TODO: Implement in plan 19-02
-    totalLifetimeTaxes: lifetimeTaxes, // TODO: Add dividend taxes in plan 19-02
+    lifetimeDividendTaxes,
+    totalLifetimeTaxes: lifetimeTaxes + lifetimeDividendTaxes,
     primaryRisk,
     terminalP10,
     terminalP90,
@@ -183,6 +199,7 @@ export function calculateSellStrategy(
 interface SellScenario {
   terminalValue: number;
   totalTaxes: number;
+  totalDividendTaxes: number;
   depleted: boolean;
   yearlyValues: number[];
 }
@@ -228,6 +245,8 @@ function runSellScenarios(
     capitalGainsRate,
     costBasisRatio,
     yearlyPercentiles,
+    dividendYield,
+    dividendTaxRate,
   );
   scenarios.push(...interpolatedScenarios);
 
@@ -236,6 +255,11 @@ function runSellScenarios(
 
 /**
  * Run a single sell scenario using a specific percentile path
+ *
+ * Order of operations (matches reference implementation):
+ * 1. Withdrawal + capital gains tax reduces portfolio
+ * 2. Market returns applied to reduced portfolio
+ * This order is less favorable to Sell strategy than applying returns first.
  */
 function runSingleSellScenario(
   initialValue: number,
@@ -261,24 +285,7 @@ function runSingleSellScenario(
       continue;
     }
 
-    // Get growth rate from BBD simulation for this year
-    const yearData = yearlyPercentiles[year];
-    const prevYearData = yearlyPercentiles[year - 1];
-
-    if (!yearData || !prevYearData) {
-      // Fallback: use average historical growth
-      const growthRate = 0.07;
-      portfolioValue *= (1 + growthRate);
-    } else {
-      // Calculate growth rate from percentile data
-      const prevValue = prevYearData[percentileKey];
-      const currValue = yearData[percentileKey];
-      const growthRate = prevValue > 0 ? (currValue - prevValue) / prevValue : 0;
-
-      // Apply growth to portfolio
-      portfolioValue *= (1 + growthRate);
-    }
-
+    // 1. WITHDRAWAL FIRST
     // Calculate withdrawal with inflation adjustment
     const adjustedWithdrawal = currentWithdrawal;
     currentWithdrawal *= (1 + withdrawalGrowth);
@@ -318,6 +325,25 @@ function runSingleSellScenario(
     const saleFraction = grossSale / portfolioValue;
     portfolioValue -= grossSale;
     costBasis *= (1 - saleFraction);
+
+    // 2. GROWTH APPLIED TO REDUCED PORTFOLIO
+    // Get growth rate from BBD simulation for this year
+    const yearData = yearlyPercentiles[year];
+    const prevYearData = yearlyPercentiles[year - 1];
+
+    if (!yearData || !prevYearData) {
+      // Fallback: use average historical growth
+      const growthRate = 0.07;
+      portfolioValue *= (1 + growthRate);
+    } else {
+      // Calculate growth rate from percentile data
+      const prevValue = prevYearData[percentileKey];
+      const currValue = yearData[percentileKey];
+      const growthRate = prevValue > 0 ? (currValue - prevValue) / prevValue : 0;
+
+      // Apply growth to portfolio
+      portfolioValue *= (1 + growthRate);
+    }
 
     yearlyValues.push(portfolioValue);
   }
