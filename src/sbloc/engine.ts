@@ -71,6 +71,16 @@ export function initializeSBLOCState(
   // Check if starting in warning zone
   state.inWarningZone = isInWarningZone(state, config);
 
+  // Validate initial state
+  try {
+    validateSBLOCState(state, config);
+  } catch (error) {
+    if (error instanceof SBLOCStateValidationError) {
+      console.warn('Initial SBLOC state validation warning:', error.message);
+    }
+    throw error; // Re-throw for initial state (shouldn't happen with valid inputs)
+  }
+
   return state;
 }
 
@@ -107,9 +117,20 @@ export interface SBLOCYearResult {
  * Buy-Borrow-Die strategy. It applies market returns, withdrawals,
  * interest, and handles margin calls.
  *
+ * Withdrawal growth:
+ * - If config.withdrawalGrowthRate is set, withdrawals grow annually
+ * - Year 0 withdrawal = annualWithdrawal
+ * - Year N withdrawal = annualWithdrawal * (1 + withdrawalGrowthRate)^N
+ * - This models inflation-adjusted spending to maintain purchasing power
+ *
+ * Note: When used via Monte Carlo simulation (monte-carlo.ts), withdrawal
+ * growth is computed externally via SBLOCSimConfig.annualWithdrawalRaise
+ * and passed as an already-adjusted annualWithdrawal. Set withdrawalGrowthRate
+ * to 0 (or omit it) in that case to avoid double-applying growth.
+ *
  * Step order:
  * 1. Apply portfolio return first
- * 2. If currentYear >= startYear: add annual withdrawal to loan
+ * 2. If currentYear >= startYear: calculate withdrawal with growth, add to loan
  * 3. Apply interest to loan balance (annual compounding)
  * 4. Update LTV
  * 5. Check for margin call
@@ -131,6 +152,7 @@ export interface SBLOCYearResult {
  *   maintenanceMargin: 0.50,
  *   liquidationHaircut: 0.05,
  *   annualWithdrawal: 50000,
+ *   withdrawalGrowthRate: 0.03, // 3% annual growth
  *   compoundingFrequency: 'annual',
  *   startYear: 0
  * };
@@ -143,24 +165,12 @@ export interface SBLOCYearResult {
  *   yearsSinceStart: 0
  * };
  *
- * // Year 1: 10% return, withdraw $50k, accrue interest
+ * // Year 0: 10% return, withdraw $50k (no growth yet)
  * const result = stepSBLOC(state, config, 0.10, 0);
+ * // Withdrawal: $50k * (1.03)^0 = $50,000
  *
- * // Portfolio: $1M * 1.10 = $1.1M
- * // Withdrawal: $50k added to loan
- * // Interest: $50k * 1.074 = $53,700
- * // LTV: $53,700 / $1.1M = 4.88%
- *
- * // result.newState.portfolioValue = 1100000
- * // result.newState.loanBalance = 53700
- * // result.interestCharged = 3700
- * // result.withdrawalMade = 50000
- * // result.marginCallTriggered = false
- *
- * // After bad year (-30% return)
- * const afterCrash = stepSBLOC(result.newState, config, -0.30, 1);
- * // Portfolio: $1.1M * 0.70 = $770k
- * // Check if margin call needed...
+ * // Year 10 example:
+ * // Withdrawal: $50k * (1.03)^10 = $67,195
  * ```
  */
 export function stepSBLOC(
@@ -306,6 +316,21 @@ export function stepSBLOC(
   if (!portfolioFailed) {
     const netWorth = newState.portfolioValue - newState.loanBalance;
     portfolioFailed = netWorth <= 0;
+  }
+
+  // Step 8: Validate final state before returning
+  // Catches NaN, Infinity (except valid edge cases), negative values
+  try {
+    validateSBLOCState(newState, config);
+  } catch (error) {
+    if (error instanceof SBLOCStateValidationError) {
+      // Log for debugging but don't crash simulation
+      console.warn('SBLOC state validation warning:', error.message, error.state);
+      // Mark portfolio as failed if state is invalid
+      portfolioFailed = true;
+    } else {
+      throw error;
+    }
   }
 
   return {
