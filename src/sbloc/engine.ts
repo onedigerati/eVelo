@@ -175,7 +175,8 @@ export function stepSBLOC(
   let withdrawalMade = 0;
 
   // Step 1: Apply portfolio return first
-  newPortfolioValue = newPortfolioValue * (1 + portfolioReturn);
+  // Floor at 0 - portfolio value cannot go negative (even with -100% return)
+  newPortfolioValue = Math.max(0, newPortfolioValue * (1 + portfolioReturn));
 
   // Step 2: If withdrawals have started, add annual withdrawal to loan
   if (currentYear >= config.startYear) {
@@ -183,15 +184,49 @@ export function stepSBLOC(
     newLoanBalance += withdrawalMade;
   }
 
+  // =========================================================================
   // Step 3: Apply interest to loan balance
-  // Interest is on the balance AFTER withdrawal is added
+  // =========================================================================
+  //
+  // Interest compounding determines how frequently interest is calculated and
+  // added to the principal. This affects the effective annual rate (EAR).
+  //
+  // ANNUAL COMPOUNDING (compoundingFrequency === 'annual'):
+  //   - Interest calculated once per year on current balance
+  //   - Formula: newBalance = balance * (1 + nominalRate)
+  //   - Effective Annual Rate (EAR) = nominalRate
+  //   - Example: $100,000 at 7.4% nominal = $107,400 after 1 year
+  //              Interest charged = $7,400
+  //
+  // MONTHLY COMPOUNDING (compoundingFrequency === 'monthly'):
+  //   - Interest calculated 12 times per year at (nominalRate / 12)
+  //   - Formula: newBalance = balance * (1 + r/12)^12
+  //   - Effective Annual Rate (EAR) = (1 + r/12)^12 - 1
+  //   - For 7.4% nominal: EAR = (1 + 0.074/12)^12 - 1 = 7.66%
+  //   - Example: $100,000 at 7.4% nominal with monthly compounding
+  //              = $100,000 * (1.00617)^12 = $107,660 after 1 year
+  //              Interest charged = $7,660 (vs $7,400 annual = $260 more)
+  //
+  // WHY THIS MATTERS FOR BBD STRATEGY:
+  //   - Most real SBLOCs use daily or monthly compounding
+  //   - Monthly compounding increases debt faster than annual
+  //   - Over 30 years at 7.4%, monthly vs annual compounding on $1M:
+  //     * Annual:  $1M * (1.074)^30   = $8.5M
+  //     * Monthly: $1M * (1.0766)^30  = $9.2M (8% higher debt)
+  //   - Conservative users should select monthly compounding
+  //
+  // Interest is calculated on the balance AFTER withdrawal is added.
+  // This models the typical scenario where withdrawal happens first in a period.
+  //
   if (newLoanBalance > 0 && config.annualInterestRate > 0) {
     if (config.compoundingFrequency === 'annual') {
-      // Annual compounding: simple interest for one year
+      // Annual compounding: interest calculated once per year
+      // EAR = nominalRate (no compounding effect)
       interestCharged = newLoanBalance * config.annualInterestRate;
       newLoanBalance = newLoanBalance * (1 + config.annualInterestRate);
     } else {
-      // Monthly compounding: apply (1 + r/12)^12
+      // Monthly compounding: (1 + r/12)^12 applied over 12 iterations
+      // EAR = (1 + r/12)^12 - 1 ≈ nominalRate + 0.26% for 7.4% nominal
       const monthlyRate = config.annualInterestRate / 12;
       const startBalance = newLoanBalance;
       for (let month = 0; month < 12; month++) {
