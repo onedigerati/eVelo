@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 14: Dashboard Calculations Review** - Thoroughly review dashboard components and verify calculations display correctly, create gap findings
 - [x] **Phase 15: Dashboard Gap Fixes** - Resolve all 4 gaps from 14-GAP-FINDINGS.md (percentile scale, success rate, array indexing, fallback labels)
 - [x] **Phase 16: Dashboard Comparison Mode** - Side-by-side comparison view when switching portfolio presets, responsive mobile layout
-- [ ] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
+- [x] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
 
 ## Phase Details
 
@@ -483,7 +483,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 14. Dashboard Calculations Review | 2/2 | Complete | 2026-01-22 |
 | 15. Dashboard Gap Fixes | 4/4 | Complete | 2026-01-22 |
 | 16. Dashboard Comparison Mode | 4/4 | Complete | 2026-01-23 |
-| 17. Welcome Page & User Guide | 0/3 | Planned | - |
+| 17. Welcome Page & User Guide | 3/3 | Complete | 2026-01-24 |
 
 **Total Plans**: 72
-**Completed Plans**: 69
+**Completed Plans**: 72
