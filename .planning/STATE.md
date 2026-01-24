@@ -10,21 +10,21 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 19 of 19 (Sell Strategy Accuracy)
-Plan: 3 of 4 complete
-Status: In progress
-Last activity: 2026-01-24 — Completed 19-03-PLAN.md (Return Derivation Accuracy)
+Plan: 4 of 4 complete
+Status: Phase complete - ALL PHASES COMPLETE 🎉
+Last activity: 2026-01-24 — Completed 19-04-PLAN.md (Gross-Up Formula & Integration Tests)
 
-Progress: ████████████████████████████████████████ 99% (79/80 plans total)
+Progress: ████████████████████████████████████████ 100% (80/80 plans total)
 
-**Next Phase:**
-Phase 19: Sell Strategy Accuracy - Match reference application order of operations, add dividend tax modeling
+**Project Status:**
+All 19 phases complete. eVelo is feature-complete with accurate BBD vs Sell comparison.
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 78
+- Total plans completed: 80
 - Average duration: 3.6 min
-- Total execution time: 295 min
+- Total execution time: 303 min
 
 **By Phase:**
 
@@ -48,11 +48,11 @@ Phase 19: Sell Strategy Accuracy - Match reference application order of operatio
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
 | 18-fix-regime-switching | 4/4 | 10 min | 2.5 min |
-| 19-sell-strategy-accuracy | 3/4 | 15 min | 5 min |
+| 19-sell-strategy-accuracy | 4/4 | 18 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 18-03 (3 min), 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min), 19-03 (4 min)
-- Trend: Phase 19 IN PROGRESS - return derivation accuracy complete (3/4 plans)
+- Last 5 plans: 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min), 19-03 (4 min), 19-04 (3.5 min)
+- Trend: Phase 19 COMPLETE - All phases complete! 🎉
 
 ## Accumulated Context
 
@@ -792,11 +792,20 @@ None
 - Console warnings added to fallback paths for debugging missing data
 - Return derivation documented: BBD and Sell use identical market paths for fair comparison
 
+**From 19-04:**
+- Gross-up formula documented inline with 33-line explanation and example
+- Example: $100k withdrawal with 60% gain → $114,280 gross sale (includes $14,280 tax)
+- Integration test suite created with 3 tests (order, dividends, gross-up)
+- Tests use tsx for TypeScript execution without build step
+- Mock percentile data generation for controlled test environment
+- Tolerance-based validation (<$100 for taxes, <$1000 for terminal values)
+- All 3 tests PASS - sell strategy accuracy verified
+
 ## Session Continuity
 
-Last session: 2026-01-24T15:36:25Z
-Stopped at: Completed 19-03-PLAN.md (Return Derivation Accuracy)
+Last session: 2026-01-24T19:58:03Z
+Stopped at: Completed 19-04-PLAN.md (Gross-Up Formula & Integration Tests)
 Resume file: None
 
-**Phase 19 IN PROGRESS (3/4 plans).**
-**Return derivation documented and validated. Year-0 initialization ensures identical market paths for BBD vs Sell comparison.**
+**ALL PHASES COMPLETE 🎉**
+**eVelo is feature-complete with accurate, tested BBD vs Sell strategy comparison.**
