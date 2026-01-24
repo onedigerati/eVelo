@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 17 of 17 (Welcome Page & User Guide) - EXECUTING
-Plan: 1 of 3 complete (17-01)
+Plan: 2 of 3 complete (17-02)
 Status: In progress
-Last activity: 2026-01-24 — Completed 17-01-PLAN.md
+Last activity: 2026-01-23 — Completed 17-02-PLAN.md
 
-Progress: ████████████████████████████████████████ 100% (70/72 plans total)
+Progress: ████████████████████████████████████████ 100% (71/72 plans total)
 
 ## Performance Metrics
 
@@ -43,11 +43,11 @@ Progress: ███████████████████████�
 | 15-dashboard-gap-fixes | 4/4 | 19 min | 4.75 min |
 | 16-dashboard-comparison-mode | 4/4 | 19 min | 4.75 min |
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
-| 17-welcome-page-user-guide | 1/3 | 4 min | 4.0 min |
+| 17-welcome-page-user-guide | 2/3 | 8 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 09-01 (3 min), 09-02 (5 min), 09-03 (6 min), 17-01 (4 min)
-- Trend: Phase 17 started - welcome screen component complete
+- Last 5 plans: 09-02 (5 min), 09-03 (6 min), 17-01 (4 min), 17-02 (4 min)
+- Trend: Phase 17 progressing - user guide modal complete
 
 ## Accumulated Context
 
@@ -701,11 +701,19 @@ None
 - Dark theme support with rgba backgrounds for step cards and disclaimer
 - show()/hide() public methods for external visibility control
 
+**From 17-02:**
+- UserGuideModal with 8 expandable help-section accordions (493 lines)
+- Definition lists (dl/dt/dd) for parameter documentation
+- 8 sections: Getting Started, Portfolio, Spending, SBLOC, Simulation, Charts, Metrics, Glossary
+- Full-screen modal on mobile (640px breakpoint) for better readability
+- Keyboard cleanup pattern: store handler reference, remove in disconnectedCallback
+- Glossary with 6 key terms: BBD, SBLOC, LTV, margin call, stepped-up basis, Monte Carlo
+
 ## Session Continuity
 
-Last session: 2026-01-24
-Stopped at: Completed 17-01-PLAN.md (Welcome Screen Component)
+Last session: 2026-01-23
+Stopped at: Completed 17-02-PLAN.md (User Guide Modal)
 Resume file: None
 
-**Phase 17 IN PROGRESS (1/3 plans complete).**
-**WelcomeScreen component ready. Next: Integration with app-root (17-02).**
+**Phase 17 IN PROGRESS (2/3 plans complete).**
+**UserGuideModal component ready. Next: Wire integration with app-root (17-03).**
