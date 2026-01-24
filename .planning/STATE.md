@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 19 of 19 (Sell Strategy Accuracy)
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: In progress
-Last activity: 2026-01-24 — Completed 19-02-PLAN.md (Dividend Tax Modeling)
+Last activity: 2026-01-24 — Completed 19-03-PLAN.md (Return Derivation Accuracy)
 
-Progress: ████████████████████████████████████████ 97% (78/80 plans total)
+Progress: ████████████████████████████████████████ 99% (79/80 plans total)
 
 **Next Phase:**
 Phase 19: Sell Strategy Accuracy - Match reference application order of operations, add dividend tax modeling
@@ -22,9 +22,9 @@ Phase 19: Sell Strategy Accuracy - Match reference application order of operatio
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 77
+- Total plans completed: 78
 - Average duration: 3.6 min
-- Total execution time: 291 min
+- Total execution time: 295 min
 
 **By Phase:**
 
@@ -48,11 +48,11 @@ Phase 19: Sell Strategy Accuracy - Match reference application order of operatio
 | 09-theming-polish | 3/3 | 14 min | 4.7 min |
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
 | 18-fix-regime-switching | 4/4 | 10 min | 2.5 min |
-| 19-sell-strategy-accuracy | 1/4 | 11 min | 11 min |
+| 19-sell-strategy-accuracy | 3/4 | 15 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 18-02 (not tracked), 18-03 (3 min), 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min)
-- Trend: Phase 19 IN PROGRESS - dividend tax modeling complete (2/4 plans)
+- Last 5 plans: 18-03 (3 min), 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min), 19-03 (4 min)
+- Trend: Phase 19 IN PROGRESS - return derivation accuracy complete (3/4 plans)
 
 ## Accumulated Context
 
@@ -776,11 +776,27 @@ None
 - Both runSingleSellScenario and runInterpolatedScenario follow identical order
 - Complete tax treatment: capital gains on sales + dividend taxes on holdings
 
+**From 19-02:**
+- Dividend tax configuration added to SellStrategyConfig (dividendYield, dividendTaxRate)
+- Default dividend yield: 2% (S&P 500 historical average ~1.5-2%)
+- Default dividend tax rate: same as capital gains rate (23.8% for qualified dividends)
+- Treating all dividends as qualified for simplicity (most long-term holdings are qualified)
+- Dividend taxes tracked separately from capital gains in SellStrategyResult
+- totalLifetimeTaxes = lifetimeTaxes + lifetimeDividendTaxes for complete tax burden
+
+**From 19-03:**
+- Year-0 percentile initialization added in results-dashboard.ts before passing to calculateSellStrategy
+- Year 0 represents portfolio state at simulation start (all percentiles = initial value)
+- Enables growth rate calculation for year 1: (year1Value - initialValue) / initialValue
+- Defensive validation warns if yearlyPercentiles.length < timeHorizon
+- Console warnings added to fallback paths for debugging missing data
+- Return derivation documented: BBD and Sell use identical market paths for fair comparison
+
 ## Session Continuity
 
-Last session: 2026-01-24T19:39:55Z
-Stopped at: Completed 19-02-PLAN.md (Dividend Tax Modeling)
+Last session: 2026-01-24T15:36:25Z
+Stopped at: Completed 19-03-PLAN.md (Return Derivation Accuracy)
 Resume file: None
 
-**Phase 19 IN PROGRESS (1/4 plans).**
-**Order of operations fixed to match reference. Sell strategy now applies withdrawal before returns.**
+**Phase 19 IN PROGRESS (3/4 plans).**
+**Return derivation documented and validated. Year-0 initialization ensures identical market paths for BBD vs Sell comparison.**
