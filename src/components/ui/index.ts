@@ -29,6 +29,9 @@ export { ToastContainer } from './toast-container';
 export { SettingsPanel } from './settings-panel';
 export { ThemeToggle } from './theme-toggle';
 
+// Help Components
+export { HelpTooltip } from './help-tooltip';
+
 // Modal Components
 export { ModalDialog, type ModalOptions } from './modal-dialog';
 
