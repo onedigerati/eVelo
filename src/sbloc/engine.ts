@@ -189,9 +189,18 @@ export function stepSBLOC(
   // Floor at 0 - portfolio value cannot go negative (even with -100% return)
   newPortfolioValue = Math.max(0, newPortfolioValue * (1 + portfolioReturn));
 
-  // Step 2: If withdrawals have started, add annual withdrawal to loan
+  // Step 2: If withdrawals have started, calculate withdrawal with growth and add to loan
+  // Withdrawal growth models inflation-adjusted spending to maintain purchasing power.
+  // Year 0 (first withdrawal year) = annualWithdrawal
+  // Year N = annualWithdrawal * (1 + withdrawalGrowthRate)^N
+  //
+  // NOTE: When used via Monte Carlo simulation (monte-carlo.ts), withdrawal growth
+  // is computed externally and passed as an already-adjusted annualWithdrawal.
+  // In that case, withdrawalGrowthRate should be 0 or undefined to avoid double-applying.
   if (currentYear >= config.startYear) {
-    withdrawalMade = config.annualWithdrawal;
+    const yearsOfWithdrawals = currentYear - config.startYear;
+    const growthRate = config.withdrawalGrowthRate ?? 0;
+    withdrawalMade = config.annualWithdrawal * Math.pow(1 + growthRate, yearsOfWithdrawals);
     newLoanBalance += withdrawalMade;
   }
 
