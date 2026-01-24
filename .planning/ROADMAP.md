@@ -32,6 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 17: Welcome Page & User Guide** - Welcome dashboard with BBD strategy introduction, comprehensive user guide with parameter documentation
 - [x] **Phase 18: Fix Regime-Switching Model** - Connect asset historical returns to regime parameters, implement calibration modes, fix preset data year labels
 - [x] **Phase 19: Sell Strategy Accuracy** - Match reference application order of operations, add dividend tax modeling, ensure apples-to-apples comparison
+- [ ] **Phase 20: Financial Calculation Audit** - Comprehensive verification of all calculation accuracy, fix 13 identified risk areas
 
 ## Phase Details
 
@@ -530,10 +531,70 @@ eVelo current order (too favorable to Sell):
 1. Returns applied to full portfolio
 2. Withdrawal + capital gains tax reduces portfolio
 
+### Phase 20: Financial Calculation Audit
+**Goal**: Comprehensive verification of all financial calculations with high confidence in accuracy
+**Depends on**: Phase 19
+**Requirements**: All calculation requirements (CALC-01 through CALC-07, ESTATE-01 through ESTATE-04)
+**Success Criteria** (what must be TRUE):
+  1. All 13 identified risk areas audited and resolved
+  2. Cost basis ratio user-configurable (not hardcoded at 40%)
+  3. Dividend yield user-configurable (not hardcoded at 2%)
+  4. Sell strategy uses expanded Monte Carlo scenarios (not just 10)
+  5. Success rate definitions consistent across BBD and Sell strategies
+  6. SBLOC withdrawals support inflation adjustment
+  7. Interest compounding configuration actually applied
+  8. CAGR/TWRR reporting clarified (median vs mean)
+  9. Edge cases handled (LTV=Infinity, portfolio=0)
+  10. State validation added to SBLOC engine
+  11. Tax rate naming consistent across modules
+  12. All dashboard outputs verified against calculation sources
+**Research**: Complete (see 20-RESEARCH.md)
+**Plans**: 11 plans
+
+Plans:
+- [ ] 20-01-PLAN.md -- Create centralized config module for calculation constants
+- [ ] 20-02-PLAN.md -- Add state validation guards to SBLOC engine
+- [ ] 20-03-PLAN.md -- Unify success rate definitions (BBD and Sell)
+- [ ] 20-04-PLAN.md -- Wire configurable cost basis and dividend yield to Sell strategy
+- [ ] 20-05-PLAN.md -- Add inflation-adjusted withdrawal support to SBLOC engine
+- [ ] 20-06-PLAN.md -- Verify and document interest compounding configuration
+- [ ] 20-07-PLAN.md -- Make liquidation target LTV configurable
+- [ ] 20-08-PLAN.md -- Clarify CAGR and TWRR reporting methodology
+- [ ] 20-09-PLAN.md -- Set up Vitest and add unit tests for key calculations
+- [ ] 20-10-PLAN.md -- Add UI controls for cost basis and dividend yield
+- [ ] 20-11-PLAN.md -- Final verification and integration testing
+
+**Details:**
+13 Risk Areas Identified:
+1. **Cost Basis Hardcoded (HIGH)** - 40% assumption in sell-strategy.ts never user-configurable
+2. **Dividend Yield Hardcoded (HIGH)** - 2% default may underestimate high-yield portfolios
+3. **Sell Strategy 10 Scenarios (HIGH)** - vs 10,000 BBD iterations creates statistical noise
+4. **Interest Compounding Ignored (MEDIUM)** - Monthly setting may not be applied
+5. **CAGR Uses Median (LOW)** - Mathematically different from mean CAGR
+6. **Success Rate Definitions Differ (MEDIUM)** - BBD: >initial vs Sell: not depleted
+7. **Estate Analysis Loan Interest (MEDIUM)** - May not adjust cost basis correctly
+8. **SBLOC No Withdrawal Growth (HIGH)** - Doesn't model inflation-adjusted withdrawals
+9. **Liquidation Target LTV Hardcoded (LOW)** - 0.8x multiplier not configurable
+10. **TWRR Shows P50 Only (LOW)** - No range of return outcomes
+11. **LTV Floating Point Edge Cases (MEDIUM)** - Infinity/NaN when portfolio=0
+12. **No State Validation in SBLOC (MEDIUM)** - Silent failures possible
+13. **Multiple Tax Rate Definitions (LOW)** - Naming inconsistency
+
+Resolution Priority:
+- Critical (fix immediately): #1, #2, #3, #6, #8
+- Important (fix in phase): #4, #7, #11, #12
+- Enhancement (improve UX): #5, #9, #10, #13
+
+Wave Structure:
+- Wave 1 (parallel): 20-01, 20-02, 20-03, 20-05, 20-06, 20-08 (foundation work)
+- Wave 2 (depends on Wave 1): 20-04, 20-07 (uses config module)
+- Wave 3 (depends on Wave 2): 20-09, 20-10 (testing and UI)
+- Wave 4 (final): 20-11 (verification)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -557,6 +618,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 17. Welcome Page & User Guide | 3/3 | Complete | 2026-01-24 |
 | 18. Fix Regime-Switching Model | 4/4 | Complete | 2026-01-24 |
 | 19. Sell Strategy Accuracy | 4/4 | Complete | 2026-01-24 |
+| 20. Financial Calculation Audit | 0/11 | Planned | - |
 
-**Total Plans**: 80
+**Total Plans**: 91
 **Completed Plans**: 80
