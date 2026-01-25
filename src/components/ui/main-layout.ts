@@ -37,7 +37,10 @@ export class MainLayout extends BaseComponent {
     return `
       <div class="layout">
         <header class="main-header">
-          <button class="mobile-menu-btn" aria-label="Open menu">&#9776;</button>
+          <button class="mobile-menu-btn" aria-label="Toggle parameters sidebar">
+            <span class="menu-label">eVelo Parameters</span>
+            <span class="menu-icon" aria-hidden="true">&#9662;</span>
+          </button>
           <slot name="header"></slot>
         </header>
         <div class="sidebar-area">
@@ -101,22 +104,58 @@ export class MainLayout extends BaseComponent {
 
       .mobile-menu-btn {
         display: none;
-        background: transparent;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs, 4px);
+        background: var(--color-primary, #0d9488);
         border: none;
-        font-size: 1.5rem;
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 600;
         cursor: pointer;
-        padding: var(--spacing-sm, 8px);
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
         color: var(--text-inverse, #ffffff);
         border-radius: var(--border-radius-sm, 4px);
+        margin-left: var(--spacing-sm, 8px);
+        min-width: 48px;
+        min-height: 48px;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
+        transition: background 0.2s ease, transform 0.1s ease;
       }
 
       .mobile-menu-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: var(--color-primary-dark, #0f766e);
       }
 
       .mobile-menu-btn:focus-visible {
         outline: 2px solid var(--text-inverse, #ffffff);
         outline-offset: 2px;
+      }
+
+      .mobile-menu-btn:active {
+        transform: scale(0.98);
+      }
+
+      .menu-label {
+        white-space: nowrap;
+      }
+
+      .menu-icon {
+        font-size: 0.75rem;
+        transition: transform 0.3s ease;
+      }
+
+      :host([sidebar-collapsed]) .menu-icon {
+        transform: rotate(180deg);
+      }
+
+      /* Dark theme */
+      :host-context([data-theme="dark"]) .mobile-menu-btn {
+        background: var(--color-primary, #0d9488);
+      }
+
+      :host-context([data-theme="dark"]) .mobile-menu-btn:hover {
+        background: var(--color-primary-light, #14b8a6);
       }
 
       .main-content {
@@ -166,7 +205,7 @@ export class MainLayout extends BaseComponent {
         }
 
         .mobile-menu-btn {
-          display: block;
+          display: flex;
         }
       }
 
