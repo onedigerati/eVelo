@@ -88,12 +88,16 @@ export function stepSBLOCMonth(
   // Create adjusted config for monthly step
   // - Withdrawal is 1/12 of annual
   // - Interest rate is 1/12 of annual (applied once per month)
+  // - Dividend tax only applied in month 0 (once per year, not 12 times)
   // - Force annual compounding since we're calling stepSBLOC once per month
   const monthlyConfig: SBLOCConfig = {
     ...config,
     annualWithdrawal: config.annualWithdrawal / 12,
     annualInterestRate: config.annualInterestRate / 12,
     compoundingFrequency: 'annual', // Single application of monthly rate
+    // Dividend tax only in first month of year (to avoid applying 12x)
+    dividendYield: currentMonth === 0 ? config.dividendYield : 0,
+    dividendTaxRate: currentMonth === 0 ? config.dividendTaxRate : 0,
   };
 
   // Create a temporary state that won't increment yearsSinceStart
@@ -200,6 +204,7 @@ export function stepSBLOCYear(
   let currentState = { ...state };
   let totalInterestCharged = 0;
   let totalWithdrawalMade = 0;
+  let totalDividendTaxBorrowed = 0;
   let firstMarginCall = false;
   let firstLiquidationEvent: LiquidationEvent | null = null;
   let portfolioFailed = false;
@@ -220,6 +225,7 @@ export function stepSBLOCYear(
     // Accumulate totals
     totalInterestCharged += monthResult.interestCharged;
     totalWithdrawalMade += monthResult.withdrawalMade;
+    totalDividendTaxBorrowed += monthResult.dividendTaxBorrowed;
 
     // Track first margin call
     if (monthResult.marginCallTriggered && !firstMarginCall) {
@@ -246,5 +252,6 @@ export function stepSBLOCYear(
     portfolioFailed,
     interestCharged: totalInterestCharged,
     withdrawalMade: totalWithdrawalMade,
+    dividendTaxBorrowed: totalDividendTaxBorrowed,
   };
 }

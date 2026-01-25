@@ -104,6 +104,8 @@ export interface SBLOCYearResult {
   interestCharged: number;
   /** Withdrawal made this year (0 if before startYear) */
   withdrawalMade: number;
+  /** Dividend tax borrowed this year (BBD advantage: borrow to pay taxes) */
+  dividendTaxBorrowed: number;
 }
 
 // ============================================================================
@@ -184,10 +186,26 @@ export function stepSBLOC(
   let newLoanBalance = state.loanBalance;
   let interestCharged = 0;
   let withdrawalMade = 0;
+  let dividendTaxBorrowed = 0;
 
   // Step 1: Apply portfolio return first
   // Floor at 0 - portfolio value cannot go negative (even with -100% return)
   newPortfolioValue = Math.max(0, newPortfolioValue * (1 + portfolioReturn));
+
+  // Step 1.5: Apply dividend tax via SBLOC borrowing (BBD advantage)
+  // This happens BEFORE withdrawals but AFTER returns.
+  // Order of operations per reference: returns → dividend tax → withdrawals → interest → margin call
+  //
+  // CRITICAL: BBD borrows to pay dividend taxes (portfolio stays whole).
+  // Sell strategy must liquidate to pay the same taxes (reduces compound growth).
+  // This is a major BBD advantage over Sell strategy.
+  const dividendYield = config.dividendYield ?? 0;
+  const dividendTaxRate = config.dividendTaxRate ?? 0;
+  if (dividendYield > 0 && dividendTaxRate > 0) {
+    const dividendIncome = newPortfolioValue * dividendYield;
+    dividendTaxBorrowed = dividendIncome * dividendTaxRate;
+    newLoanBalance += dividendTaxBorrowed; // Borrow to pay taxes (true BBD)
+  }
 
   // Step 2: If withdrawals have started, calculate withdrawal with growth and add to loan
   // Withdrawal growth models inflation-adjusted spending to maintain purchasing power.
@@ -349,5 +367,6 @@ export function stepSBLOC(
     portfolioFailed,
     interestCharged,
     withdrawalMade,
+    dividendTaxBorrowed,
   };
 }

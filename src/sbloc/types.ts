@@ -144,6 +144,25 @@ export interface SBLOCConfig {
    * @default 0.8 (targets 80% of maintenance margin)
    */
   liquidationTargetMultiplier?: number;
+
+  /**
+   * Dividend yield for BBD tax modeling (e.g., 0.02 for 2%)
+   * When enabled, dividends are received annually and taxes are paid by
+   * BORROWING via SBLOC (portfolio stays whole). This is a key BBD advantage
+   * over Sell strategy which must liquidate to pay dividend taxes.
+   *
+   * @default 0 (no dividend tax modeling)
+   */
+  dividendYield?: number;
+
+  /**
+   * Dividend tax rate (ordinary income rate, e.g., 0.37 for 37%)
+   * Applied to dividend income when dividendYield > 0.
+   * BBD borrows via SBLOC to pay these taxes (preserves compound growth).
+   *
+   * @default 0 (no dividend tax)
+   */
+  dividendTaxRate?: number;
 }
 
 // ============================================================================
@@ -343,6 +362,8 @@ export const DEFAULT_SBLOC_CONFIG: SBLOCConfig = {
   startYear: 0,
   withdrawalGrowthRate: 0.03,   // 3% annual growth (inflation adjustment)
   liquidationTargetMultiplier: 0.8, // Target 80% of maintenance margin after liquidation
+  dividendYield: 0,             // No dividend tax by default
+  dividendTaxRate: 0,           // No dividend tax by default
 };
 
 /**
