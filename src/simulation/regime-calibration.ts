@@ -18,18 +18,20 @@ export interface ClassifiedReturns {
   bull: number[];
   bear: number[];
   crash: number[];
+  recovery: number[];
 }
 
 /**
- * Classify historical returns into bull/bear/crash regimes using percentile thresholds
+ * Classify historical returns into bull/bear/crash/recovery regimes using percentile thresholds
  *
  * Classification thresholds (based on academic literature):
  * - Crash: Bottom 10% of returns (worst ~3 years out of 30)
- * - Bear: Next 20% (10th to 30th percentile)
- * - Bull: Top 70% (above 30th percentile)
+ * - Bear: 10th to 30th percentile (next 20%)
+ * - Recovery: Positive returns following crash/bear periods (70th to 85th percentile)
+ * - Bull: Top 15% and all other positive returns (above 85th percentile and 30th-70th)
  *
  * @param returns Array of historical annual returns (as decimals, e.g., 0.12 for 12%)
- * @returns Object with bull, bear, crash arrays
+ * @returns Object with bull, bear, crash, recovery arrays
  */
 export function classifyRegimes(returns: number[]): ClassifiedReturns {
   if (returns.length < 10) {
@@ -37,24 +39,44 @@ export function classifyRegimes(returns: number[]): ClassifiedReturns {
   }
 
   // Calculate threshold values
-  const crashThreshold = percentile(returns, 10);  // Bottom 10%
-  const bearThreshold = percentile(returns, 30);   // Next 20%
+  const crashThreshold = percentile(returns, 10);    // Bottom 10%
+  const bearThreshold = percentile(returns, 30);     // 30th percentile
+  const recoveryThreshold = percentile(returns, 70); // 70th percentile
+  const bullThreshold = percentile(returns, 85);     // 85th percentile
 
   const bull: number[] = [];
   const bear: number[] = [];
   const crash: number[] = [];
+  const recovery: number[] = [];
 
-  for (const r of returns) {
+  // Track previous return to detect recovery periods
+  let previousWasNegative = false;
+
+  for (let i = 0; i < returns.length; i++) {
+    const r = returns[i];
+    const currentIsPositive = r >= 0;
+
     if (r < crashThreshold) {
       crash.push(r);
+      previousWasNegative = true;
     } else if (r < bearThreshold) {
       bear.push(r);
-    } else {
+      previousWasNegative = true;
+    } else if (r >= bullThreshold) {
       bull.push(r);
+      previousWasNegative = false;
+    } else if (r >= recoveryThreshold || (currentIsPositive && previousWasNegative)) {
+      // Recovery: Strong positive returns OR positive return following negative period
+      recovery.push(r);
+      previousWasNegative = false;
+    } else {
+      // Normal bull market (between 30th and 70th percentile)
+      bull.push(r);
+      previousWasNegative = false;
     }
   }
 
-  return { bull, bear, crash };
+  return { bull, bear, crash, recovery };
 }
 
 /**
@@ -79,6 +101,10 @@ export function estimateRegimeParams(classified: ClassifiedReturns): RegimeParam
     crash: {
       mean: classified.crash.length >= minObs ? mean(classified.crash) : -0.25,
       stddev: classified.crash.length >= minObs ? stddev(classified.crash) : 0.30,
+    },
+    recovery: {
+      mean: classified.recovery.length >= minObs ? mean(classified.recovery) : 0.15,
+      stddev: classified.recovery.length >= minObs ? stddev(classified.recovery) : 0.20,
     },
   };
 }
@@ -115,7 +141,7 @@ export function calculatePortfolioRegimeParams(
   weights: number[],
   correlationMatrix: number[][]
 ): RegimeParamsMap {
-  const regimes: MarketRegime[] = ['bull', 'bear', 'crash'];
+  const regimes: MarketRegime[] = ['bull', 'bear', 'crash', 'recovery'];
   const result = {} as RegimeParamsMap;
 
   for (const regime of regimes) {
@@ -183,6 +209,12 @@ export function applyConservativeAdjustment(
       mean: historicalParams.crash.mean - 0.03,
       // Increase crash volatility by 25%
       stddev: historicalParams.crash.stddev * 1.25,
+    },
+    recovery: {
+      // Reduce recovery returns (reduce by 2pp)
+      mean: historicalParams.recovery.mean - 0.02,
+      // Increase recovery volatility by 20%
+      stddev: historicalParams.recovery.stddev * 1.20,
     },
   };
 }
