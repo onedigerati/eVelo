@@ -537,7 +537,12 @@ export async function runMonteCarlo(
     const medianNetWorth = statistics.median;
     const bbdNetEstate = medianNetWorth;
 
-    // Estimate taxes if sold (simplified: assume all gains above initial, 23.8% tax rate)
+    // Get median dividend taxes borrowed (they're "in the loan" at death, forgiven by step-up)
+    const medianDividendTaxesBorrowed = totalDividendTaxesBorrowed
+      ? percentile(totalDividendTaxesBorrowed, 50)
+      : 0;
+
+    // Estimate taxes if sold (will be replaced by integrated sell strategy results if available)
     // For sell strategy, we need to calculate gross portfolio value to estimate embedded gains
     // Median gross portfolio = median net worth + median loan
     const medianGrossPortfolio = medianNetWorth + medianLoan;
@@ -549,6 +554,7 @@ export async function runMonteCarlo(
       bbdNetEstate,
       sellNetEstate,
       bbdAdvantage: bbdNetEstate - sellNetEstate,
+      medianDividendTaxesBorrowed,
     };
   }
 
@@ -744,6 +750,38 @@ export async function runMonteCarlo(
       medianTerminal: sellPercentiles.p50.toFixed(0),
       medianTaxes: sellTaxes.medianTotal.toFixed(0),
     });
+
+    // Update estate analysis to use integrated sell strategy results (if estate analysis exists)
+    if (estateAnalysis) {
+      const bbdNetEstate = estateAnalysis.bbdNetEstate;
+      const sellNetEstate = sellPercentiles.p50; // Use integrated sell strategy median terminal value
+      const bbdAdvantage = bbdNetEstate - sellNetEstate;
+      const medianDividendTaxesBorrowed = estateAnalysis.medianDividendTaxesBorrowed ?? 0;
+
+      estateAnalysis = {
+        bbdNetEstate,
+        sellNetEstate,
+        bbdAdvantage,
+        medianDividendTaxesBorrowed,
+      };
+
+      // Log estate comparison with dividend tax details
+      console.log('[MC Debug] ═══════════════════════════════════════════════════');
+      console.log('[MC Debug] ESTATE ANALYSIS (BBD vs Sell)');
+      console.log('[MC Debug] ═══════════════════════════════════════════════════');
+      console.log(`[MC Debug] BBD median net estate: $${bbdNetEstate.toFixed(0)}`);
+      console.log(`[MC Debug] Sell median net estate: $${sellNetEstate.toFixed(0)}`);
+      console.log(`[MC Debug] BBD advantage: $${bbdAdvantage.toFixed(0)} (${((bbdAdvantage/sellNetEstate)*100).toFixed(1)}%)`);
+      if (medianDividendTaxesBorrowed > 0) {
+        console.log(`[MC Debug] Median dividend taxes borrowed (BBD): $${medianDividendTaxesBorrowed.toFixed(0)}`);
+        console.log(`[MC Debug]   (These taxes are "in the loan" at death, forgiven by step-up)`);
+        console.log(`[MC Debug]   (Sell strategy paid same taxes by liquidating portfolio)`);
+      }
+      console.log(`[MC Debug] Sell median taxes paid (lifetime): $${sellTaxes.medianTotal.toFixed(0)}`);
+      console.log(`[MC Debug]   - Capital gains: $${sellTaxes.medianCapitalGains.toFixed(0)}`);
+      console.log(`[MC Debug]   - Dividend taxes: $${sellTaxes.medianDividend.toFixed(0)}`);
+      console.log('[MC Debug] ═══════════════════════════════════════════════════');
+    }
   }
 
   return {

@@ -349,6 +349,8 @@ export interface EstateAnalysis {
   sellNetEstate: number;
   /** BBD advantage (positive means BBD is better) */
   bbdAdvantage: number;
+  /** Median dividend taxes borrowed by BBD (in loan at death, forgiven by step-up) */
+  medianDividendTaxesBorrowed?: number;
 }
 
 /**
