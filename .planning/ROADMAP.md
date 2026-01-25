@@ -34,6 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 19: Sell Strategy Accuracy** - Match reference application order of operations, add dividend tax modeling, ensure apples-to-apples comparison
 - [ ] **Phase 20: Financial Calculation Audit** - Comprehensive verification of all calculation accuracy, fix 13 identified risk areas
 - [ ] **Phase 21: Header Redesign** - Elegant, branded header with improved aesthetics, eVelo identity, and responsive mobile experience
+- [ ] **Phase 22: Mobile Sidebar UX Redesign** - Vertical collapse/expand on mobile, auto-collapse on simulation, "eVelo Parameters" label replacing hamburger icon
 
 ## Phase Details
 
@@ -627,10 +628,43 @@ Key improvements over current eVelo header:
 - Improve icon button grouping and spacing
 - Ensure mobile-first responsive behavior
 
+### Phase 22: Mobile Sidebar UX Redesign
+**Goal**: Redesign mobile sidebar interaction with vertical collapse behavior, auto-collapse on simulation, and branded "eVelo Parameters" label
+**Depends on**: Phase 21
+**Requirements**: UI-04 (mobile layout), UI-01 (sidebar)
+**Success Criteria** (what must be TRUE):
+  1. Mobile: Sidebar collapses/expands vertically (slides up/down) instead of horizontal overlay
+  2. Mobile: Clicking "Run Monte Carlo Simulation" auto-collapses sidebar and shows dashboard
+  3. Mobile: "eVelo Parameters" text label replaces hamburger icon (☰)
+  4. Desktop: "eVelo Parameters" label rotates 90 degrees when sidebar is collapsed
+  5. Transition animations are smooth (CSS transitions)
+  6. Touch interactions work reliably on mobile devices
+  7. Accessible with keyboard navigation and ARIA attributes
+  8. Dark theme styling maintained for collapsed/expanded states
+**Research**: Complete (see 22-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 22-01-PLAN.md -- Mobile vertical collapse behavior and auto-collapse on simulation
+- [ ] 22-02-PLAN.md -- Desktop rotated label and integration testing
+
+**Details:**
+User-requested UX improvements:
+1. **Vertical collapse (mobile)**: Panel slides up/down instead of horizontal overlay - more natural for mobile interaction
+2. **Auto-collapse on simulation**: When user clicks "Run Monte Carlo Simulation", panel auto-collapses to reveal results
+3. **Branded label**: Replace hamburger icon with "eVelo Parameters" text for clearer navigation
+4. **Rotated label (desktop)**: When collapsed in desktop view, label rotates 90° for compact display
+
+Implementation approach:
+- CSS transform: translateY() for mobile vertical slide
+- CSS transform: rotate(-90deg) for desktop collapsed label
+- Event listener on simulation button to trigger collapse
+- Update main-layout.ts and sidebar-panel.ts components
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -656,6 +690,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 19. Sell Strategy Accuracy | 4/4 | Complete | 2026-01-24 |
 | 20. Financial Calculation Audit | 0/11 | Planned | - |
 | 21. Header Redesign | 0/2 | Planned | - |
+| 22. Mobile Sidebar UX Redesign | 0/2 | Planned | - |
 
-**Total Plans**: 93
+**Total Plans**: 95
 **Completed Plans**: 80
