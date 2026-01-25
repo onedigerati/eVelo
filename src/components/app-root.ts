@@ -423,9 +423,8 @@ export class AppRoot extends BaseComponent {
           </div>
         </sidebar-panel>
 
-        <div slot="header" class="header-content">
-          <h1>eVelo Portfolio Simulator</h1>
-          <div class="header-buttons">
+        <app-header slot="header">
+          <div slot="actions" class="header-buttons">
             <button id="btn-guide" class="header-btn" aria-label="User Guide" title="User Guide">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -440,7 +439,7 @@ export class AppRoot extends BaseComponent {
               </svg>
             </button>
           </div>
-        </div>
+        </app-header>
 
         <div class="dashboard">
           <welcome-screen id="welcome"></welcome-screen>
@@ -571,17 +570,6 @@ export class AppRoot extends BaseComponent {
         display: none;
       }
 
-      .header-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-      }
-
-      .header-content h1 {
-        margin: 0;
-      }
-
       .header-btn {
         background: transparent;
         border: none;
@@ -589,19 +577,19 @@ export class AppRoot extends BaseComponent {
         cursor: pointer;
         padding: var(--spacing-xs, 4px);
         border-radius: var(--radius-sm, 4px);
-        color: var(--text-secondary, #475569);
+        color: var(--text-inverse, #ffffff);
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background 0.2s, color 0.2s;
       }
 
       .header-btn:hover {
-        background: var(--surface-hover, rgba(0, 0, 0, 0.05));
-        color: var(--color-primary, #0d9488);
+        background: rgba(255, 255, 255, 0.15);
       }
 
       .header-btn:focus-visible {
-        outline: 2px solid var(--color-primary, #0d9488);
+        outline: 2px solid var(--text-inverse, #ffffff);
         outline-offset: 2px;
       }
 
