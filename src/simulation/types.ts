@@ -114,6 +114,20 @@ export interface TimelineConfig {
 export type RegimeCalibrationMode = 'historical' | 'conservative';
 
 /**
+ * Survivorship bias adjustment by calibration mode
+ *
+ * Historical return data includes survivorship bias because failed companies
+ * are removed from indices. This adjustment accounts for that bias.
+ *
+ * - Historical (1.5%): Based on empirical studies of survivorship bias in equity markets
+ * - Conservative (2.0%): More aggressive adjustment for stress testing
+ */
+export const SURVIVORSHIP_BIAS: Record<RegimeCalibrationMode, number> = {
+  historical: 0.015, // 1.5% annual adjustment
+  conservative: 0.020, // 2.0% annual adjustment
+};
+
+/**
  * Simulation configuration - controls how Monte Carlo runs
  */
 export interface SimulationConfig {
