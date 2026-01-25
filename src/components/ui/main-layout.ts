@@ -20,17 +20,31 @@ export class MainLayout extends BaseComponent {
     return ['sidebar-collapsed', 'sidebar-open'];
   }
 
+  /**
+   * Override to prevent re-render on attribute changes.
+   * CSS handles the visual changes via :host([sidebar-collapsed]) selectors.
+   * Re-rendering would destroy slot elements and break content distribution.
+   */
+  override attributeChangedCallback(
+    _name: string,
+    _oldValue: string | null,
+    _newValue: string | null
+  ): void {
+    // Do nothing - CSS handles sidebar-collapsed and sidebar-open states
+    // Do NOT call render() as it would destroy slots and break layout
+  }
+
   protected template(): string {
     return `
       <div class="layout">
+        <header class="main-header">
+          <button class="mobile-menu-btn" aria-label="Open menu">&#9776;</button>
+          <slot name="header"></slot>
+        </header>
         <div class="sidebar-area">
           <slot name="sidebar"></slot>
         </div>
         <div class="main-area">
-          <header class="main-header">
-            <button class="mobile-menu-btn" aria-label="Open menu">&#9776;</button>
-            <slot name="header"></slot>
-          </header>
           <main class="main-content">
             <slot></slot>
           </main>
@@ -49,6 +63,10 @@ export class MainLayout extends BaseComponent {
 
       .layout {
         display: grid;
+        grid-template-areas:
+          "header header"
+          "sidebar main";
+        grid-template-rows: auto 1fr;
         grid-template-columns: var(--sidebar-width, 320px) 1fr;
         height: 100%;
       }
@@ -57,24 +75,29 @@ export class MainLayout extends BaseComponent {
         grid-template-columns: var(--sidebar-collapsed-width, 48px) 1fr;
       }
 
+      .main-header {
+        grid-area: header;
+        display: flex;
+        align-items: center;
+      }
+
+      /* Make slotted header element fill full width */
+      .main-header ::slotted(*) {
+        flex: 1;
+      }
+
       .sidebar-area {
-        grid-column: 1;
+        grid-area: sidebar;
         overflow-y: auto;
         background: var(--surface-secondary, #f8fafc);
         border-right: 1px solid var(--border-color, #e2e8f0);
       }
 
       .main-area {
-        grid-column: 2;
+        grid-area: main;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-      }
-
-      .main-header {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md, 16px);
       }
 
       .mobile-menu-btn {
@@ -111,6 +134,14 @@ export class MainLayout extends BaseComponent {
       /* Mobile responsive */
       @media (max-width: 768px) {
         .layout {
+          grid-template-areas:
+            "header"
+            "main";
+          grid-template-columns: 1fr;
+        }
+
+        /* Override collapsed state on mobile - sidebar is overlay, not collapsed */
+        :host([sidebar-collapsed]) .layout {
           grid-template-columns: 1fr;
         }
 
@@ -140,10 +171,6 @@ export class MainLayout extends BaseComponent {
         .mobile-menu-btn {
           display: block;
         }
-
-        .main-area {
-          grid-column: 1;
-        }
       }
     `;
   }
@@ -153,6 +180,9 @@ export class MainLayout extends BaseComponent {
     this.addEventListener('toggle', ((e: CustomEvent) => {
       if (e.detail.collapsed) {
         this.setAttribute('sidebar-collapsed', '');
+        // On mobile, also close the overlay when sidebar is collapsed
+        // This removes the backdrop that would otherwise cover the main content
+        this.removeAttribute('sidebar-open');
       } else {
         this.removeAttribute('sidebar-collapsed');
       }
@@ -161,6 +191,11 @@ export class MainLayout extends BaseComponent {
     // Mobile menu button opens sidebar overlay
     this.$('.mobile-menu-btn')?.addEventListener('click', () => {
       this.setAttribute('sidebar-open', '');
+      // Clear any collapsed state so sidebar content is visible
+      this.removeAttribute('sidebar-collapsed');
+      // Also clear sidebar-panel's collapsed attribute (content hidden via display:none)
+      const sidebarPanel = this.querySelector('sidebar-panel');
+      sidebarPanel?.removeAttribute('collapsed');
     });
 
     // Backdrop click closes sidebar overlay
