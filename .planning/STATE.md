@@ -9,22 +9,22 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 ## Current Position
 
-Phase: 22 of 22 (Mobile Sidebar UX Redesign)
-Plan: 02 of 02
-Status: Phase complete
-Last activity: 2026-01-25 — Completed 22-02-PLAN.md (Branded Toggle with eVelo Parameters Label)
+Phase: 23 of 23 (Reference Methodology Alignment)
+Plan: 01 of 09
+Status: In progress
+Last activity: 2026-01-25 — Completed 23-01-PLAN.md (Bootstrap Correlation Preservation)
 
-Progress: ████████████████████████████████████████████ 100% (91/91 plans complete)
+Progress: ████████████████████████████████████████ 88% (92/105 plans complete)
 
 **Current Phase:**
-Phase 22: Mobile Sidebar UX Redesign - Vertical collapse/expand with auto-collapse on simulation run
+Phase 23: Reference Methodology Alignment - Bootstrap correlation preservation via shared year index
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 80
+- Total plans completed: 92
 - Average duration: 3.6 min
-- Total execution time: 303 min
+- Total execution time: 335 min
 
 **By Phase:**
 
@@ -49,10 +49,14 @@ Phase 22: Mobile Sidebar UX Redesign - Vertical collapse/expand with auto-collap
 | 17-welcome-page-user-guide | 3/3 | 13 min | 4.3 min |
 | 18-fix-regime-switching | 4/4 | 10 min | 2.5 min |
 | 19-sell-strategy-accuracy | 4/4 | 18 min | 4.5 min |
+| 20-financial-calculation-audit | 2/9 | 6 min | 3.0 min |
+| 21-header-redesign | 1/1 | 4 min | 4.0 min |
+| 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
+| 23-reference-methodology-alignment | 1/9 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 19-03 (4 min), 19-04 (3.5 min), 20-03 (2 min)
-- Trend: Phase 20 in progress - Financial calculation audit
+- Last 5 plans: 22-01 (3 min), 22-02 (4 min), 23-01 (4 min)
+- Trend: Phase 23 in progress - Reference methodology alignment
 
 ## Accumulated Context
 
@@ -399,6 +403,12 @@ Recent decisions affecting current work:
   - Goals: Vertical collapse/expand, auto-collapse on simulation, branded label
   - Key changes: Replace hamburger icon with "eVelo Parameters" label
   - Desktop: 90° rotated label when collapsed
+
+- Phase 23 added: Reference Methodology Alignment
+  - Comprehensive extraction of reference PortfolioStrategySimulator.html methodology
+  - Critical gaps: Bootstrap correlation, 4-regime system, fat-tail model, sell strategy alignment
+  - See: .planning/phases/23-reference-methodology-alignment/23-REFERENCE-METHODOLOGY.md
+  - 10 plans covering all methodology alignment work
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -861,10 +871,18 @@ None
 - Unicode triangles (▸ ◂ ▾) for directional indicators
 - Icon rotation (90° desktop, 180° mobile) for visual feedback
 
+**From 23-01:**
+- Bootstrap correlation preservation via shared year index sampling
+- correlatedBootstrap samples same historical year for all assets
+- correlatedBlockBootstrap preserves both autocorrelation and cross-correlation
+- Replaces independent per-asset sampling in Monte Carlo simulation
+- Preserves natural crisis correlations from historical data (e.g., 2008 crash)
+- Test demonstration: independent sampling destroyed correlation (0.999→-0.066), correlated preserved (0.999→1.000)
+
 ## Session Continuity
 
-Last session: 2026-01-25T02:39:42Z
-Stopped at: Completed 22-02-PLAN.md (Branded Toggle with eVelo Parameters Label)
+Last session: 2026-01-25T22:04:21Z
+Stopped at: Completed 23-01-PLAN.md (Bootstrap Correlation Preservation)
 Resume file: None
 
-**Phase 22 complete - Mobile Sidebar UX Redesign (91/91 plans complete)**
+**Phase 23 in progress - Reference Methodology Alignment (1/9 plans complete)**
