@@ -849,6 +849,196 @@ interface SellScenarioWithYearlyTaxes extends SellScenario {
   yearlyTotalTaxes: number[];
 }
 
+// ============================================================================
+// Iteration-Based Sell Strategy (Aligned with BBD)
+// ============================================================================
+
+/**
+ * Configuration for iteration-based sell strategy calculation.
+ * Uses raw asset returns from Monte Carlo iteration instead of percentile data.
+ */
+export interface SellStrategyFromReturnsConfig {
+  /** Initial portfolio value */
+  initialValue: number;
+  /** Annual withdrawal amount */
+  annualWithdrawal: number;
+  /** Annual withdrawal growth rate (e.g., 0.03 for 3%) */
+  withdrawalGrowth: number;
+  /** Time horizon in years */
+  timeHorizon: number;
+  /** Capital gains tax rate (default: 0.238 for 23.8%) */
+  capitalGainsRate?: number;
+  /** Initial cost basis as fraction of portfolio (default: 0.4 for 40%) */
+  costBasisRatio?: number;
+  /** Annual dividend yield as decimal (default: 0.02 for 2%) */
+  dividendYield?: number;
+  /** Dividend tax rate as decimal (default: 0.238 for 23.8%) */
+  dividendTaxRate?: number;
+}
+
+/**
+ * Result from a single sell strategy iteration.
+ */
+export interface SellIterationResult {
+  /** Terminal portfolio value after all withdrawals and taxes */
+  terminalValue: number;
+  /** Total capital gains taxes paid over lifetime */
+  totalCapitalGainsTaxes: number;
+  /** Total dividend taxes paid over lifetime */
+  totalDividendTaxes: number;
+  /** Whether portfolio was depleted (reached zero) */
+  depleted: boolean;
+  /** Portfolio values by year (includes year 0) */
+  yearlyValues: number[];
+  /** Cumulative taxes by year (capital gains + dividend) */
+  yearlyTaxes: number[];
+}
+
+/**
+ * Calculate Sell strategy for a single iteration using raw portfolio returns.
+ *
+ * This function aligns with BBD methodology by:
+ * 1. Using the SAME market returns as the BBD iteration
+ * 2. Running ONE scenario per iteration (not multiple synthetic scenarios)
+ * 3. Ensuring fair apples-to-apples comparison where only strategy mechanics differ
+ *
+ * Order of operations per year (matches reference implementation):
+ * 1. Dividend tax paid from portfolio
+ * 2. Withdrawal + capital gains tax (gross-up calculation)
+ * 3. Market returns applied to reduced portfolio
+ *
+ * @param config - Configuration with withdrawal and tax parameters
+ * @param portfolioReturns - Array of portfolio returns (one per year) from BBD iteration
+ * @returns Single iteration result with terminal value and tax tracking
+ *
+ * @example
+ * ```typescript
+ * // Inside Monte Carlo iteration loop:
+ * const portfolioReturns = calculateWeightedReturns(assetReturns, weights);
+ * const sellResult = calculateSellStrategyFromReturns(config, portfolioReturns);
+ * ```
+ */
+export function calculateSellStrategyFromReturns(
+  config: SellStrategyFromReturnsConfig,
+  portfolioReturns: number[]
+): SellIterationResult {
+  const {
+    initialValue,
+    annualWithdrawal,
+    withdrawalGrowth,
+    timeHorizon,
+    capitalGainsRate = DEFAULT_SELL_CONFIG.capitalGainsRate,
+    costBasisRatio = DEFAULT_SELL_CONFIG.costBasisRatio,
+    dividendYield = DEFAULT_SELL_CONFIG.dividendYield,
+    dividendTaxRate = DEFAULT_SELL_CONFIG.dividendTaxRate,
+  } = config;
+
+  // Validate portfolioReturns length
+  if (portfolioReturns.length < timeHorizon) {
+    console.warn(
+      `Sell strategy: portfolioReturns length (${portfolioReturns.length}) ` +
+      `is less than timeHorizon (${timeHorizon}). Results may be incomplete.`
+    );
+  }
+
+  let portfolioValue = initialValue;
+  let costBasis = initialValue * costBasisRatio;
+  let currentWithdrawal = annualWithdrawal;
+  let totalCapitalGainsTaxes = 0;
+  let totalDividendTaxes = 0;
+  let depleted = false;
+  const yearlyValues: number[] = [initialValue];
+  const yearlyTaxes: number[] = [0];
+
+  for (let year = 0; year < timeHorizon; year++) {
+    if (portfolioValue <= 0) {
+      depleted = true;
+      yearlyValues.push(0);
+      yearlyTaxes.push(yearlyTaxes[yearlyTaxes.length - 1]); // Carry forward cumulative
+      continue;
+    }
+
+    let yearTaxes = 0;
+
+    // 1. DIVIDEND TAX FIRST (before withdrawal)
+    if (dividendYield > 0) {
+      const dividendIncome = portfolioValue * dividendYield;
+      const dividendTax = dividendIncome * dividendTaxRate;
+      totalDividendTaxes += dividendTax;
+      yearTaxes += dividendTax;
+      portfolioValue -= dividendTax;
+
+      if (portfolioValue <= 0) {
+        depleted = true;
+        yearlyValues.push(0);
+        yearlyTaxes.push(yearlyTaxes[yearlyTaxes.length - 1] + yearTaxes);
+        continue;
+      }
+    }
+
+    // 2. WITHDRAWAL + CAPITAL GAINS TAX
+    const adjustedWithdrawal = currentWithdrawal;
+    currentWithdrawal *= (1 + withdrawalGrowth);
+
+    if (adjustedWithdrawal >= portfolioValue) {
+      // Full depletion - pay taxes on remaining portfolio
+      const finalTax = calculateCapitalGainsTax(
+        portfolioValue,
+        portfolioValue * (costBasis / portfolioValue),
+        capitalGainsRate
+      );
+      totalCapitalGainsTaxes += finalTax;
+      yearTaxes += finalTax;
+      portfolioValue = 0;
+      depleted = true;
+      yearlyValues.push(0);
+      yearlyTaxes.push(yearlyTaxes[yearlyTaxes.length - 1] + yearTaxes);
+      continue;
+    }
+
+    // Calculate taxes on sale
+    const saleAmount = adjustedWithdrawal;
+    const basisSold = costBasis * (saleAmount / portfolioValue);
+    const gain = saleAmount - basisSold;
+    const tax = gain > 0 ? gain * capitalGainsRate : 0;
+    totalCapitalGainsTaxes += tax;
+    yearTaxes += tax;
+
+    // Gross-up: must sell withdrawal + tax amount
+    const grossSale = saleAmount + tax;
+
+    if (grossSale >= portfolioValue) {
+      // Depleted after accounting for taxes
+      portfolioValue = 0;
+      depleted = true;
+      yearlyValues.push(0);
+      yearlyTaxes.push(yearlyTaxes[yearlyTaxes.length - 1] + yearTaxes);
+      continue;
+    }
+
+    // Update portfolio and cost basis
+    const saleFraction = grossSale / portfolioValue;
+    portfolioValue -= grossSale;
+    costBasis *= (1 - saleFraction);
+
+    // 3. GROWTH APPLIED TO REDUCED PORTFOLIO
+    const portfolioReturn = portfolioReturns[year] ?? 0;
+    portfolioValue *= (1 + portfolioReturn);
+
+    yearlyValues.push(portfolioValue);
+    yearlyTaxes.push(yearlyTaxes[yearlyTaxes.length - 1] + yearTaxes);
+  }
+
+  return {
+    terminalValue: portfolioValue,
+    totalCapitalGainsTaxes,
+    totalDividendTaxes,
+    depleted,
+    yearlyValues,
+    yearlyTaxes,
+  };
+}
+
 /**
  * Extract cumulative taxes by year from scenarios.
  *
