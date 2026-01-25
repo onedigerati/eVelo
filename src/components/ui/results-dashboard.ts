@@ -481,7 +481,9 @@ export class ResultsDashboard extends BaseComponent {
       .chart-container histogram-chart,
       .chart-container donut-chart,
       .chart-container correlation-heatmap,
-      .chart-container bbd-comparison-chart {
+      .chart-container bbd-comparison-chart,
+      .chart-container margin-call-chart,
+      .chart-container sbloc-balance-chart {
         position: absolute;
         inset: 0;
         width: 100%;
