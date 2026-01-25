@@ -198,12 +198,18 @@ export async function runMonteCarlo(
       let portfolioValue = initialValue;
       let cumulativeReturn = 1; // Track cumulative return for this iteration
 
+      // Track portfolio returns for sell strategy (one per year)
+      const iterationPortfolioReturns: number[] = [];
+
       for (let year = 0; year < timeHorizon; year++) {
         // Calculate weighted portfolio return
         let portfolioReturn = 0;
         for (let a = 0; a < numAssets; a++) {
           portfolioReturn += weights[a] * assetReturns[a][year];
         }
+
+        // Store portfolio return for sell strategy
+        iterationPortfolioReturns.push(portfolioReturn);
 
         // Track cumulative return
         cumulativeReturn *= (1 + portfolioReturn);
@@ -302,6 +308,27 @@ export async function runMonteCarlo(
         } else {
           yearlyValues[year][i] = portfolioValue;
         }
+      }
+
+      // Run sell strategy for this iteration (if enabled)
+      if (config.sellStrategy && sellIterationResults && sellYearlyValues) {
+        const sellConfig: SellStrategyFromReturnsConfig = {
+          initialValue,
+          annualWithdrawal: sblocBaseWithdrawal,
+          withdrawalGrowth: sblocRaiseRate,
+          timeHorizon,
+          costBasisRatio: config.sellStrategy.costBasisRatio,
+          dividendYield: config.sellStrategy.dividendYield,
+          // capitalGainsRate and dividendTaxRate use defaults from DEFAULT_SELL_CONFIG
+        };
+
+        const sellResult = calculateSellStrategyFromReturns(
+          sellConfig,
+          iterationPortfolioReturns
+        );
+
+        sellIterationResults.push(sellResult);
+        sellYearlyValues[i] = sellResult.yearlyValues;
       }
 
       // Store terminal value
@@ -552,6 +579,76 @@ export async function runMonteCarlo(
     };
   }
 
+  // Compute sell strategy statistics (if enabled)
+  let sellStrategyOutput: SellStrategyOutput | undefined;
+  if (config.sellStrategy && sellIterationResults && sellYearlyValues) {
+    console.log('[MC Debug] Computing sell strategy statistics from', sellIterationResults.length, 'iterations');
+
+    // Extract terminal values
+    const sellTerminalValues = sellIterationResults.map(r => r.terminalValue);
+
+    // Calculate success rate (terminal > initial)
+    const sellSuccessCount = sellTerminalValues.filter(v => v > initialValue).length;
+    const sellSuccessRate = (sellSuccessCount / iterations) * 100;
+
+    // Calculate depletion probability
+    const sellDepletedCount = sellIterationResults.filter(r => r.depleted).length;
+    const sellDepletionProbability = (sellDepletedCount / iterations) * 100;
+
+    // Calculate percentiles
+    const sellPercentiles = {
+      p10: percentile(sellTerminalValues, 10),
+      p25: percentile(sellTerminalValues, 25),
+      p50: percentile(sellTerminalValues, 50),
+      p75: percentile(sellTerminalValues, 75),
+      p90: percentile(sellTerminalValues, 90),
+    };
+
+    // Calculate tax metrics
+    const capitalGainsTaxes = sellIterationResults.map(r => r.totalCapitalGainsTaxes);
+    const dividendTaxes = sellIterationResults.map(r => r.totalDividendTaxes);
+    const totalTaxes = sellIterationResults.map(r => r.totalCapitalGainsTaxes + r.totalDividendTaxes);
+
+    const sellTaxes = {
+      medianCapitalGains: percentile(capitalGainsTaxes, 50),
+      medianDividend: percentile(dividendTaxes, 50),
+      medianTotal: percentile(totalTaxes, 50),
+    };
+
+    // Calculate yearly percentiles across all iterations
+    const sellYearlyPercentiles: YearlyPercentiles[] = [];
+    for (let year = 0; year <= timeHorizon; year++) {
+      const yearValues = sellYearlyValues
+        .map(iterYearly => iterYearly[year])
+        .filter(v => v !== undefined);
+
+      sellYearlyPercentiles.push({
+        year,
+        p10: percentile(yearValues, 10),
+        p25: percentile(yearValues, 25),
+        p50: percentile(yearValues, 50),
+        p75: percentile(yearValues, 75),
+        p90: percentile(yearValues, 90),
+      });
+    }
+
+    sellStrategyOutput = {
+      terminalValues: sellTerminalValues,
+      successRate: sellSuccessRate,
+      percentiles: sellPercentiles,
+      taxes: sellTaxes,
+      depletionProbability: sellDepletionProbability,
+      yearlyPercentiles: sellYearlyPercentiles,
+    };
+
+    console.log('[MC Debug] Sell strategy results:', {
+      successRate: sellSuccessRate.toFixed(1) + '%',
+      depletionProbability: sellDepletionProbability.toFixed(1) + '%',
+      medianTerminal: sellPercentiles.p50.toFixed(0),
+      medianTaxes: sellTaxes.medianTotal.toFixed(0),
+    });
+  }
+
   return {
     terminalValues,
     yearlyPercentiles,
@@ -560,6 +657,7 @@ export async function runMonteCarlo(
     marginCallStats,
     estateAnalysis,
     debugStats,
+    sellStrategy: sellStrategyOutput,
   };
 }
 
