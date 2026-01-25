@@ -449,6 +449,24 @@ export interface SBLOCDebugStats {
     survivorshipBias: number;
     volatilityScaling: number;
   }[];
+  /**
+   * Path-coherent percentile extraction info (Phase 23-09)
+   * Shows which simulation index represents each percentile line
+   */
+  pathCoherentPercentiles?: {
+    /** Simulation index for P10 (poor outcome) */
+    p10SimIndex: number;
+    /** Terminal value of P10 simulation */
+    p10TerminalValue: number;
+    /** Simulation index for P50 (median outcome) */
+    p50SimIndex: number;
+    /** Terminal value of P50 simulation */
+    p50TerminalValue: number;
+    /** Simulation index for P90 (good outcome) */
+    p90SimIndex: number;
+    /** Terminal value of P90 simulation */
+    p90TerminalValue: number;
+  };
 }
 
 /**

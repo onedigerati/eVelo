@@ -672,6 +672,15 @@ export async function runMonteCarlo(
           volatilityScaling: params.volatilityScaling,
         };
       }) : undefined,
+      // Path-coherent percentile info (Phase 23-09)
+      pathCoherentPercentiles: {
+        p10SimIndex: simulationIndices.p10,
+        p10TerminalValue: terminalValues[simulationIndices.p10],
+        p50SimIndex: simulationIndices.p50,
+        p50TerminalValue: terminalValues[simulationIndices.p50],
+        p90SimIndex: simulationIndices.p90,
+        p90TerminalValue: terminalValues[simulationIndices.p90],
+      },
     };
   } else if (resamplingMethod === 'fat-tail') {
     // Build minimal debug stats for fat-tail method (without SBLOC)
@@ -714,6 +723,15 @@ export async function runMonteCarlo(
           volatilityScaling: params.volatilityScaling,
         };
       }),
+      // Path-coherent percentile info (Phase 23-09)
+      pathCoherentPercentiles: {
+        p10SimIndex: simulationIndices.p10,
+        p10TerminalValue: terminalValues[simulationIndices.p10],
+        p50SimIndex: simulationIndices.p50,
+        p50TerminalValue: terminalValues[simulationIndices.p50],
+        p90SimIndex: simulationIndices.p90,
+        p90TerminalValue: terminalValues[simulationIndices.p90],
+      },
     };
   }
 

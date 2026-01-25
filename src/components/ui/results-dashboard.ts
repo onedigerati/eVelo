@@ -2396,6 +2396,52 @@ export class ResultsDashboard extends BaseComponent {
     lines.push(`  Iterations:         ${config?.iterations?.toLocaleString() ?? 'N/A'}`);
     lines.push('');
 
+    // Phase 23: Methodology Configuration
+    lines.push('▸ METHODOLOGY (Phase 23 Alignment)');
+    const resamplingMethod = config?.resamplingMethod ?? 'simple';
+    const methodLabels: Record<string, string> = {
+      'simple': 'Simple Bootstrap (correlated year sampling)',
+      'block': 'Block Bootstrap (correlated, preserves autocorrelation)',
+      'regime': '4-Regime Switching (bull/bear/crash/recovery)',
+      'fat-tail': 'Fat-Tail Model (Student\'s t-distribution)',
+    };
+    lines.push(`  Return Model:       ${methodLabels[resamplingMethod] || resamplingMethod}`);
+
+    // Regime-specific info
+    if (resamplingMethod === 'regime') {
+      const calibMode = config?.regimeCalibration ?? 'historical';
+      const biasAmount = calibMode === 'conservative' ? '2.0%' : '1.5%';
+      lines.push(`  Calibration Mode:   ${calibMode} (survivorship bias: ${biasAmount})`);
+    }
+
+    // Withdrawal chapters
+    if (config?.withdrawalChapters?.enabled) {
+      const ch = config.withdrawalChapters;
+      lines.push(`  Withdrawal Chapters: ENABLED`);
+      if (ch.chapter2) {
+        lines.push(`    Chapter 2: -${ch.chapter2.reductionPercent}% at year ${ch.chapter2.yearsAfterStart} after withdrawals start`);
+      }
+      if (ch.chapter3) {
+        lines.push(`    Chapter 3: -${ch.chapter3.reductionPercent}% at year ${ch.chapter3.yearsAfterStart} after withdrawals start`);
+      }
+      // Calculate cumulative reduction
+      let cumMult = 1.0;
+      if (ch.chapter2) cumMult *= (1 - ch.chapter2.reductionPercent / 100);
+      if (ch.chapter3) cumMult *= (1 - ch.chapter3.reductionPercent / 100);
+      lines.push(`    Cumulative:  Final withdrawal = ${(cumMult * 100).toFixed(1)}% of base`);
+    } else {
+      lines.push(`  Withdrawal Chapters: disabled`);
+    }
+
+    // Tax modeling for BBD dividend borrowing
+    if (config?.taxModeling?.enabled && !config.taxModeling.taxAdvantaged) {
+      lines.push(`  BBD Dividend Tax:   BORROWING enabled`);
+      lines.push(`    Yield: ${(config.taxModeling.dividendYield * 100).toFixed(1)}%, Rate: ${(config.taxModeling.ordinaryTaxRate * 100).toFixed(0)}%`);
+    } else {
+      lines.push(`  BBD Dividend Tax:   disabled (tax-advantaged or off)`);
+    }
+    lines.push('');
+
     // Raw Statistics
     lines.push('▸ RAW STATISTICS (from simulation)');
     lines.push(`  stats.median:       $${stats.median.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
@@ -2602,13 +2648,17 @@ export class ResultsDashboard extends BaseComponent {
 
       // Regime parameters (if regime method was used)
       if (ds.regimeParameters && ds.regimeParameters.length > 0) {
-        lines.push(`  REGIME PARAMETERS (calibration: ${ds.calibrationMode || 'unknown'}):`);
+        lines.push(`  REGIME PARAMETERS (4-regime, calibration: ${ds.calibrationMode || 'unknown'}):`);
         for (const asset of ds.regimeParameters) {
           const fallbackNote = asset.usedFallback ? ' ⚠️ FALLBACK TO DEFAULTS' : '';
           lines.push(`    ${asset.assetId}:${fallbackNote}`);
-          lines.push(`      Bull:  mean=${(asset.bull.mean * 100).toFixed(1)}%, stddev=${(asset.bull.stddev * 100).toFixed(1)}%`);
-          lines.push(`      Bear:  mean=${(asset.bear.mean * 100).toFixed(1)}%, stddev=${(asset.bear.stddev * 100).toFixed(1)}%`);
-          lines.push(`      Crash: mean=${(asset.crash.mean * 100).toFixed(1)}%, stddev=${(asset.crash.stddev * 100).toFixed(1)}%`);
+          lines.push(`      Bull:     mean=${(asset.bull.mean * 100).toFixed(1)}%, stddev=${(asset.bull.stddev * 100).toFixed(1)}%`);
+          lines.push(`      Bear:     mean=${(asset.bear.mean * 100).toFixed(1)}%, stddev=${(asset.bear.stddev * 100).toFixed(1)}%`);
+          lines.push(`      Crash:    mean=${(asset.crash.mean * 100).toFixed(1)}%, stddev=${(asset.crash.stddev * 100).toFixed(1)}%`);
+          // Phase 23-02: Display recovery regime (4th state)
+          if (asset.recovery) {
+            lines.push(`      Recovery: mean=${(asset.recovery.mean * 100).toFixed(1)}%, stddev=${(asset.recovery.stddev * 100).toFixed(1)}%`);
+          }
           if (asset.validationIssues && asset.validationIssues.length > 0) {
             for (const issue of asset.validationIssues) {
               lines.push(`      ⚠️ ${issue}`);
@@ -2617,6 +2667,58 @@ export class ResultsDashboard extends BaseComponent {
         }
         lines.push('');
       }
+
+      // Fat-tail parameters (if fat-tail method was used)
+      if (ds.fatTailParameters && ds.fatTailParameters.length > 0) {
+        lines.push(`  FAT-TAIL PARAMETERS (Student's t-distribution):`);
+        for (const asset of ds.fatTailParameters) {
+          lines.push(`    ${asset.assetId} (${asset.assetClass}):`);
+          lines.push(`      Degrees of Freedom: ${asset.degreesOfFreedom} (lower = fatter tails)`);
+          lines.push(`      Skew Multiplier:    ${asset.skewMultiplier}`);
+          lines.push(`      Survivorship Bias:  ${(asset.survivorshipBias * 100).toFixed(1)}%`);
+          lines.push(`      Volatility Scaling: ${asset.volatilityScaling}`);
+        }
+        lines.push('');
+      }
+
+      // Path-coherent percentile extraction info (Phase 23-09)
+      if (ds.pathCoherentPercentiles) {
+        const pcp = ds.pathCoherentPercentiles;
+        lines.push(`  PATH-COHERENT PERCENTILES (simulation indices):`);
+        lines.push(`    Each percentile line = ONE complete simulation journey`);
+        lines.push(`    P10 (poor):   Simulation #${pcp.p10SimIndex.toLocaleString()} → $${pcp.p10TerminalValue.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+        lines.push(`    P50 (median): Simulation #${pcp.p50SimIndex.toLocaleString()} → $${pcp.p50TerminalValue.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+        lines.push(`    P90 (good):   Simulation #${pcp.p90SimIndex.toLocaleString()} → $${pcp.p90TerminalValue.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+        lines.push('');
+      }
+
+      // BBD Dividend Tax Borrowing (Phase 23-06)
+      if (ds.dividendTaxesBorrowed && ds.dividendTaxesBorrowed.median > 0) {
+        lines.push(`  BBD DIVIDEND TAX BORROWING:`);
+        lines.push(`    Median Borrowed:  $${ds.dividendTaxesBorrowed.median.toLocaleString(undefined, {maximumFractionDigits: 0})} (these taxes are "in the loan")`);
+        lines.push(`    Max Borrowed:     $${ds.dividendTaxesBorrowed.max.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+        lines.push(`    ↳ BBD borrows via SBLOC, portfolio stays whole`);
+        lines.push(`    ↳ Sell liquidates same amount, reduces compound growth`);
+        lines.push('');
+      }
+    }
+
+    // Integrated Sell Strategy Results (Phase 23-05)
+    if (data.sellStrategy) {
+      const sell = data.sellStrategy;
+      lines.push('▸ INTEGRATED SELL STRATEGY (1-per-iteration, same returns as BBD)');
+      lines.push(`  Iterations:         ${sell.terminalValues.length.toLocaleString()} (same as BBD)`);
+      lines.push(`  Success Rate:       ${sell.successRate.toFixed(1)}%`);
+      lines.push(`  Depletion Prob:     ${sell.depletionProbability.toFixed(1)}%`);
+      lines.push(`  Terminal Values:`);
+      lines.push(`    P10: $${sell.percentiles.p10.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    P50: $${sell.percentiles.p50.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    P90: $${sell.percentiles.p90.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`  Taxes (lifetime):`);
+      lines.push(`    Capital Gains:    $${sell.taxes.medianCapitalGains.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Dividend:         $${sell.taxes.medianDividend.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Total:            $${sell.taxes.medianTotal.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push('');
     }
 
     lines.push('═══════════════════════════════════════════════════════════════');
