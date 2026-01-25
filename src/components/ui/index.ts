@@ -4,6 +4,7 @@
  */
 
 // Layout Components
+export { AppHeader } from './app-header';
 export { SidebarPanel } from './sidebar-panel';
 export { ParamSection } from './param-section';
 export { MainLayout } from './main-layout';
