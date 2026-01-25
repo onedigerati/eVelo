@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 23 of 23 (Reference Methodology Alignment)
-Plan: 02 of 09
+Plan: 05 of 09
 Status: In progress
-Last activity: 2026-01-25 — Completed 23-02-PLAN.md (4-Regime System with Recovery State)
+Last activity: 2026-01-25 — Completed 23-05-PLAN.md (Align Sell Strategy with BBD Iteration)
 
-Progress: ████████████████████████████████████████ 89% (93/105 plans complete)
+Progress: ████████████████████████████████████████ 90% (95/105 plans complete)
 
 **Current Phase:**
 Phase 23: Reference Methodology Alignment - 4-regime market model with recovery state
@@ -22,9 +22,9 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 93
-- Average duration: 3.6 min
-- Total execution time: 340 min
+- Total plans completed: 95
+- Average duration: 3.8 min
+- Total execution time: 357 min
 
 **By Phase:**
 
@@ -52,10 +52,10 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 | 20-financial-calculation-audit | 2/9 | 6 min | 3.0 min |
 | 21-header-redesign | 1/1 | 4 min | 4.0 min |
 | 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
-| 23-reference-methodology-alignment | 2/9 | 9 min | 4.5 min |
+| 23-reference-methodology-alignment | 5/9 | 26 min | 5.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 22-01 (3 min), 22-02 (4 min), 23-01 (4 min), 23-02 (5 min)
+- Last 5 plans: 23-01 (4 min), 23-02 (5 min), 23-03 (8 min), 23-05 (9 min)
 - Trend: Phase 23 in progress - Reference methodology alignment
 
 ## Accumulated Context
@@ -527,6 +527,12 @@ Recent decisions affecting current work:
 - VIZ-01 and VIZ-06 affected by GAP-01 but visualization code itself is correct
 - Total 4 gaps found: 1 HIGH (GAP-01), 2 MEDIUM (GAP-02, GAP-VIZ-07), 1 LOW (VIZ-04)
 - Comprehensive gap findings document with 11 sections (resolution priority, test recommendations, metadata)
+
+**From 23-03:**
+- Student's t-distribution with asset-class specific degrees of freedom for tail fatness
+- Return clamping to [-0.99, +10.0] to prevent extreme outliers in simulation
+- Survivorship bias adjustment varies by asset class (0.5% equity stock, 0.2% equity index)
+- Cholesky decomposition for correlated multivariate fat-tail returns
 
 ### Pending Todos
 
