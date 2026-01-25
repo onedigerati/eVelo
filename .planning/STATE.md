@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 20 - Financial Calculation Audit
+**Current focus:** Phase 21 - Header Redesign
 
 ## Current Position
 
-Phase: 20 of 20 (Financial Calculation Audit)
-Plan: 10 of 11
+Phase: 21 of 21 (Header Redesign)
+Plan: 01 of 02
 Status: In progress
-Last activity: 2026-01-25 — Completed 20-10-PLAN.md (Sell Strategy UI Configuration)
+Last activity: 2026-01-25 — Completed 21-01-PLAN.md (Create App Header Component)
 
-Progress: █████████████████████████████████████████░░░ 97% (88/91 plans complete)
+Progress: ██████████████████████████████████████████░░ 98% (89/91 plans complete)
 
 **Current Phase:**
-Phase 20: Financial Calculation Audit - Comprehensive verification of all 13 identified risk areas
+Phase 21: Header Redesign - Professional branding with wordmark, tagline, and responsive styling
 
 ## Performance Metrics
 
@@ -387,6 +387,12 @@ Recent decisions affecting current work:
   - 13 risk areas identified across all calculation modules
   - Critical issues: hardcoded cost basis (40%), dividend yield (2%), 10-scenario Sell limitation
   - Goal: High confidence in calculation accuracy across all dashboard outputs
+
+- Phase 21 added: Header Redesign
+  - User request: Enhance header to match reference application aesthetics
+  - Goals: Elegant branding, professional typography, responsive mobile experience
+  - Inspiration: Reference app's centered title, tagline, icon button grouping
+  - Key improvements: Logo/wordmark, value proposition tagline, refined button styling
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -825,10 +831,19 @@ None
 - SBLOC validation tests cover NaN, Infinity, negative edge cases
 - All tests pass in <250ms
 
+**From 21-01:**
+- AppHeader component with branded wordmark (lightning icon + eVelo title)
+- Tagline "Tax-Efficient Portfolio Strategy Simulator" with 0.9 opacity
+- Slot pattern for action buttons with pre-styled hover/focus states
+- Fluid typography using clamp() for responsive sizing
+- Responsive: tagline hidden at 768px breakpoint, reduced padding
+- Dark theme via :host-context([data-theme="dark"]) selector
+- HTML entity (&#9889;) for lightning bolt instead of direct emoji
+
 ## Session Continuity
 
-Last session: 2026-01-25T18:14:30Z
-Stopped at: Completed 20-09-PLAN.md (Unit Testing Setup)
+Last session: 2026-01-25T01:19:20Z
+Stopped at: Completed 21-01-PLAN.md (Create App Header Component)
 Resume file: None
 
-**Phase 20 in progress - Financial Calculation Audit (87/91 plans complete)**
+**Phase 21 in progress - Header Redesign (89/91 plans complete)**
