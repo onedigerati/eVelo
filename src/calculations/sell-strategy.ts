@@ -212,6 +212,34 @@ export function calculateSellStrategy(
   const dividendYield = config.dividendYield ?? DEFAULT_SELL_CONFIG.dividendYield;
   const dividendTaxRate = config.dividendTaxRate ?? DEFAULT_SELL_CONFIG.dividendTaxRate;
 
+  // Validate and log configuration for debugging
+  if (import.meta.env?.DEV) {
+    console.debug('Sell strategy config:', {
+      costBasisRatio,
+      dividendYield,
+      capitalGainsRate,
+      dividendTaxRate,
+      annualWithdrawal,
+      timeHorizon,
+    });
+  }
+
+  // Validate cost basis ratio is in valid range
+  if (costBasisRatio < 0 || costBasisRatio > 1) {
+    console.warn(
+      `Invalid costBasisRatio ${costBasisRatio}, should be 0-1. ` +
+      `Using default ${DEFAULT_SELL_CONFIG.costBasisRatio}`
+    );
+  }
+
+  // Validate dividend yield is reasonable
+  if (dividendYield < 0 || dividendYield > 0.15) {
+    console.warn(
+      `Unusual dividendYield ${(dividendYield * 100).toFixed(1)}%, ` +
+      `typical range is 0-10%`
+    );
+  }
+
   // Extract growth rates from yearly percentiles (using median path)
   const growthRates = extractGrowthRates(yearlyPercentiles);
 
