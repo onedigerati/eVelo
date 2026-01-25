@@ -186,6 +186,29 @@ export async function runMonteCarlo(
     } else {
       console.log(`[MC] Dividend tax modeling disabled (tax-advantaged account or taxes disabled)`);
     }
+
+    // Log withdrawal chapter configuration
+    if (config.withdrawalChapters?.enabled) {
+      console.log(`[MC] Withdrawal chapters enabled (multi-phase strategy)`);
+      if (config.withdrawalChapters.chapter2) {
+        const ch2Year = config.withdrawalChapters.chapter2.yearsAfterStart;
+        const ch2Pct = config.withdrawalChapters.chapter2.reductionPercent;
+        console.log(`[MC]   Chapter 2: Reduce by ${ch2Pct}% at year ${sblocWithdrawalStartYear + ch2Year} (${ch2Year} years after withdrawal start)`);
+      }
+      if (config.withdrawalChapters.chapter3) {
+        const ch3Year = config.withdrawalChapters.chapter3.yearsAfterStart;
+        const ch3Pct = config.withdrawalChapters.chapter3.reductionPercent;
+        console.log(`[MC]   Chapter 3: Reduce by ${ch3Pct}% at year ${sblocWithdrawalStartYear + ch3Year} (${ch3Year} years after withdrawal start)`);
+      }
+      if (config.withdrawalChapters.chapter2 && config.withdrawalChapters.chapter3) {
+        const ch2Mult = 1 - (config.withdrawalChapters.chapter2.reductionPercent / 100);
+        const ch3Mult = 1 - (config.withdrawalChapters.chapter3.reductionPercent / 100);
+        const cumulativeMult = ch2Mult * ch3Mult;
+        console.log(`[MC]   Cumulative reduction: ${((1 - cumulativeMult) * 100).toFixed(1)}% (final withdrawal = ${(cumulativeMult * 100).toFixed(1)}% of base)`);
+      }
+    } else {
+      console.log(`[MC] Withdrawal chapters disabled (constant withdrawal pattern)`);
+    }
   }
 
   if (config.sellStrategy) {
@@ -244,7 +267,7 @@ export async function runMonteCarlo(
 
         // SBLOC simulation step (if enabled)
         if (config.sbloc && sblocStates && marginCallYears) {
-          // Calculate effective withdrawal for this year (with annual raises)
+          // Calculate effective withdrawal for this year (with annual raises and chapters)
           // Note: We compute effectiveWithdrawal externally (using sblocRaiseRate growth)
           // rather than using the SBLOC engine's withdrawalGrowthRate. This keeps the
           // engine stateless - it just uses the withdrawal amount we pass each year.
@@ -254,9 +277,17 @@ export async function runMonteCarlo(
           // Year 0: baseWithdrawal * (1+r)^0 = baseWithdrawal
           // Year 1: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
           const yearsOfWithdrawals = Math.max(0, year - sblocWithdrawalStartYear);
-          const effectiveWithdrawal = year >= sblocWithdrawalStartYear
+          let effectiveWithdrawal = year >= sblocWithdrawalStartYear
             ? sblocBaseWithdrawal * Math.pow(1 + sblocRaiseRate, yearsOfWithdrawals)
             : 0;
+
+          // Apply chapter multiplier for multi-phase withdrawal strategies
+          const chapterMultiplier = calculateChapterMultiplier(
+            config.withdrawalChapters,
+            year,
+            sblocWithdrawalStartYear
+          );
+          effectiveWithdrawal *= chapterMultiplier;
 
           // Shared SBLOC engine config for this year
           // Note: compoundingFrequency is 'annual' here; stepSBLOCYear adjusts to 'monthly'
@@ -1096,4 +1127,49 @@ function calculateCumulativeWithdrawalAtYear(
   }
 
   return cumulative;
+}
+
+/**
+ * Calculate chapter multiplier for multi-phase withdrawal strategies
+ *
+ * Returns a multiplier (0-1+) based on which chapters are currently active.
+ * Chapters reduce withdrawals at specified years to model lifestyle changes.
+ *
+ * IMPORTANT: Multipliers are CUMULATIVE. If Chapter 2 reduces by 25% and Chapter 3
+ * reduces by 25%, the final multiplier is 0.75 * 0.75 = 0.5625 (56.25% of base).
+ *
+ * @param config Withdrawal chapters configuration
+ * @param currentYear Current simulation year (0-indexed)
+ * @param withdrawalStartYear Year when withdrawals begin (0-indexed)
+ * @returns Multiplier to apply to withdrawal (1.0 = no change, 0.75 = 25% reduction)
+ */
+function calculateChapterMultiplier(
+  config: SimulationConfig['withdrawalChapters'],
+  currentYear: number,
+  withdrawalStartYear: number
+): number {
+  // If chapters not enabled, return 1.0 (no change)
+  if (!config || !config.enabled) {
+    return 1.0;
+  }
+
+  // Calculate years since withdrawal started
+  const yearsSinceWithdrawalStart = Math.max(0, currentYear - withdrawalStartYear);
+
+  // Start with full withdrawal (multiplier = 1.0)
+  let multiplier = 1.0;
+
+  // Apply Chapter 2 reduction if active
+  if (config.chapter2 && yearsSinceWithdrawalStart >= config.chapter2.yearsAfterStart) {
+    const chapter2Multiplier = 1 - (config.chapter2.reductionPercent / 100);
+    multiplier *= chapter2Multiplier;
+  }
+
+  // Apply Chapter 3 reduction if active (cumulative with Chapter 2)
+  if (config.chapter3 && yearsSinceWithdrawalStart >= config.chapter3.yearsAfterStart) {
+    const chapter3Multiplier = 1 - (config.chapter3.reductionPercent / 100);
+    multiplier *= chapter3Multiplier;
+  }
+
+  return multiplier;
 }
