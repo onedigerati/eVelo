@@ -916,8 +916,47 @@ None
 - PathCoherentResult interface documents methodology in return type
 - Point-wise calculateYearlyPercentiles kept for reference with detailed JSDoc
 
+**Phase 23 Debug Panel Verification (post-execution enhancement):**
+Added comprehensive debug outputs to verify all Phase 23 methodology implementations:
+
+**METHODOLOGY section (new):**
+- Return model with description (simple/block/regime/fat-tail)
+- Regime calibration mode + survivorship bias percentage (1.5% historical, 2.0% conservative)
+- Withdrawal chapters config with cumulative reduction calculation
+- BBD dividend tax borrowing status with yield/rate
+
+**SBLOC DIAGNOSTIC DETAILS (enhanced):**
+- 4-Regime parameters now show Recovery regime (4th state) per asset
+- Fat-tail parameters: degrees of freedom, skew multiplier, survivorship bias, volatility scaling
+- Path-coherent percentiles: simulation indices (e.g., "P10: Simulation #572 → $365,194")
+- BBD dividend tax borrowing: median/max borrowed with BBD vs Sell explanation
+
+**INTEGRATED SELL STRATEGY section (new):**
+- Shows 1-per-iteration alignment (same count as BBD)
+- Success rate and depletion probability
+- Terminal percentiles (P10/P50/P90)
+- Tax breakdown: capital gains + dividend taxes separately
+
+**Verification steps:**
+1. Regime mode → check Recovery regime appears in parameters
+2. Conservative calibration → check 2.0% survivorship bias
+3. Enable chapters → check cumulative reduction math
+4. Enable tax modeling → check dividend tax borrowing amounts
+5. Fat-tail mode → check degrees of freedom per asset class
+6. Path-coherent → verify simulation indices for P10/P50/P90
+7. Sell strategy → verify same iteration count as BBD
+
+Files modified: results-dashboard.ts, monte-carlo.ts, types.ts
+Commit: 752a7e4
+
 ## Session Continuity
 
-Last session: 2026-01-25T23:30:00Z
-Stopped at: Completed Phase 23 (Reference Methodology Alignment) - all 9 plans verified
+Last session: 2026-01-25T17:40:00Z
+Stopped at: Added debug panel verification outputs for Phase 23 methodology
 Resume file: None
+
+**To resume:**
+- Phase 23 complete and verified (10/10 must-haves)
+- Debug panel enhanced with Phase 23 verification outputs
+- Remaining phases: 10 (PWA), 20 (Financial Audit), 21 (Header Redesign)
+- Next recommended: `/gsd:execute-phase 20` or `/gsd:progress` to check status
