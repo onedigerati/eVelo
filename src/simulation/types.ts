@@ -374,6 +374,12 @@ export interface SBLOCDebugStats {
     median: number;
     mean: number;
   };
+  /** Total dividend taxes borrowed (BBD advantage: borrow vs liquidate) */
+  dividendTaxesBorrowed: {
+    median: number;
+    mean: number;
+    max: number;
+  };
   /** Final gross portfolio values (before loan subtraction) */
   finalGrossPortfolio: {
     median: number;

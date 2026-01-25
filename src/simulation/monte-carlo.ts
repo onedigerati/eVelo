@@ -50,7 +50,11 @@ import type {
   RegimeParamsMap,
   SellStrategyOutput,
 } from './types';
-import { DEFAULT_REGIME_PARAMS, FAT_TAIL_PARAMS } from './types';
+import {
+  DEFAULT_REGIME_PARAMS,
+  FAT_TAIL_PARAMS,
+  CONSERVATIVE_TRANSITION_MATRIX,
+} from './types';
 
 /** Batch size for progress reporting */
 const BATCH_SIZE = 1000;
@@ -146,6 +150,7 @@ export async function runMonteCarlo(
   let marginCallCounts: number[] | null = null; // Total margin calls per iteration
   let totalHaircutLosses: number[] | null = null; // Total haircut losses per iteration
   let totalInterestCharged: number[] | null = null; // Total interest charged per iteration
+  let totalDividendTaxesBorrowed: number[] | null = null; // Total dividend taxes borrowed per iteration
 
   // SBLOC configuration values (extracted for use in year loop)
   const sblocBaseWithdrawal = config.sbloc?.annualWithdrawal ?? 0;
@@ -166,8 +171,21 @@ export async function runMonteCarlo(
     marginCallCounts = new Array(iterations).fill(0);
     totalHaircutLosses = new Array(iterations).fill(0);
     totalInterestCharged = new Array(iterations).fill(0);
+    totalDividendTaxesBorrowed = new Array(iterations).fill(0);
     iterationReturns = new Array(iterations).fill(0);
     firstFailureYear = new Array(iterations).fill(-1);
+
+    // Log dividend tax configuration
+    const dividendTaxEnabled = config.taxModeling?.enabled && !config.taxModeling?.taxAdvantaged;
+    if (dividendTaxEnabled) {
+      const divYield = (config.taxModeling!.dividendYield * 100).toFixed(2);
+      const divTaxRate = (config.taxModeling!.ordinaryTaxRate * 100).toFixed(1);
+      console.log(`[MC] BBD dividend tax borrowing enabled: ${divYield}% yield × ${divTaxRate}% tax rate`);
+      console.log(`[MC] BBD borrows to pay dividend taxes (portfolio stays whole)`);
+      console.log(`[MC] Sell strategy liquidates to pay same taxes (reduces compound growth)`);
+    } else {
+      console.log(`[MC] Dividend tax modeling disabled (tax-advantaged account or taxes disabled)`);
+    }
   }
 
   if (config.sellStrategy) {
@@ -243,6 +261,18 @@ export async function runMonteCarlo(
           // Shared SBLOC engine config for this year
           // Note: compoundingFrequency is 'annual' here; stepSBLOCYear adjusts to 'monthly'
           // internally when config.sbloc.monthlyWithdrawal is true
+          //
+          // Dividend tax handling:
+          // If tax modeling is enabled and account is taxable, BBD borrows via SBLOC to pay
+          // dividend taxes. This preserves compound growth on the full portfolio value.
+          // Sell strategy must liquidate to pay the same taxes (reduces compound growth).
+          const dividendYield = config.taxModeling?.enabled && !config.taxModeling?.taxAdvantaged
+            ? (config.taxModeling.dividendYield ?? 0)
+            : 0;
+          const dividendTaxRate = config.taxModeling?.enabled && !config.taxModeling?.taxAdvantaged
+            ? (config.taxModeling.ordinaryTaxRate ?? 0)
+            : 0;
+
           const sblocConfig: SBLOCEngineConfig = {
             annualInterestRate: config.sbloc.interestRate,
             maxLTV: config.sbloc.targetLTV, // Margin call triggers when LTV exceeds target (e.g., 65%)
@@ -251,6 +281,8 @@ export async function runMonteCarlo(
             annualWithdrawal: effectiveWithdrawal,
             compoundingFrequency: 'annual',
             startYear: sblocWithdrawalStartYear,
+            dividendYield,
+            dividendTaxRate,
           };
 
           // Get current SBLOC state or initialize
@@ -286,6 +318,9 @@ export async function runMonteCarlo(
           }
           if (totalInterestCharged) {
             totalInterestCharged[i] += yearResult.interestCharged;
+          }
+          if (totalDividendTaxesBorrowed) {
+            totalDividendTaxesBorrowed[i] += yearResult.dividendTaxBorrowed;
           }
 
           // Track first failure year
@@ -519,7 +554,7 @@ export async function runMonteCarlo(
 
   // Build debug stats if SBLOC is enabled
   let debugStats: SimulationOutput['debugStats'];
-  if (config.sbloc && marginCallCounts && totalHaircutLosses && totalInterestCharged && sblocStates && iterationReturns && firstFailureYear) {
+  if (config.sbloc && marginCallCounts && totalHaircutLosses && totalInterestCharged && totalDividendTaxesBorrowed && sblocStates && iterationReturns && firstFailureYear) {
     const mcCounts = marginCallCounts;
     const finalGrossPortfolios = sblocStates.map(states => states[timeHorizon - 1]?.portfolioValue ?? 0);
 
@@ -547,6 +582,11 @@ export async function runMonteCarlo(
       interestCharged: {
         median: percentile(totalInterestCharged, 50),
         mean: mean(totalInterestCharged),
+      },
+      dividendTaxesBorrowed: {
+        median: percentile(totalDividendTaxesBorrowed, 50),
+        mean: mean(totalDividendTaxesBorrowed),
+        max: Math.max(...totalDividendTaxesBorrowed),
       },
       finalGrossPortfolio: {
         median: percentile(finalGrossPortfolios, 50),
@@ -610,6 +650,11 @@ export async function runMonteCarlo(
       interestCharged: {
         median: 0,
         mean: 0,
+      },
+      dividendTaxesBorrowed: {
+        median: 0,
+        mean: 0,
+        max: 0,
       },
       finalGrossPortfolio: {
         median: 0,
@@ -729,15 +774,29 @@ function generateIterationReturns(
 
   if (method === 'regime') {
     // Use regime-switching with correlation and calibrated params
+    const calibrationMode = regimeCalibration ?? 'historical';
+
+    // Log survivorship bias application and transition matrix selection
+    const bias = calibrationMode === 'conservative' ? '2.0%' : '1.5%';
+    const matrixType = calibrationMode === 'conservative' ? 'conservative' : 'historical';
+    console.log(`[Regime] Applying ${bias} survivorship bias adjustment (${calibrationMode} mode)`);
+    console.log(`[Regime] Using ${matrixType} transition matrix`);
+
+    // Use conservative transition matrix when in conservative mode
+    const transitionMatrix = calibrationMode === 'conservative'
+      ? CONSERVATIVE_TRANSITION_MATRIX
+      : undefined; // undefined means use default (historical) matrix
+
     const { returns } = generateCorrelatedRegimeReturns(
       years,
       numAssets,
       portfolio.correlationMatrix,
       rng,
       'bull', // initialRegime
-      undefined, // matrix (use default)
+      transitionMatrix,
       undefined, // shared params (not used when assetRegimeParams provided)
-      assetRegimeParams
+      assetRegimeParams,
+      calibrationMode
     );
     return returns;
   }
