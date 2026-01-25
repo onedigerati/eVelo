@@ -75,9 +75,6 @@ export class MainLayout extends BaseComponent {
         display: flex;
         align-items: center;
         gap: var(--spacing-md, 16px);
-        padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
-        border-bottom: 1px solid var(--border-color, #e2e8f0);
-        background: var(--surface-primary, #ffffff);
       }
 
       .mobile-menu-btn {
@@ -86,16 +83,17 @@ export class MainLayout extends BaseComponent {
         border: none;
         font-size: 1.5rem;
         cursor: pointer;
-        padding: var(--spacing-xs, 4px);
-        color: var(--text-primary, #1e293b);
+        padding: var(--spacing-sm, 8px);
+        color: var(--text-inverse, #ffffff);
+        border-radius: var(--border-radius-sm, 4px);
       }
 
       .mobile-menu-btn:hover {
-        color: var(--color-primary, #0d9488);
+        background: rgba(255, 255, 255, 0.15);
       }
 
       .mobile-menu-btn:focus-visible {
-        outline: 2px solid var(--color-primary, #0d9488);
+        outline: 2px solid var(--text-inverse, #ffffff);
         outline-offset: 2px;
       }
 
