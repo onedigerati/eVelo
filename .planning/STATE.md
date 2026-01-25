@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 20 of 20 (Financial Calculation Audit)
-Plan: 8 of 11
+Plan: 9 of 11
 Status: In progress
-Last activity: 2026-01-25 — Completed 20-04-PLAN.md (Wire Configurable Sell Config)
+Last activity: 2026-01-25 — Completed 20-09-PLAN.md (Unit Testing Setup)
 
-Progress: ████████████████████████████████████████░░░░ 94% (86/91 plans complete)
+Progress: █████████████████████████████████████████░░░ 96% (87/91 plans complete)
 
 **Current Phase:**
 Phase 20: Financial Calculation Audit - Comprehensive verification of all 13 identified risk areas
@@ -816,10 +816,19 @@ None
 - SellYearlyAnalysisTable component with orange tax column for cost emphasis
 - Table uses sbloc-section class (only visible when BBD comparison relevant)
 
+**From 20-09:**
+- Vitest 4.0.18 installed for unit testing (native ESM, Vite integration)
+- Test file pattern: src/**/__tests__/*.test.ts
+- npm scripts: test (run), test:watch (dev), test:ui (browser UI)
+- 27 unit tests: 9 sell strategy + 18 SBLOC validation
+- Sell strategy tests verify success rate definition (terminal > initial)
+- SBLOC validation tests cover NaN, Infinity, negative edge cases
+- All tests pass in <250ms
+
 ## Session Continuity
 
-Last session: 2026-01-25T00:13:24Z
-Stopped at: Completed 20-04-PLAN.md (Wire Configurable Sell Config)
+Last session: 2026-01-25T18:14:30Z
+Stopped at: Completed 20-09-PLAN.md (Unit Testing Setup)
 Resume file: None
 
-**Phase 20 in progress - Financial Calculation Audit**
+**Phase 20 in progress - Financial Calculation Audit (87/91 plans complete)**
