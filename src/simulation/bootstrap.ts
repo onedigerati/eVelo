@@ -159,3 +159,115 @@ export function blockBootstrap(
 
   return result;
 }
+
+/**
+ * Correlated simple bootstrap resampling with shared year index
+ *
+ * Preserves cross-asset correlations by sampling the same historical year
+ * for all assets in each simulation period. This maintains the natural
+ * correlation structure present in historical data.
+ *
+ * Example: If 2008 is sampled, all assets use their 2008 returns,
+ * preserving the crisis correlation spike that occurred that year.
+ *
+ * @param assetReturns Array of historical return series (one per asset)
+ * @param targetLength Number of returns to generate
+ * @param rng Random number generator (0-1)
+ * @returns Array of resampled returns for each asset (preserving correlations)
+ */
+export function correlatedBootstrap(
+  assetReturns: number[][],
+  targetLength: number,
+  rng: () => number
+): number[][] {
+  if (assetReturns.length === 0) {
+    throw new Error('Cannot bootstrap from empty asset array');
+  }
+
+  // Find minimum historical data length across all assets
+  const minLength = Math.min(...assetReturns.map(returns => returns.length));
+
+  if (minLength === 0) {
+    throw new Error('All assets must have at least one historical return');
+  }
+
+  // Initialize result arrays for each asset
+  const results: number[][] = assetReturns.map(() => []);
+
+  // Sample targetLength years using shared year indices
+  for (let i = 0; i < targetLength; i++) {
+    // Sample a single year index that all assets will use
+    const sharedYearIndex = Math.floor(rng() * minLength);
+
+    // Apply this year's return to all assets
+    assetReturns.forEach((returns, assetIdx) => {
+      results[assetIdx].push(returns[sharedYearIndex]);
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Correlated block bootstrap resampling with shared block indices
+ *
+ * Preserves both autocorrelation (within each asset) and cross-asset
+ * correlations by sampling the same historical blocks for all assets.
+ *
+ * Use when returns have significant serial correlation AND you need
+ * to preserve cross-asset correlation structure.
+ *
+ * @param assetReturns Array of historical return series (one per asset)
+ * @param targetLength Number of returns to generate
+ * @param rng Random number generator (0-1)
+ * @param blockSize Optional fixed block size (auto-calculated from first asset if not provided)
+ * @returns Array of resampled returns for each asset (preserving both types of correlation)
+ */
+export function correlatedBlockBootstrap(
+  assetReturns: number[][],
+  targetLength: number,
+  rng: () => number,
+  blockSize?: number
+): number[][] {
+  if (assetReturns.length === 0) {
+    throw new Error('Cannot bootstrap from empty asset array');
+  }
+
+  // Find minimum historical data length across all assets
+  const minLength = Math.min(...assetReturns.map(returns => returns.length));
+
+  if (minLength === 0) {
+    throw new Error('All assets must have at least one historical return');
+  }
+
+  // Calculate or validate block size using first asset
+  const effectiveBlockSize = blockSize ?? optimalBlockLength(assetReturns[0]);
+
+  // Block size cannot exceed minimum series length
+  const safeBlockSize = Math.min(effectiveBlockSize, minLength);
+
+  if (safeBlockSize < 1) {
+    throw new Error('Block size must be at least 1');
+  }
+
+  // Initialize result arrays for each asset
+  const results: number[][] = assetReturns.map(() => []);
+
+  // Maximum starting index for a block
+  const maxStart = minLength - safeBlockSize;
+
+  // Sample blocks until we reach targetLength
+  while (results[0].length < targetLength) {
+    // Sample a single block starting position that all assets will use
+    const sharedStartIdx = maxStart > 0 ? Math.floor(rng() * (maxStart + 1)) : 0;
+
+    // Copy this block for all assets
+    for (let i = 0; i < safeBlockSize && results[0].length < targetLength; i++) {
+      assetReturns.forEach((returns, assetIdx) => {
+        results[assetIdx].push(returns[sharedStartIdx + i]);
+      });
+    }
+  }
+
+  return results;
+}

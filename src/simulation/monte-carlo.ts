@@ -13,7 +13,12 @@
 
 import seedrandom from 'seedrandom';
 import { mean, stddev, percentile } from '../math';
-import { simpleBootstrap, blockBootstrap } from './bootstrap';
+import {
+  simpleBootstrap,
+  blockBootstrap,
+  correlatedBootstrap,
+  correlatedBlockBootstrap,
+} from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
 import {
   calibrateRegimeModelWithValidation,
@@ -571,25 +576,18 @@ function generateIterationReturns(
     return returns;
   }
 
-  // Bootstrap methods - sample each asset's historical returns
-  const returns: number[][] = [];
+  // Bootstrap methods - use correlated sampling to preserve cross-asset correlation
+  // Gather all historical returns for correlated sampling
+  const allHistoricalReturns = portfolio.assets.map(asset => asset.historicalReturns);
 
-  for (const asset of portfolio.assets) {
-    const historical = asset.historicalReturns;
-
-    if (method === 'block') {
-      returns.push(blockBootstrap(historical, years, rng, blockSize));
-    } else {
-      // 'simple' bootstrap
-      returns.push(simpleBootstrap(historical, years, rng));
-    }
+  if (method === 'block') {
+    // Use correlated block bootstrap: same blocks for all assets
+    return correlatedBlockBootstrap(allHistoricalReturns, years, rng, blockSize);
+  } else {
+    // 'simple' bootstrap: use correlated sampling (same year index for all assets)
+    // This preserves the natural correlation structure in historical data
+    return correlatedBootstrap(allHistoricalReturns, years, rng);
   }
-
-  // Note: For bootstrap, we resample actual historical data which already
-  // embeds historical correlation. For more precise correlation control,
-  // would need to decorrelate/recorrelate. Keeping simple for now.
-
-  return returns;
 }
 
 /**
