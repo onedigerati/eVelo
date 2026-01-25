@@ -875,12 +875,47 @@ export class ResultsDashboard extends BaseComponent {
       setData(data: BBDComparisonChartData): void
     };
 
-    if (this._data?.estateAnalysis && bbdSection && bbdChart) {
+    if (this._data?.estateAnalysis && this._data?.sblocTrajectory && bbdSection && bbdChart) {
       bbdSection.classList.add('visible');
+
+      // Calculate correct sell strategy terminal value using the actual sell simulation
+      // The estateAnalysis.sellNetEstate is incorrect because it uses BBD portfolio value
+      const timeHorizon = this.getEffectiveTimeHorizon();
+      const initialValue = this.getEffectiveInitialValue();
+      const percentilesWithYear0 = [
+        {
+          year: 0,
+          p10: initialValue,
+          p25: initialValue,
+          p50: initialValue,
+          p75: initialValue,
+          p90: initialValue,
+        },
+        ...this._data.yearlyPercentiles,
+      ];
+
+      const sellResult = calculateSellStrategy(
+        {
+          initialValue,
+          annualWithdrawal: this.getEffectiveAnnualWithdrawal(),
+          withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
+          timeHorizon,
+          capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
+          costBasisRatio: this.getEffectiveCostBasisRatio(),
+          dividendYield: this.getEffectiveSellDividendYield(),
+        },
+        percentilesWithYear0,
+      );
+
+      // Use BBD net estate from simulation, but correct sell terminal value
+      const bbdNetEstate = this._data.estateAnalysis.bbdNetEstate;
+      const sellNetEstate = sellResult.terminalNetWorth;
+      const bbdAdvantage = bbdNetEstate - sellNetEstate;
+
       bbdChart.setData({
-        bbdNetEstate: this._data.estateAnalysis.bbdNetEstate,
-        sellNetEstate: this._data.estateAnalysis.sellNetEstate,
-        bbdAdvantage: this._data.estateAnalysis.bbdAdvantage,
+        bbdNetEstate,
+        sellNetEstate,
+        bbdAdvantage,
       });
     } else {
       bbdSection?.classList.remove('visible');
@@ -1439,12 +1474,28 @@ export class ResultsDashboard extends BaseComponent {
     // Calculate tax savings (difference in costs)
     const taxSavings = sellResult.lifetimeTaxes - cumulativeInterest;
 
+    // Calculate BBD dividend taxes
+    // In BBD strategy, the portfolio still generates dividends that are taxable income
+    // Qualified dividends are taxed at LTCG rates (same as capital gains)
+    const dividendYield = this.getEffectiveSellDividendYield();
+    const dividendTaxRate = this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238;
+    let bbdDividendTaxes = 0;
+
+    if (dividendYield > 0) {
+      // Sum dividend taxes over all years using median portfolio values
+      // Year 0 has no dividends (just the starting value)
+      for (const yearData of percentilesWithYear0.slice(1)) {
+        const yearlyDividends = yearData.p50 * dividendYield;
+        bbdDividendTaxes += yearlyDividends * dividendTaxRate;
+      }
+    }
+
     // BBD metrics
     const bbdData = {
       terminalNetWorth: bbdTerminalNetWorth,
       successRate: this._data.statistics.successRate,
-      lifetimeCost: cumulativeInterest,
-      dividendTaxes: 0, // Dividends not tracked separately in current simulation
+      lifetimeCost: cumulativeInterest + bbdDividendTaxes,
+      dividendTaxes: bbdDividendTaxes,
       primaryRisk: marginCallProbability > 0
         ? `Margin Call (${marginCallProbability.toFixed(1)}%)`
         : 'Low (0% margin call)',
