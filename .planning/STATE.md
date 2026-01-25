@@ -9,15 +9,15 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 ## Current Position
 
-Phase: 21 of 21 (Header Redesign)
+Phase: 22 of 22 (Mobile Sidebar UX Redesign)
 Plan: 01 of 02
 Status: In progress
-Last activity: 2026-01-25 — Completed 21-01-PLAN.md (Create App Header Component)
+Last activity: 2026-01-25 — Completed 22-01-PLAN.md (Mobile Vertical Collapse & Auto-Collapse)
 
-Progress: ██████████████████████████████████████████░░ 98% (89/91 plans complete)
+Progress: ██████████████████████████████████████████░░ 98% (90/91 plans complete)
 
 **Current Phase:**
-Phase 21: Header Redesign - Professional branding with wordmark, tagline, and responsive styling
+Phase 22: Mobile Sidebar UX Redesign - Vertical collapse/expand with auto-collapse on simulation run
 
 ## Performance Metrics
 
@@ -393,6 +393,12 @@ Recent decisions affecting current work:
   - Goals: Elegant branding, professional typography, responsive mobile experience
   - Inspiration: Reference app's centered title, tagline, icon button grouping
   - Key improvements: Logo/wordmark, value proposition tagline, refined button styling
+
+- Phase 22 added: Mobile Sidebar UX Redesign
+  - User request: Improve mobile sidebar interaction patterns
+  - Goals: Vertical collapse/expand, auto-collapse on simulation, branded label
+  - Key changes: Replace hamburger icon with "eVelo Parameters" label
+  - Desktop: 90° rotated label when collapsed
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -840,10 +846,17 @@ None
 - Dark theme via :host-context([data-theme="dark"]) selector
 - HTML entity (&#9889;) for lightning bolt instead of direct emoji
 
+**From 22-01:**
+- Mobile sidebar slides vertically (translateY) instead of horizontal overlay (translateX)
+- Unified sidebar-collapsed attribute (removed sidebar-open) for both desktop and mobile
+- Auto-collapse on mobile via simulation-start CustomEvent from app-root to main-layout
+- Smooth 300ms cubic-bezier transitions with reduced motion support
+- Desktop horizontal collapse behavior unchanged (48px collapsed width)
+
 ## Session Continuity
 
-Last session: 2026-01-25T01:19:20Z
-Stopped at: Completed 21-01-PLAN.md (Create App Header Component)
+Last session: 2026-01-25T02:33:39Z
+Stopped at: Completed 22-01-PLAN.md (Mobile Vertical Collapse & Auto-Collapse)
 Resume file: None
 
-**Phase 21 in progress - Header Redesign (89/91 plans complete)**
+**Phase 22 in progress - Mobile Sidebar UX Redesign (90/91 plans complete)**
