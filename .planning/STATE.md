@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 19 - Sell Strategy Accuracy
+**Current focus:** Phase 20 - Financial Calculation Audit
 
 ## Current Position
 
-Phase: 19 of 19 (Sell Strategy Accuracy)
-Plan: 4 of 4 complete
-Status: Phase complete - ALL PHASES COMPLETE 🎉
-Last activity: 2026-01-24 — Completed quick-013: Sell Strategy yearly analysis table
+Phase: 20 of 20 (Financial Calculation Audit)
+Plan: 6 of 11
+Status: In progress
+Last activity: 2026-01-24 — Completed 20-06-PLAN.md (Interest Compounding Documentation)
 
-Progress: ████████████████████████████████████████ 100% (80/80 plans total)
+Progress: ████████████████████████████████████████░░░░ 92% (82/89 plans complete)
 
-**Project Status:**
-All 19 phases complete. eVelo is feature-complete with accurate BBD vs Sell comparison.
+**Current Phase:**
+Phase 20: Financial Calculation Audit - Comprehensive verification of all 13 identified risk areas
 
 ## Performance Metrics
 
@@ -51,8 +51,8 @@ All 19 phases complete. eVelo is feature-complete with accurate BBD vs Sell comp
 | 19-sell-strategy-accuracy | 4/4 | 18 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 18-04 (3 min), 19-01 (not tracked), 19-02 (11 min), 19-03 (4 min), 19-04 (3.5 min)
-- Trend: Phase 19 COMPLETE - All phases complete! 🎉
+- Last 5 plans: 19-03 (4 min), 19-04 (3.5 min), 20-03 (2 min)
+- Trend: Phase 20 in progress - Financial calculation audit
 
 ## Accumulated Context
 
@@ -381,6 +381,12 @@ Recent decisions affecting current work:
   - Order of operations: withdrawal before returns (reference) vs returns before withdrawal (current)
   - Missing dividend tax modeling in Sell strategy
   - Ensures apples-to-apples BBD vs Sell comparison
+
+- Phase 20 added: Financial Calculation Audit
+  - Comprehensive review triggered by bug discovery (inconsistent annualWithdrawal, tax metrics)
+  - 13 risk areas identified across all calculation modules
+  - Critical issues: hardcoded cost basis (40%), dividend yield (2%), 10-scenario Sell limitation
+  - Goal: High confidence in calculation accuracy across all dashboard outputs
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -812,8 +818,8 @@ None
 
 ## Session Continuity
 
-Last session: 2026-01-24T21:03:54Z
-Stopped at: Completed quick-013-PLAN.md (Sell Strategy Yearly Analysis Table)
+Last session: 2026-01-25T00:04:13Z
+Stopped at: Completed 20-06-PLAN.md (Interest Compounding Documentation)
 Resume file: None
 
 **ALL PHASES COMPLETE 🎉**
