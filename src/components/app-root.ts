@@ -374,6 +374,39 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
+          <param-section title="Sell Strategy Comparison" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 3v18h18'/><path d='M18 17V9'/><path d='M13 17V5'/><path d='M8 17v-3'/></svg>" open>
+            <div class="param-group">
+              <label>
+                Cost Basis Ratio (%)
+                <help-tooltip content="What fraction of your portfolio is original cost (basis) vs gains. 40% means 60% embedded gains. Affects capital gains taxes when selling."></help-tooltip>
+              </label>
+              <range-slider
+                id="sell-cost-basis-ratio"
+                value="40"
+                min="5"
+                max="95"
+                step="5"
+                suffix="%"
+              ></range-slider>
+              <span class="help-text">Lower ratio = more embedded gains = higher taxes on sale</span>
+            </div>
+            <div class="param-group">
+              <label>
+                Dividend Yield (%)
+                <help-tooltip content="Annual dividend yield of your portfolio. S&P 500 averages 1.5-2%. Growth portfolios may be lower, income portfolios higher."></help-tooltip>
+              </label>
+              <range-slider
+                id="sell-dividend-yield"
+                value="2"
+                min="0"
+                max="10"
+                step="0.5"
+                suffix="%"
+              ></range-slider>
+              <span class="help-text">Higher yield = more dividend taxes in Sell strategy</span>
+            </div>
+          </param-section>
+
           <div slot="footer" class="simulation-controls">
             <button class="btn-primary" id="run-sim">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
@@ -1013,6 +1046,14 @@ export class AppRoot extends BaseComponent {
       ltcgTaxRate: enableTaxModeling && !taxAdvantaged ? this.getRangeSliderValue('ltcg-tax-rate', 23.8) / 100 : 0,
     };
 
+    // Sell Strategy Comparison
+    const sellCostBasisRatio = this.getRangeSliderValue('sell-cost-basis-ratio', 40) / 100;
+    const sellDividendYield = this.getRangeSliderValue('sell-dividend-yield', 2) / 100;
+    const sellStrategy = {
+      costBasisRatio: sellCostBasisRatio,
+      dividendYield: sellDividendYield,
+    };
+
     // Build SBLOC config
     const sblocConfig: SBLOCSimConfig = {
       targetLTV: maxBorrowing,
@@ -1045,6 +1086,7 @@ export class AppRoot extends BaseComponent {
       sbloc: sblocConfig,
       withdrawalChapters,
       taxModeling,
+      sellStrategy,
     };
 
     // Build PortfolioConfig from portfolio-composition assets

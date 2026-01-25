@@ -81,6 +81,24 @@ export interface TaxModelingConfig {
 }
 
 /**
+ * Sell strategy configuration for BBD vs Sell comparison
+ */
+export interface SellStrategyConfig {
+  /**
+   * Cost basis ratio - fraction of portfolio that is original cost (basis).
+   * E.g., 0.4 means 40% basis, 60% embedded gains.
+   * Lower ratio = more embedded gains = higher capital gains taxes on sale.
+   */
+  costBasisRatio: number;
+  /**
+   * Dividend yield for Sell strategy tax calculation.
+   * E.g., 0.02 for 2% annual dividend yield.
+   * S&P 500 historical average is ~1.5-2%.
+   */
+  dividendYield: number;
+}
+
+/**
  * Timeline configuration for BBD strategy
  */
 export interface TimelineConfig {
@@ -125,6 +143,8 @@ export interface SimulationConfig {
   withdrawalChapters?: WithdrawalChaptersConfig;
   /** Tax modeling configuration */
   taxModeling?: TaxModelingConfig;
+  /** Sell strategy configuration for BBD vs Sell comparison */
+  sellStrategy?: SellStrategyConfig;
 }
 
 /**
