@@ -420,6 +420,22 @@ export class ResultsDashboard extends BaseComponent {
       <div class="no-data" id="no-data">
         <p>Run a simulation to see results</p>
       </div>
+
+      <!-- Debug Panel (development only) -->
+      <section class="debug-section" id="debug-section">
+        <div class="debug-header">
+          <button class="debug-toggle" id="debug-toggle">
+            <span class="debug-toggle-icon">▶</span>
+            Debug Panel
+          </button>
+          <button class="debug-copy hidden" id="debug-copy" title="Copy to clipboard">
+            📋 Copy
+          </button>
+        </div>
+        <div class="debug-content hidden" id="debug-content">
+          <pre id="debug-output"></pre>
+        </div>
+      </section>
     `;
   }
 
@@ -843,6 +859,94 @@ export class ResultsDashboard extends BaseComponent {
         }
       }
 
+      /* Debug section styling */
+      .debug-section {
+        margin-top: var(--spacing-xl, 32px);
+        background: var(--surface-primary, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--radius-lg, 8px);
+        overflow: hidden;
+      }
+
+      .debug-header {
+        display: flex;
+        align-items: center;
+        background: var(--surface-secondary, #f8fafc);
+      }
+
+      .debug-toggle {
+        flex: 1;
+        padding: var(--spacing-md, 16px);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm, 8px);
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 600;
+        color: var(--text-secondary, #475569);
+        text-align: left;
+      }
+
+      .debug-toggle:hover {
+        background: var(--surface-tertiary, #f1f5f9);
+      }
+
+      .debug-toggle-icon {
+        transition: transform 0.2s ease;
+      }
+
+      .debug-toggle.expanded .debug-toggle-icon {
+        transform: rotate(90deg);
+      }
+
+      .debug-copy {
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        margin-right: var(--spacing-sm, 8px);
+        background: var(--color-primary, #0d9488);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md, 6px);
+        cursor: pointer;
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 500;
+        transition: background 0.2s ease;
+      }
+
+      .debug-copy:hover {
+        background: var(--color-primary-dark, #0f766e);
+      }
+
+      .debug-copy.copied {
+        background: #22c55e;
+      }
+
+      .debug-copy.hidden {
+        display: none;
+      }
+
+      .debug-content {
+        padding: var(--spacing-md, 16px);
+        max-height: 600px;
+        overflow: auto;
+        background: #1e293b;
+      }
+
+      .debug-content.hidden {
+        display: none;
+      }
+
+      #debug-output {
+        margin: 0;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #e2e8f0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
       /* Extra small screens */
       @media (max-width: 480px) {
         .chart-container {
@@ -884,6 +988,46 @@ export class ResultsDashboard extends BaseComponent {
   protected override afterRender(): void {
     // Initial state: show no-data message
     this.updateCharts();
+
+    // Setup debug panel toggle
+    const toggle = this.$('#debug-toggle');
+    const content = this.$('#debug-content');
+    const copyBtn = this.$('#debug-copy');
+
+    if (toggle && content && copyBtn) {
+      toggle.addEventListener('click', () => {
+        const isExpanded = toggle.classList.toggle('expanded');
+        content.classList.toggle('hidden');
+        // Show/hide copy button based on panel state
+        if (isExpanded) {
+          copyBtn.classList.remove('hidden');
+        } else {
+          copyBtn.classList.add('hidden');
+        }
+      });
+
+      // Copy button handler
+      copyBtn.addEventListener('click', async () => {
+        const output = this.$('#debug-output');
+        if (output) {
+          try {
+            await navigator.clipboard.writeText(output.textContent || '');
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('copied');
+            setTimeout(() => {
+              copyBtn.textContent = '📋 Copy';
+              copyBtn.classList.remove('copied');
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+            copyBtn.textContent = '❌ Failed';
+            setTimeout(() => {
+              copyBtn.textContent = '📋 Copy';
+            }, 2000);
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -1068,6 +1212,9 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update Sell strategy yearly analysis table
     this.updateSellYearlyAnalysisTable();
+
+    // Update debug panel with raw data
+    this.updateDebugPanel();
   }
 
   /**
@@ -1224,40 +1371,24 @@ export class ResultsDashboard extends BaseComponent {
   /**
    * Update Terminal Net Worth Distribution spectrum.
    * Calculates P10/P50/P90 from terminal values.
-   * When SBLOC data is available, shows NET WORTH (portfolio - loan balance).
+   *
+   * NOTE: For SBLOC simulations, terminalValues already contains NET WORTH
+   * (portfolio - loan). The simulation engine converts these values in post-processing.
+   * We do NOT subtract loan balance here to avoid double-subtraction.
    */
   private updateNetWorthSpectrum(): void {
     const spectrum = this.$('#net-worth-spectrum') as PercentileSpectrum | null;
 
     if (!spectrum || !this._data) return;
 
+    // terminalValues already contains NET WORTH for SBLOC simulations
+    // (converted in monte-carlo.ts post-processing step)
     const values = Array.from(this._data.terminalValues);
 
-    // Calculate portfolio value percentiles
-    const portfolioP10 = percentile(values, 10);
-    const portfolioP50 = percentile(values, 50);
-    const portfolioP90 = percentile(values, 90);
-
-    // If SBLOC data available, subtract loan balance to get NET WORTH
-    // For worst case (P10): low portfolio with high loan
-    // For best case (P90): high portfolio with low loan
-    let p10 = portfolioP10;
-    let p50 = portfolioP50;
-    let p90 = portfolioP90;
-
-    if (this._data.sblocTrajectory) {
-      const traj = this._data.sblocTrajectory;
-      const lastIdx = traj.years.length - 1;
-
-      const loanP10 = traj.loanBalance.p10[lastIdx] || 0;
-      const loanP50 = traj.loanBalance.p50[lastIdx] || 0;
-      const loanP90 = traj.loanBalance.p90[lastIdx] || 0;
-
-      // Net worth = portfolio - loan (invert loan percentiles for worst/best case)
-      p10 = portfolioP10 - loanP90;  // Worst case: low portfolio, high loan
-      p50 = portfolioP50 - loanP50;  // Median case
-      p90 = portfolioP90 - loanP10;  // Best case: high portfolio, low loan
-    }
+    // Calculate percentiles directly - these are already net worth
+    const p10 = percentile(values, 10);
+    const p50 = percentile(values, 50);
+    const p90 = percentile(values, 90);
 
     // Update spectrum component
     spectrum.p10 = p10;
@@ -1439,19 +1570,20 @@ export class ResultsDashboard extends BaseComponent {
     let peakUtilizationP90 = 0;
     let safetyBufferP10 = 100;
     let mostDangerousYear = 1;
-    let medianLoanBalance = 0;
-    let p90LoanBalance = 0;  // For worst-case net worth calculation
 
     if (this._data.sblocTrajectory) {
       const traj = this._data.sblocTrajectory;
-      // Estimate utilization from loan balance vs portfolio value
-      // Median utilization is loan / portfolio at median
       const lastYearIdx = traj.years.length - 1;
       const medianLoan = traj.loanBalance.p50[lastYearIdx];
-      medianLoanBalance = medianLoan;
-      p90LoanBalance = traj.loanBalance.p90[lastYearIdx] || 0;
-      const medianPortfolio = this._data.statistics.median;
-      medianUtilization = medianPortfolio > 0 ? (medianLoan / medianPortfolio) * 100 : 0;
+
+      // For utilization calculation, we need GROSS portfolio value, not net worth
+      // Gross portfolio = net worth + loan balance
+      // statistics.median is already net worth for SBLOC simulations
+      const medianNetWorth = this._data.statistics.median;
+      const medianGrossPortfolio = medianNetWorth + medianLoan;
+
+      // Utilization = loan / gross portfolio
+      medianUtilization = medianGrossPortfolio > 0 ? (medianLoan / medianGrossPortfolio) * 100 : 0;
 
       // Peak utilization (P90 loan / P10 portfolio scenario)
       peakUtilizationP90 = Math.min(100, medianUtilization * 1.5);
@@ -1471,10 +1603,10 @@ export class ResultsDashboard extends BaseComponent {
       ? this._data.marginCallStats[this._data.marginCallStats.length - 1].cumulativeProbability
       : 0;
 
-    // Calculate terminal NET WORTH values (portfolio - loan balance)
-    const medianTerminalNetWorth = this._data.statistics.median - medianLoanBalance;
-    // P10 (worst case) net worth: low portfolio with high loan
-    const p10NetWorth = p10PortfolioValue - p90LoanBalance;
+    // Terminal NET WORTH values - statistics.median and p10PortfolioValue are ALREADY net worth
+    // for SBLOC simulations (converted in monte-carlo.ts post-processing)
+    const medianTerminalNetWorth = this._data.statistics.median;
+    const p10NetWorth = p10PortfolioValue;
 
     banner.data = {
       bbdSuccessRate: this._data.statistics.successRate,
@@ -1588,8 +1720,9 @@ export class ResultsDashboard extends BaseComponent {
     const terminalLoan = traj.loanBalance.p50[lastIdx] || 0;
     const cumulativeInterest = traj.cumulativeInterest.p50[lastIdx] || 0;
 
-    // Calculate BBD terminal net worth (portfolio - loan)
-    const bbdTerminalNetWorth = this._data.statistics.median - terminalLoan;
+    // statistics.median is ALREADY net worth for SBLOC simulations
+    // (converted in monte-carlo.ts post-processing)
+    const bbdTerminalNetWorth = this._data.statistics.median;
 
     // Margin call probability
     const marginCallProbability = this._data.marginCallStats && this._data.marginCallStats.length > 0
@@ -1606,15 +1739,20 @@ export class ResultsDashboard extends BaseComponent {
     // Calculate BBD dividend taxes
     // In BBD strategy, the portfolio still generates dividends that are taxable income
     // Qualified dividends are taxed at LTCG rates (same as capital gains)
+    // NOTE: yearlyPercentiles contains NET WORTH, need to add loan balance to get GROSS portfolio
     const dividendYield = this.getEffectiveSellDividendYield();
     const dividendTaxRate = this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238;
     let bbdDividendTaxes = 0;
 
     if (dividendYield > 0) {
-      // Sum dividend taxes over all years using median portfolio values
+      // Sum dividend taxes over all years using median GROSS portfolio values
       // Year 0 has no dividends (just the starting value)
-      for (const yearData of percentilesWithYear0.slice(1)) {
-        const yearlyDividends = yearData.p50 * dividendYield;
+      for (let yearIdx = 0; yearIdx < this._data.yearlyPercentiles.length; yearIdx++) {
+        const yearData = this._data.yearlyPercentiles[yearIdx];
+        const loanBalance = traj.loanBalance.p50[yearIdx] || 0;
+        // Reconstruct gross portfolio = net worth + loan
+        const grossPortfolio = yearData.p50 + loanBalance;
+        const yearlyDividends = grossPortfolio * dividendYield;
         bbdDividendTaxes += yearlyDividends * dividendTaxRate;
       }
     }
@@ -1746,6 +1884,9 @@ export class ResultsDashboard extends BaseComponent {
 
   /**
    * Update comparison line chart with BBD vs Sell trajectories.
+   *
+   * NOTE: For SBLOC simulations, yearlyPercentiles already contains NET WORTH
+   * (portfolio - loan). We use these values directly without additional subtraction.
    */
   private updateComparisonLineChart(sellResult: ReturnType<typeof calculateSellStrategy>): void {
     const chart = this.$('#comparison-line-chart') as HTMLElement & {
@@ -1757,11 +1898,10 @@ export class ResultsDashboard extends BaseComponent {
     const traj = this._data.sblocTrajectory;
     const years = traj.years;
 
-    // BBD net worth = portfolio value - loan balance
+    // yearlyPercentiles already contains NET WORTH for SBLOC simulations
+    // (converted in monte-carlo.ts during iteration)
     const bbdValues = years.map((year, idx) => {
-      const portfolio = this._data!.yearlyPercentiles[idx]?.p50 || 0;
-      const loan = traj.loanBalance.p50[idx] || 0;
-      return portfolio - loan;
+      return this._data!.yearlyPercentiles[idx]?.p50 || 0;
     });
 
     // Sell trajectory uses the yearly values from sell calculation
@@ -1814,6 +1954,9 @@ export class ResultsDashboard extends BaseComponent {
 
   /**
    * Update terminal comparison chart with percentile bars.
+   *
+   * NOTE: For SBLOC simulations, terminalValues already contains NET WORTH
+   * (portfolio - loan). We use these values directly without additional subtraction.
    */
   private updateTerminalComparisonChart(sellResult: ReturnType<typeof calculateSellStrategy>): void {
     const chart = this.$('#terminal-comparison-chart') as HTMLElement & {
@@ -1822,16 +1965,14 @@ export class ResultsDashboard extends BaseComponent {
 
     if (!chart || !this._data?.sblocTrajectory) return;
 
-    const traj = this._data.sblocTrajectory;
-    const lastIdx = traj.years.length - 1;
-
-    // Get BBD terminal values at each percentile (portfolio - loan)
+    // terminalValues already contains NET WORTH for SBLOC simulations
+    // (converted in monte-carlo.ts post-processing step)
     const values = Array.from(this._data.terminalValues);
-    const bbdP10 = percentile(values, 10) - (traj.loanBalance.p90[lastIdx] || 0);
-    const bbdP25 = percentile(values, 25) - (traj.loanBalance.p75[lastIdx] || 0);
-    const bbdP50 = percentile(values, 50) - (traj.loanBalance.p50[lastIdx] || 0);
-    const bbdP75 = percentile(values, 75) - (traj.loanBalance.p25[lastIdx] || 0);
-    const bbdP90 = percentile(values, 90) - (traj.loanBalance.p10[lastIdx] || 0);
+    const bbdP10 = percentile(values, 10);
+    const bbdP25 = percentile(values, 25);
+    const bbdP50 = percentile(values, 50);
+    const bbdP75 = percentile(values, 75);
+    const bbdP90 = percentile(values, 90);
 
     // Sell percentiles - use P10/P90 from result, interpolate others
     const sellP10 = sellResult.terminalP10;
@@ -1850,6 +1991,10 @@ export class ResultsDashboard extends BaseComponent {
 
   /**
    * Update SBLOC utilization chart with percentile bands.
+   *
+   * NOTE: For SBLOC simulations, yearlyPercentiles contains NET WORTH (portfolio - loan).
+   * To calculate utilization (loan / gross portfolio), we need to reconstruct gross portfolio:
+   * gross portfolio = net worth + loan balance
    */
   private updateSBLOCUtilizationChart(): void {
     const chart = this.$('#sbloc-utilization-chart') as HTMLElement & {
@@ -1861,7 +2006,10 @@ export class ResultsDashboard extends BaseComponent {
     const traj = this._data.sblocTrajectory;
     const years = traj.years;
 
-    // Calculate utilization percentiles (loan balance / portfolio value * 100)
+    // Calculate utilization percentiles (loan balance / GROSS portfolio value * 100)
+    // yearlyPercentiles contains NET WORTH, so we reconstruct gross portfolio:
+    // gross portfolio = net worth + loan
+    //
     // Note: For utilization, P90 means high utilization (bad), P10 means low (good)
     const p10: number[] = [];
     const p25: number[] = [];
@@ -1870,7 +2018,6 @@ export class ResultsDashboard extends BaseComponent {
     const p90: number[] = [];
 
     for (let idx = 0; idx < years.length; idx++) {
-      const year = years[idx];
       const yearData = this._data!.yearlyPercentiles[idx];
 
       if (!yearData) {
@@ -1882,19 +2029,12 @@ export class ResultsDashboard extends BaseComponent {
         continue;
       }
 
-      // Utilization = loan / portfolio * 100
-      // Best case (P10 utilization): low loan, high portfolio -> p10 loan / p90 portfolio
-      // Worst case (P90 utilization): high loan, low portfolio -> p90 loan / p10 portfolio
-      //
-      // Cap utilization at 200% to avoid chart distortion when portfolio approaches zero.
-      // Above 100% means "underwater" (loan > portfolio); >200% provides no additional insight.
-      const MAX_UTILIZATION = 200;
-
-      const portfolioP10 = yearData.p10 || 1;
-      const portfolioP25 = yearData.p25 || 1;
-      const portfolioP50 = yearData.p50 || 1;
-      const portfolioP75 = yearData.p75 || 1;
-      const portfolioP90 = yearData.p90 || 1;
+      // yearData contains NET WORTH percentiles
+      const netWorthP10 = yearData.p10;
+      const netWorthP25 = yearData.p25;
+      const netWorthP50 = yearData.p50;
+      const netWorthP75 = yearData.p75;
+      const netWorthP90 = yearData.p90;
 
       const loanP10 = traj.loanBalance.p10[idx] || 0;
       const loanP25 = traj.loanBalance.p25?.[idx] || (loanP10 + (traj.loanBalance.p50[idx] || 0)) / 2;
@@ -1902,16 +2042,31 @@ export class ResultsDashboard extends BaseComponent {
       const loanP75 = traj.loanBalance.p75?.[idx] || (loanP50 + (traj.loanBalance.p90[idx] || 0)) / 2;
       const loanP90 = traj.loanBalance.p90[idx] || 0;
 
-      // Best case: low loan / high portfolio (optimistic scenario)
-      p10.push(Math.min((loanP10 / portfolioP90) * 100, MAX_UTILIZATION));
+      // Reconstruct GROSS portfolio = net worth + loan
+      // For utilization calculation, we pair:
+      // - Best case (low utilization): low loan with high net worth scenario
+      // - Worst case (high utilization): high loan with low net worth scenario
+      const grossP90 = netWorthP90 + loanP10;  // Best case: high NW, low loan
+      const grossP75 = netWorthP75 + loanP25;
+      const grossP50 = netWorthP50 + loanP50;  // Median case
+      const grossP25 = netWorthP25 + loanP75;
+      const grossP10 = netWorthP10 + loanP90;  // Worst case: low NW, high loan
+
+      // Cap utilization at 200% to avoid chart distortion when portfolio approaches zero.
+      // Above 100% means "underwater" (loan > portfolio); >200% provides no additional insight.
+      const MAX_UTILIZATION = 200;
+
+      // Utilization = loan / gross portfolio * 100
+      // Best case (P10 utilization): low loan / high gross portfolio
+      p10.push(Math.min(grossP90 > 0 ? (loanP10 / grossP90) * 100 : 0, MAX_UTILIZATION));
       // Good case
-      p25.push(Math.min((loanP25 / portfolioP75) * 100, MAX_UTILIZATION));
+      p25.push(Math.min(grossP75 > 0 ? (loanP25 / grossP75) * 100 : 0, MAX_UTILIZATION));
       // Median case
-      p50.push(Math.min((loanP50 / portfolioP50) * 100, MAX_UTILIZATION));
+      p50.push(Math.min(grossP50 > 0 ? (loanP50 / grossP50) * 100 : 0, MAX_UTILIZATION));
       // Bad case
-      p75.push(Math.min((loanP75 / portfolioP25) * 100, MAX_UTILIZATION));
-      // Worst case: high loan / low portfolio (pessimistic scenario)
-      p90.push(Math.min((loanP90 / portfolioP10) * 100, MAX_UTILIZATION));
+      p75.push(Math.min(grossP25 > 0 ? (loanP75 / grossP25) * 100 : 0, MAX_UTILIZATION));
+      // Worst case (P90 utilization): high loan / low gross portfolio
+      p90.push(Math.min(grossP10 > 0 ? (loanP90 / grossP10) * 100 : MAX_UTILIZATION, MAX_UTILIZATION));
     }
 
     // Get max borrowing from config or default
@@ -2191,6 +2346,284 @@ export class ResultsDashboard extends BaseComponent {
     }
 
     return { expectedReturns, volatilities, isEstimate };
+  }
+
+  /**
+   * Update debug panel with raw simulation data.
+   * Outputs key data points for debugging anomalous results.
+   */
+  private updateDebugPanel(): void {
+    const output = this.$('#debug-output');
+    if (!output) return;
+
+    if (!this._data) {
+      output.textContent = 'No simulation data available.';
+      return;
+    }
+
+    const data = this._data;
+    const config = this._simulationConfig;
+    const traj = data.sblocTrajectory;
+    const estate = data.estateAnalysis;
+    const stats = data.statistics;
+    const extended = this.computeExtendedStats();
+
+    // Sample terminal values (first 20 and stats)
+    const terminalArr = Array.from(data.terminalValues);
+    const terminalSample = terminalArr.slice(0, 20);
+    const terminalNegativeCount = terminalArr.filter(v => v < 0).length;
+    const terminalZeroCount = terminalArr.filter(v => v === 0).length;
+    const terminalMin = Math.min(...terminalArr);
+    const terminalMax = Math.max(...terminalArr);
+
+    // Build debug output
+    const lines: string[] = [];
+
+    lines.push('═══════════════════════════════════════════════════════════════');
+    lines.push('                    SIMULATION DEBUG DATA');
+    lines.push('═══════════════════════════════════════════════════════════════');
+    lines.push('');
+
+    // Configuration
+    lines.push('▸ CONFIGURATION');
+    lines.push(`  Initial Value:      $${(config?.initialValue ?? this._initialValue).toLocaleString()}`);
+    lines.push(`  Time Horizon:       ${config?.timeHorizon ?? this._timeHorizon} years`);
+    lines.push(`  Annual Withdrawal:  $${(config?.sbloc?.annualWithdrawal ?? this._annualWithdrawal).toLocaleString()}`);
+    lines.push(`  Withdrawal Growth:  ${((config?.sbloc?.annualWithdrawalRaise ?? 0.03) * 100).toFixed(1)}%`);
+    lines.push(`  SBLOC Interest:     ${((config?.sbloc?.interestRate ?? 0.07) * 100).toFixed(2)}%`);
+    lines.push(`  Target LTV:         ${((config?.sbloc?.targetLTV ?? 0.65) * 100).toFixed(0)}%`);
+    lines.push(`  Maint. Margin:      ${((config?.sbloc?.maintenanceMargin ?? 0.50) * 100).toFixed(0)}%`);
+    lines.push(`  Iterations:         ${config?.iterations?.toLocaleString() ?? 'N/A'}`);
+    lines.push('');
+
+    // Raw Statistics
+    lines.push('▸ RAW STATISTICS (from simulation)');
+    lines.push(`  stats.median:       $${stats.median.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+    lines.push(`  stats.mean:         $${stats.mean.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+    lines.push(`  stats.stddev:       $${stats.stddev.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+    lines.push(`  stats.successRate:  ${stats.successRate.toFixed(2)}%`);
+    lines.push('');
+
+    // Extended Statistics
+    lines.push('▸ COMPUTED EXTENDED STATS');
+    lines.push(`  CAGR (median):      ${extended ? (extended.cagr * 100).toFixed(2) + '%' : 'N/A'}`);
+    lines.push(`  TWRR (median):      ${extended ? (extended.twrr * 100).toFixed(2) + '%' : 'N/A'}`);
+    lines.push(`  Volatility:         ${extended ? (extended.volatility * 100).toFixed(2) + '%' : 'N/A'}`);
+    lines.push('');
+
+    // Terminal Values Analysis
+    const hasSBLOC = !!traj;
+    lines.push(`▸ TERMINAL VALUES ANALYSIS ${hasSBLOC ? '(NET WORTH = portfolio - loan)' : '(GROSS PORTFOLIO)'}`);
+    lines.push(`  Count:              ${terminalArr.length.toLocaleString()}`);
+    lines.push(`  Min:                $${terminalMin.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+    lines.push(`  Max:                $${terminalMax.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+    lines.push(`  Negative count:     ${terminalNegativeCount} (${((terminalNegativeCount / terminalArr.length) * 100).toFixed(2)}%)`);
+    lines.push(`  Zero count:         ${terminalZeroCount} (${((terminalZeroCount / terminalArr.length) * 100).toFixed(2)}%)`);
+    lines.push(`  Sample (first 20):  [${terminalSample.map(v => v.toFixed(0)).join(', ')}]`);
+    lines.push('');
+
+    // Yearly Percentiles (first and last few years)
+    lines.push(`▸ YEARLY PERCENTILES ${hasSBLOC ? '(NET WORTH = portfolio - loan)' : '(GROSS PORTFOLIO)'}`);
+    const percLen = data.yearlyPercentiles.length;
+    const percToShow = [...data.yearlyPercentiles.slice(0, 3), ...data.yearlyPercentiles.slice(-3)];
+    percToShow.forEach((p, idx) => {
+      const label = `Year ${p.year}`;
+      lines.push(`  ${label}: P10=$${p.p10.toFixed(0)} | P50=$${p.p50.toFixed(0)} | P90=$${p.p90.toFixed(0)}`);
+    });
+    if (percLen > 6) {
+      lines.push(`  ... (${percLen - 6} more years)`);
+    }
+    lines.push('');
+
+    // SBLOC Trajectory
+    if (traj) {
+      lines.push('▸ SBLOC TRAJECTORY');
+      const lastIdx = traj.years.length - 1;
+      lines.push(`  Years tracked:      ${traj.years.length} (Year ${traj.years[0]} to Year ${traj.years[lastIdx]})`);
+      lines.push('');
+      lines.push('  LOAN BALANCE (by percentile):');
+      lines.push(`    Year 1  - P10: $${(traj.loanBalance.p10[0] || 0).toFixed(0)} | P50: $${(traj.loanBalance.p50[0] || 0).toFixed(0)} | P90: $${(traj.loanBalance.p90[0] || 0).toFixed(0)}`);
+      lines.push(`    Year ${traj.years[lastIdx]} - P10: $${(traj.loanBalance.p10[lastIdx] || 0).toFixed(0)} | P50: $${(traj.loanBalance.p50[lastIdx] || 0).toFixed(0)} | P90: $${(traj.loanBalance.p90[lastIdx] || 0).toFixed(0)}`);
+      lines.push('');
+      lines.push('  CUMULATIVE WITHDRAWALS:');
+      lines.push(`    Year 1:  $${(traj.cumulativeWithdrawals[0] || 0).toFixed(0)}`);
+      lines.push(`    Year ${traj.years[lastIdx]}: $${(traj.cumulativeWithdrawals[lastIdx] || 0).toFixed(0)}`);
+      lines.push('');
+      lines.push('  CUMULATIVE INTEREST (P50):');
+      lines.push(`    Year 1:  $${(traj.cumulativeInterest.p50[0] || 0).toFixed(0)}`);
+      lines.push(`    Year ${traj.years[lastIdx]}: $${(traj.cumulativeInterest.p50[lastIdx] || 0).toFixed(0)}`);
+      lines.push('');
+
+      // GROSS PORTFOLIO = Net Worth + Loan (reconstructed for debugging)
+      const lastYearPerc = data.yearlyPercentiles[lastIdx];
+      if (lastYearPerc) {
+        lines.push('  GROSS PORTFOLIO (Net Worth + Loan) at Year 15:');
+        // yearlyPercentiles contains NET WORTH, add loan to get gross portfolio
+        const grossP10 = lastYearPerc.p10 + (traj.loanBalance.p90[lastIdx] || 0);
+        const grossP50 = lastYearPerc.p50 + (traj.loanBalance.p50[lastIdx] || 0);
+        const grossP90 = lastYearPerc.p90 + (traj.loanBalance.p10[lastIdx] || 0);
+        lines.push(`    P10 Gross: $${grossP10.toFixed(0)} = $${lastYearPerc.p10.toFixed(0)} (NW P10) + $${(traj.loanBalance.p90[lastIdx] || 0).toFixed(0)} (loan P90)`);
+        lines.push(`    P50 Gross: $${grossP50.toFixed(0)} = $${lastYearPerc.p50.toFixed(0)} (NW P50) + $${(traj.loanBalance.p50[lastIdx] || 0).toFixed(0)} (loan P50)`);
+        lines.push(`    P90 Gross: $${grossP90.toFixed(0)} = $${lastYearPerc.p90.toFixed(0)} (NW P90) + $${(traj.loanBalance.p10[lastIdx] || 0).toFixed(0)} (loan P10)`);
+        lines.push('');
+      }
+
+      // Utilization calculation (loan / GROSS portfolio)
+      lines.push('  UTILIZATION % (Loan / Gross Portfolio):');
+      for (const yearIdx of [0, Math.floor(lastIdx / 2), lastIdx]) {
+        const yp = data.yearlyPercentiles[yearIdx];
+        if (yp) {
+          const loan = traj.loanBalance.p50[yearIdx] || 0;
+          // yp.p50 is NET WORTH, gross = net worth + loan
+          const grossPortfolio = yp.p50 + loan;
+          const util = grossPortfolio > 0 ? (loan / grossPortfolio) * 100 : 0;
+          lines.push(`    Year ${traj.years[yearIdx]}: ${util.toFixed(1)}% = $${loan.toFixed(0)} / $${grossPortfolio.toFixed(0)} (gross)`);
+        }
+      }
+      lines.push('');
+    } else {
+      lines.push('▸ SBLOC TRAJECTORY: Not available');
+      lines.push('');
+    }
+
+    // Margin Call Stats
+    if (data.marginCallStats && data.marginCallStats.length > 0) {
+      lines.push('▸ MARGIN CALL STATISTICS');
+      const mcStats = data.marginCallStats;
+      lines.push(`  Years tracked:      ${mcStats.length}`);
+      lines.push('');
+      lines.push('  PROBABILITY BY YEAR:');
+      // Show first 5, last 3
+      const mcToShow = [...mcStats.slice(0, 5), ...mcStats.slice(-3)];
+      mcToShow.forEach((mc, idx) => {
+        lines.push(`    Year ${mc.year}: ${mc.probability.toFixed(2)}% (cumulative: ${mc.cumulativeProbability.toFixed(2)}%)`);
+      });
+      if (mcStats.length > 8) {
+        lines.push(`    ... (${mcStats.length - 8} more years)`);
+      }
+      lines.push('');
+    } else {
+      lines.push('▸ MARGIN CALL STATISTICS: Not available');
+      lines.push('');
+    }
+
+    // Estate Analysis
+    if (estate) {
+      lines.push('▸ ESTATE ANALYSIS (from simulation)');
+      lines.push(`  bbdNetEstate:       $${estate.bbdNetEstate.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`  sellNetEstate:      $${estate.sellNetEstate.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`  bbdAdvantage:       $${estate.bbdAdvantage.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push('');
+    } else {
+      lines.push('▸ ESTATE ANALYSIS: Not available');
+      lines.push('');
+    }
+
+    // Key Metrics Calculation Check
+    lines.push('▸ KEY METRICS CALCULATION CHECK');
+    const initialValue = config?.initialValue ?? this._initialValue;
+    const timeHorizon = config?.timeHorizon ?? this._timeHorizon;
+    const medianTerminal = stats.median;  // This is NET WORTH for SBLOC simulations
+
+    // CAGR formula: (terminal / initial)^(1/years) - 1
+    // For SBLOC, medianTerminal is already NET WORTH
+    const cagrCalc = medianTerminal > 0
+      ? Math.pow(medianTerminal / initialValue, 1 / timeHorizon) - 1
+      : -1;  // -100% for negative net worth
+    lines.push(`  CAGR Check (using ${hasSBLOC ? 'NET WORTH' : 'GROSS PORTFOLIO'}):`);
+    lines.push(`    Formula: (terminal/initial)^(1/years) - 1`);
+    lines.push(`    = ($${medianTerminal.toFixed(0)} / $${initialValue.toFixed(0)})^(1/${timeHorizon}) - 1`);
+    lines.push(`    = ${medianTerminal > 0 ? (cagrCalc * 100).toFixed(2) + '%' : 'NaN (negative terminal value)'}`);
+
+    if (traj) {
+      const lastIdx = traj.years.length - 1;
+      const loanBalance = traj.loanBalance.p50[lastIdx] || 0;
+      // medianTerminal is ALREADY net worth, so gross = net worth + loan
+      const grossPortfolio = medianTerminal + loanBalance;
+      lines.push('');
+      lines.push(`  SBLOC Breakdown:`);
+      lines.push(`    Median NET WORTH (from stats.median): $${medianTerminal.toFixed(0)}`);
+      lines.push(`    Loan Balance (P50): $${loanBalance.toFixed(0)}`);
+      lines.push(`    Reconstructed GROSS Portfolio: $${grossPortfolio.toFixed(0)} = $${medianTerminal.toFixed(0)} + $${loanBalance.toFixed(0)}`);
+    }
+    lines.push('');
+
+    // SBLOC Debug Stats (detailed diagnostics)
+    if (data.debugStats) {
+      const ds = data.debugStats;
+      lines.push('▸ SBLOC DIAGNOSTIC DETAILS');
+      lines.push('');
+      lines.push('  MARGIN CALL DISTRIBUTION:');
+      lines.push(`    0 margin calls:  ${ds.marginCallDistribution.noMarginCalls.toLocaleString()} iterations`);
+      lines.push(`    1 margin call:   ${ds.marginCallDistribution.oneMarginCall.toLocaleString()} iterations`);
+      lines.push(`    2 margin calls:  ${ds.marginCallDistribution.twoMarginCalls.toLocaleString()} iterations`);
+      lines.push(`    3+ margin calls: ${ds.marginCallDistribution.threeOrMore.toLocaleString()} iterations`);
+      lines.push(`    Max in any iter: ${ds.marginCallDistribution.maxMarginCalls}`);
+      lines.push('');
+      lines.push('  HAIRCUT LOSSES (from forced liquidations):');
+      lines.push(`    Median:          $${ds.haircutLosses.median.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Mean:            $${ds.haircutLosses.mean.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Max:             $${ds.haircutLosses.max.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push('');
+      lines.push('  TOTAL INTEREST CHARGED (over 15 years):');
+      lines.push(`    Median:          $${ds.interestCharged.median.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Mean:            $${ds.interestCharged.mean.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push('');
+      lines.push('  FINAL GROSS PORTFOLIO (before loan subtraction):');
+      lines.push(`    Median:          $${ds.finalGrossPortfolio.median.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push(`    Mean:            $${ds.finalGrossPortfolio.mean.toLocaleString(undefined, {maximumFractionDigits: 0})}`);
+      lines.push('');
+
+      // Portfolio returns analysis
+      if (ds.portfolioReturns) {
+        lines.push('  PORTFOLIO RETURNS (cumulative over 15 years):');
+        lines.push(`    P10:             ${(ds.portfolioReturns.p10 * 100).toFixed(1)}%`);
+        lines.push(`    Median:          ${(ds.portfolioReturns.median * 100).toFixed(1)}%`);
+        lines.push(`    Mean:            ${(ds.portfolioReturns.mean * 100).toFixed(1)}%`);
+        lines.push(`    P90:             ${(ds.portfolioReturns.p90 * 100).toFixed(1)}%`);
+        lines.push('');
+      }
+
+      // Failure analysis
+      if (ds.failureAnalysis) {
+        const fa = ds.failureAnalysis;
+        const totalIter = fa.totalFailed + fa.totalSucceeded;
+        lines.push('  FAILURE ANALYSIS:');
+        lines.push(`    Failed iterations:    ${fa.totalFailed.toLocaleString()} (${(fa.totalFailed/totalIter*100).toFixed(1)}%)`);
+        lines.push(`    Succeeded iterations: ${fa.totalSucceeded.toLocaleString()} (${(fa.totalSucceeded/totalIter*100).toFixed(1)}%)`);
+        lines.push(`    Median failure year:  ${fa.medianFailureYear.toFixed(1)}`);
+        lines.push(`    Avg failure year:     ${fa.avgFailureYear.toFixed(1)}`);
+        lines.push('');
+        lines.push('  RETURNS BY OUTCOME:');
+        lines.push(`    Successful avg return: ${(fa.successfulAvgReturn * 100).toFixed(1)}%`);
+        lines.push(`    Failed avg return:     ${(fa.failedAvgReturn * 100).toFixed(1)}%`);
+        lines.push('');
+      }
+
+      // Regime parameters (if regime method was used)
+      if (ds.regimeParameters && ds.regimeParameters.length > 0) {
+        lines.push(`  REGIME PARAMETERS (calibration: ${ds.calibrationMode || 'unknown'}):`);
+        for (const asset of ds.regimeParameters) {
+          const fallbackNote = asset.usedFallback ? ' ⚠️ FALLBACK TO DEFAULTS' : '';
+          lines.push(`    ${asset.assetId}:${fallbackNote}`);
+          lines.push(`      Bull:  mean=${(asset.bull.mean * 100).toFixed(1)}%, stddev=${(asset.bull.stddev * 100).toFixed(1)}%`);
+          lines.push(`      Bear:  mean=${(asset.bear.mean * 100).toFixed(1)}%, stddev=${(asset.bear.stddev * 100).toFixed(1)}%`);
+          lines.push(`      Crash: mean=${(asset.crash.mean * 100).toFixed(1)}%, stddev=${(asset.crash.stddev * 100).toFixed(1)}%`);
+          if (asset.validationIssues && asset.validationIssues.length > 0) {
+            for (const issue of asset.validationIssues) {
+              lines.push(`      ⚠️ ${issue}`);
+            }
+          }
+        }
+        lines.push('');
+      }
+    }
+
+    lines.push('═══════════════════════════════════════════════════════════════');
+    lines.push('                      END DEBUG DATA');
+    lines.push('═══════════════════════════════════════════════════════════════');
+
+    output.textContent = lines.join('\n');
   }
 }
 

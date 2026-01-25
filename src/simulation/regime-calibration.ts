@@ -9,6 +9,7 @@
 
 import { mean, stddev, percentile } from '../math';
 import type { RegimeParamsMap, MarketRegime, RegimeCalibrationMode } from './types';
+import { DEFAULT_REGIME_PARAMS } from './types';
 
 /**
  * Classified returns by regime
@@ -187,6 +188,115 @@ export function applyConservativeAdjustment(
 }
 
 /**
+ * Validation issues found in regime parameters
+ */
+export interface RegimeValidationIssue {
+  /** Type of issue */
+  type: 'negative_bull_mean' | 'inverted_hierarchy' | 'extreme_volatility' | 'insufficient_spread';
+  /** Human-readable description */
+  message: string;
+  /** Severity: 'warning' allows use, 'error' triggers fallback */
+  severity: 'warning' | 'error';
+}
+
+/**
+ * Result of regime parameter validation
+ */
+export interface RegimeValidationResult {
+  /** Whether parameters are valid (no errors, warnings OK) */
+  isValid: boolean;
+  /** List of issues found */
+  issues: RegimeValidationIssue[];
+  /** Whether fallback to defaults was used */
+  usedFallback: boolean;
+}
+
+/**
+ * Extended calibration result with validation info
+ */
+export interface CalibratedRegimeResult {
+  /** The regime parameters (calibrated or fallback) */
+  params: RegimeParamsMap;
+  /** Validation result */
+  validation: RegimeValidationResult;
+}
+
+/**
+ * Validate regime parameters for sanity
+ *
+ * Checks for degenerate parameters that indicate the calibration
+ * produced nonsensical results (e.g., negative bull mean, bull worse than bear).
+ *
+ * @param params Regime parameters to validate
+ * @returns Validation result with issues list
+ */
+export function validateRegimeParams(params: RegimeParamsMap): RegimeValidationResult {
+  const issues: RegimeValidationIssue[] = [];
+
+  // Check 1: Bull mean should be positive
+  // A negative bull mean means even "good" times lose money - likely bad data
+  if (params.bull.mean < 0) {
+    issues.push({
+      type: 'negative_bull_mean',
+      message: `Bull mean is negative (${(params.bull.mean * 100).toFixed(1)}%). Asset likely has poor/insufficient historical data.`,
+      severity: 'error',
+    });
+  }
+
+  // Check 2: Regime hierarchy should be bull > bear > crash for means
+  if (params.bull.mean <= params.bear.mean) {
+    issues.push({
+      type: 'inverted_hierarchy',
+      message: `Bull mean (${(params.bull.mean * 100).toFixed(1)}%) <= bear mean (${(params.bear.mean * 100).toFixed(1)}%). Regime ordering is inverted.`,
+      severity: 'error',
+    });
+  }
+  if (params.bear.mean <= params.crash.mean) {
+    issues.push({
+      type: 'inverted_hierarchy',
+      message: `Bear mean (${(params.bear.mean * 100).toFixed(1)}%) <= crash mean (${(params.crash.mean * 100).toFixed(1)}%). Regime ordering is inverted.`,
+      severity: 'warning', // Less severe - crash/bear can be close
+    });
+  }
+
+  // Check 3: Extreme volatility (stddev > 80% is suspicious)
+  const maxReasonableStddev = 0.80;
+  if (params.bull.stddev > maxReasonableStddev) {
+    issues.push({
+      type: 'extreme_volatility',
+      message: `Bull stddev is extreme (${(params.bull.stddev * 100).toFixed(1)}% > 80%). Data may be unreliable.`,
+      severity: 'error',
+    });
+  }
+  if (params.bear.stddev > maxReasonableStddev) {
+    issues.push({
+      type: 'extreme_volatility',
+      message: `Bear stddev is extreme (${(params.bear.stddev * 100).toFixed(1)}% > 80%).`,
+      severity: 'warning',
+    });
+  }
+
+  // Check 4: Insufficient spread between regimes (all too similar)
+  const bullBearSpread = params.bull.mean - params.bear.mean;
+  if (bullBearSpread < 0.05) { // Less than 5% difference
+    issues.push({
+      type: 'insufficient_spread',
+      message: `Bull/bear spread is only ${(bullBearSpread * 100).toFixed(1)}%. Regimes may not be meaningfully different.`,
+      severity: 'warning',
+    });
+  }
+
+  // Determine if valid (no errors)
+  const hasErrors = issues.some(i => i.severity === 'error');
+
+  return {
+    isValid: !hasErrors,
+    issues,
+    usedFallback: false,
+  };
+}
+
+/**
  * Calibrate regime model with explicit mode selection
  *
  * Main entry point for regime calibration that respects the user's
@@ -200,15 +310,72 @@ export function calibrateRegimeModelWithMode(
   historicalReturns: number[],
   mode: RegimeCalibrationMode
 ): RegimeParamsMap {
+  const result = calibrateRegimeModelWithValidation(historicalReturns, mode);
+  return result.params;
+}
+
+/**
+ * Calibrate regime model with validation and fallback
+ *
+ * Enhanced calibration that validates results and falls back to
+ * sensible defaults when calibration produces degenerate parameters.
+ *
+ * @param historicalReturns Array of historical annual returns
+ * @param mode Calibration mode
+ * @param assetId Optional asset identifier for logging
+ * @returns Calibration result with params and validation info
+ */
+export function calibrateRegimeModelWithValidation(
+  historicalReturns: number[],
+  mode: RegimeCalibrationMode,
+  assetId?: string
+): CalibratedRegimeResult {
   // Step 1: Derive historical parameters from data
   const historicalParams = calibrateRegimeModel(historicalReturns);
 
   // Step 2: Apply mode-specific adjustment
-  if (mode === 'conservative') {
-    return applyConservativeAdjustment(historicalParams);
+  const adjustedParams = mode === 'conservative'
+    ? applyConservativeAdjustment(historicalParams)
+    : historicalParams;
+
+  // Step 3: Validate the parameters
+  const validation = validateRegimeParams(adjustedParams);
+
+  // Step 4: If invalid, fall back to defaults
+  if (!validation.isValid) {
+    const assetLabel = assetId || 'Asset';
+    console.warn(
+      `[Regime Calibration] ${assetLabel}: Degenerate parameters detected, using defaults.`,
+      validation.issues.map(i => i.message)
+    );
+
+    // Use DEFAULT_REGIME_PARAMS (imported at top)
+    const fallbackParams = mode === 'conservative'
+      ? applyConservativeAdjustment(DEFAULT_REGIME_PARAMS)
+      : DEFAULT_REGIME_PARAMS;
+
+    return {
+      params: fallbackParams,
+      validation: {
+        ...validation,
+        usedFallback: true,
+      },
+    };
   }
 
-  return historicalParams;
+  // Log warnings even if valid
+  if (validation.issues.length > 0) {
+    const assetLabel = assetId || 'Asset';
+    console.warn(
+      `[Regime Calibration] ${assetLabel}: Warnings:`,
+      validation.issues.map(i => i.message)
+    );
+  }
+
+  return {
+    params: adjustedParams,
+    validation,
+  };
 }
 
 /**

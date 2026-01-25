@@ -16,8 +16,9 @@ import { mean, stddev, percentile } from '../math';
 import { simpleBootstrap, blockBootstrap } from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
 import {
-  calibrateRegimeModelWithMode,
+  calibrateRegimeModelWithValidation,
   calculatePortfolioRegimeParams,
+  type CalibratedRegimeResult,
 } from './regime-calibration';
 import {
   initializeSBLOCState,
@@ -91,39 +92,65 @@ export async function runMonteCarlo(
 
   // Calibrate regime parameters if using regime method
   let assetRegimeParams: RegimeParamsMap[] | undefined;
+  let assetCalibrationResults: CalibratedRegimeResult[] | undefined;
 
   if (resamplingMethod === 'regime') {
     const calibrationMode = config.regimeCalibration ?? 'historical';
     console.log(`Regime calibration mode: ${calibrationMode}`);
 
-    // Calibrate each asset's regime parameters from its historical data
-    assetRegimeParams = portfolio.assets.map((asset, idx) => {
+    // Calibrate each asset's regime parameters from its historical data (with validation)
+    assetCalibrationResults = portfolio.assets.map((asset) => {
       if (asset.historicalReturns.length >= 10) {
-        const params = calibrateRegimeModelWithMode(asset.historicalReturns, calibrationMode);
-        console.log(`Asset ${asset.id} regime params (${calibrationMode}):`, {
-          bull: { mean: (params.bull.mean * 100).toFixed(1) + '%', stddev: (params.bull.stddev * 100).toFixed(1) + '%' },
-          bear: { mean: (params.bear.mean * 100).toFixed(1) + '%', stddev: (params.bear.stddev * 100).toFixed(1) + '%' },
-          crash: { mean: (params.crash.mean * 100).toFixed(1) + '%', stddev: (params.crash.stddev * 100).toFixed(1) + '%' },
+        const result = calibrateRegimeModelWithValidation(
+          asset.historicalReturns,
+          calibrationMode,
+          asset.id
+        );
+        const status = result.validation.usedFallback ? '⚠️ FALLBACK' : '✓';
+        console.log(`Asset ${asset.id} regime params (${calibrationMode}) ${status}:`, {
+          bull: { mean: (result.params.bull.mean * 100).toFixed(1) + '%', stddev: (result.params.bull.stddev * 100).toFixed(1) + '%' },
+          bear: { mean: (result.params.bear.mean * 100).toFixed(1) + '%', stddev: (result.params.bear.stddev * 100).toFixed(1) + '%' },
+          crash: { mean: (result.params.crash.mean * 100).toFixed(1) + '%', stddev: (result.params.crash.stddev * 100).toFixed(1) + '%' },
         });
-        return params;
+        if (result.validation.issues.length > 0) {
+          console.log(`  Issues:`, result.validation.issues.map(i => `[${i.severity}] ${i.message}`));
+        }
+        return result;
       }
       console.log(`Asset ${asset.id}: Using default params (insufficient data)`);
-      return DEFAULT_REGIME_PARAMS;
+      return {
+        params: DEFAULT_REGIME_PARAMS,
+        validation: { isValid: true, issues: [], usedFallback: true },
+      } as CalibratedRegimeResult;
     });
+
+    assetRegimeParams = assetCalibrationResults.map(r => r.params);
   }
 
   // Track SBLOC state per iteration per year (only if sbloc config provided)
   let sblocStates: SBLOCState[][] | null = null;
   let marginCallYears: number[] | null = null; // First margin call year per iteration (-1 if none)
+  let marginCallCounts: number[] | null = null; // Total margin calls per iteration
+  let totalHaircutLosses: number[] | null = null; // Total haircut losses per iteration
+  let totalInterestCharged: number[] | null = null; // Total interest charged per iteration
 
   // SBLOC configuration values (extracted for use in year loop)
   const sblocBaseWithdrawal = config.sbloc?.annualWithdrawal ?? 0;
   const sblocRaiseRate = config.sbloc?.annualWithdrawalRaise ?? 0;
   const sblocWithdrawalStartYear = config.timeline?.withdrawalStartYear ?? 0;
 
+  // Track portfolio returns for diagnostics
+  let iterationReturns: number[] | null = null; // Cumulative return per iteration
+  let firstFailureYear: number[] | null = null; // Year when portfolio first failed (-1 if never)
+
   if (config.sbloc) {
     sblocStates = Array.from({ length: iterations }, () => []);
     marginCallYears = new Array(iterations).fill(-1);
+    marginCallCounts = new Array(iterations).fill(0);
+    totalHaircutLosses = new Array(iterations).fill(0);
+    totalInterestCharged = new Array(iterations).fill(0);
+    iterationReturns = new Array(iterations).fill(0);
+    firstFailureYear = new Array(iterations).fill(-1);
   }
 
   // Run iterations in batches
@@ -149,6 +176,7 @@ export async function runMonteCarlo(
 
       // Simulate portfolio growth
       let portfolioValue = initialValue;
+      let cumulativeReturn = 1; // Track cumulative return for this iteration
 
       for (let year = 0; year < timeHorizon; year++) {
         // Calculate weighted portfolio return
@@ -156,6 +184,9 @@ export async function runMonteCarlo(
         for (let a = 0; a < numAssets; a++) {
           portfolioReturn += weights[a] * assetReturns[a][year];
         }
+
+        // Track cumulative return
+        cumulativeReturn *= (1 + portfolioReturn);
 
         // Apply return to portfolio value
         portfolioValue *= (1 + portfolioReturn);
@@ -186,7 +217,7 @@ export async function runMonteCarlo(
           // internally when config.sbloc.monthlyWithdrawal is true
           const sblocConfig: SBLOCEngineConfig = {
             annualInterestRate: config.sbloc.interestRate,
-            maxLTV: config.sbloc.maintenanceMargin, // Use maintenance as max for margin call
+            maxLTV: config.sbloc.targetLTV, // Margin call triggers when LTV exceeds target (e.g., 65%)
             maintenanceMargin: config.sbloc.maintenanceMargin,
             liquidationHaircut: config.sbloc.liquidationHaircut,
             annualWithdrawal: effectiveWithdrawal,
@@ -218,6 +249,22 @@ export async function runMonteCarlo(
             marginCallYears[i] = year + 1;
           }
 
+          // Track margin call counts and haircut losses
+          if (yearResult.marginCallTriggered && marginCallCounts) {
+            marginCallCounts[i]++;
+          }
+          if (yearResult.liquidationEvent && totalHaircutLosses) {
+            totalHaircutLosses[i] += yearResult.liquidationEvent.haircut;
+          }
+          if (totalInterestCharged) {
+            totalInterestCharged[i] += yearResult.interestCharged;
+          }
+
+          // Track first failure year
+          if (yearResult.portfolioFailed && firstFailureYear && firstFailureYear[i] === -1) {
+            firstFailureYear[i] = year + 1;
+          }
+
           // Sync portfolio value with SBLOC engine's tracked value
           // This accounts for any forced liquidations that reduced the portfolio
           // Note: We sync to the SBLOC state's portfolioValue, NOT set to 0 on failure
@@ -227,11 +274,23 @@ export async function runMonteCarlo(
         }
 
         // Store yearly value
-        yearlyValues[year][i] = portfolioValue;
+        // For SBLOC simulations, store NET WORTH (portfolio - loan) instead of gross portfolio
+        if (config.sbloc && sblocStates) {
+          const currentState = sblocStates[i][year];
+          const loanBalance = currentState?.loanBalance ?? 0;
+          yearlyValues[year][i] = portfolioValue - loanBalance;
+        } else {
+          yearlyValues[year][i] = portfolioValue;
+        }
       }
 
       // Store terminal value
       terminalValues[i] = portfolioValue;
+
+      // Store cumulative return for diagnostics
+      if (iterationReturns) {
+        iterationReturns[i] = cumulativeReturn - 1; // Convert to percentage (e.g., 1.5 -> 0.5 = 50%)
+      }
     }
 
     // Report progress
@@ -251,7 +310,37 @@ export async function runMonteCarlo(
   // Yield to allow progress update to render
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  // Calculate statistics
+  // ============================================================================
+  // CRITICAL FIX: Convert terminal portfolio values to NET WORTH for BBD strategy
+  // ============================================================================
+  // For BBD strategy with SBLOC, terminalValues currently contains GROSS portfolio values.
+  // All metrics (CAGR, median, success rate, histogram) should use NET WORTH (portfolio - loan).
+  //
+  // Why this matters:
+  // - A portfolio can have $500K value with $600K loan = -$100K net worth (failed)
+  // - Using gross value shows $500K which is misleading
+  // - CAGR calculated from gross value is meaningless
+  // - Success rate should compare net worth growth, not gross portfolio
+  //
+  // For non-SBLOC simulations, loan is $0 so net worth = portfolio value (no change).
+  // ============================================================================
+
+  if (config.sbloc && sblocStates) {
+    // Replace terminalValues with terminal NET WORTH for each iteration
+    for (let i = 0; i < iterations; i++) {
+      const finalState = sblocStates[i][timeHorizon - 1];
+      const loanBalance = finalState?.loanBalance ?? 0;
+      const portfolioValue = terminalValues[i];
+      const netWorth = portfolioValue - loanBalance;
+      terminalValues[i] = netWorth;
+    }
+
+    console.log('[MC Debug] BBD Strategy: Converted terminalValues to NET WORTH (portfolio - loan)');
+  } else {
+    console.log('[MC Debug] No SBLOC: terminalValues already correct (portfolio values, no loan)');
+  }
+
+  // Calculate statistics from terminal net worth
   const terminalArray = Array.from(terminalValues);
 
   // Diagnostic logging for CAGR debugging
@@ -268,6 +357,49 @@ export async function runMonteCarlo(
 
   const statistics = calculateStatistics(terminalArray, initialValue);
   console.log(`[MC Debug] Statistics: median=${statistics.median.toFixed(0)}, mean=${statistics.mean.toFixed(0)}, successRate=${statistics.successRate.toFixed(1)}%`);
+
+  // Additional SBLOC diagnostics
+  if (config.sbloc && marginCallCounts && totalHaircutLosses && totalInterestCharged) {
+    const mcCounts = marginCallCounts;
+    const noMarginCalls = mcCounts.filter(c => c === 0).length;
+    const oneMarginCall = mcCounts.filter(c => c === 1).length;
+    const twoMarginCalls = mcCounts.filter(c => c === 2).length;
+    const threeOrMore = mcCounts.filter(c => c >= 3).length;
+    const maxMarginCalls = Math.max(...mcCounts);
+
+    const medianHaircut = percentile(totalHaircutLosses, 50);
+    const meanHaircut = mean(totalHaircutLosses);
+    const maxHaircut = Math.max(...totalHaircutLosses);
+
+    const medianInterest = percentile(totalInterestCharged, 50);
+    const meanInterest = mean(totalInterestCharged);
+
+    // Track final gross portfolio values
+    const finalGrossPortfolios = sblocStates!.map(states => states[timeHorizon - 1]?.portfolioValue ?? 0);
+    const medianGrossPortfolio = percentile(finalGrossPortfolios, 50);
+    const meanGrossPortfolio = mean(finalGrossPortfolios);
+
+    console.log(`[MC Debug] ═══════════════════════════════════════════════════`);
+    console.log(`[MC Debug] SBLOC DIAGNOSTIC SUMMARY`);
+    console.log(`[MC Debug] ═══════════════════════════════════════════════════`);
+    console.log(`[MC Debug] Margin Call Distribution:`);
+    console.log(`[MC Debug]   0 margin calls: ${noMarginCalls} (${(noMarginCalls/iterations*100).toFixed(1)}%)`);
+    console.log(`[MC Debug]   1 margin call:  ${oneMarginCall} (${(oneMarginCall/iterations*100).toFixed(1)}%)`);
+    console.log(`[MC Debug]   2 margin calls: ${twoMarginCalls} (${(twoMarginCalls/iterations*100).toFixed(1)}%)`);
+    console.log(`[MC Debug]   3+ margin calls: ${threeOrMore} (${(threeOrMore/iterations*100).toFixed(1)}%)`);
+    console.log(`[MC Debug]   Max margin calls in any iteration: ${maxMarginCalls}`);
+    console.log(`[MC Debug] Haircut Losses (from forced liquidations):`);
+    console.log(`[MC Debug]   Median: $${medianHaircut.toFixed(0)}`);
+    console.log(`[MC Debug]   Mean: $${meanHaircut.toFixed(0)}`);
+    console.log(`[MC Debug]   Max: $${maxHaircut.toFixed(0)}`);
+    console.log(`[MC Debug] Interest Charged:`);
+    console.log(`[MC Debug]   Median: $${medianInterest.toFixed(0)}`);
+    console.log(`[MC Debug]   Mean: $${meanInterest.toFixed(0)}`);
+    console.log(`[MC Debug] Final Gross Portfolio:`);
+    console.log(`[MC Debug]   Median: $${medianGrossPortfolio.toFixed(0)}`);
+    console.log(`[MC Debug]   Mean: $${meanGrossPortfolio.toFixed(0)}`);
+    console.log(`[MC Debug] ═══════════════════════════════════════════════════`);
+  }
 
   const yearlyPercentiles = calculateYearlyPercentiles(yearlyValues);
 
@@ -317,18 +449,85 @@ export async function runMonteCarlo(
     // Compute estate analysis (median case)
     const finalStates = sblocStates.map(iterStates => iterStates[timeHorizon - 1]);
     const medianLoan = percentile(finalStates.map(s => s?.loanBalance ?? 0), 50);
-    const medianPortfolio = statistics.median;
-    const bbdNetEstate = medianPortfolio - medianLoan;
+    // IMPORTANT: statistics.median is now NET WORTH (already has loan subtracted)
+    const medianNetWorth = statistics.median;
+    const bbdNetEstate = medianNetWorth;
 
     // Estimate taxes if sold (simplified: assume all gains above initial, 23.8% tax rate)
-    const embeddedGains = Math.max(0, medianPortfolio - initialValue);
+    // For sell strategy, we need to calculate gross portfolio value to estimate embedded gains
+    // Median gross portfolio = median net worth + median loan
+    const medianGrossPortfolio = medianNetWorth + medianLoan;
+    const embeddedGains = Math.max(0, medianGrossPortfolio - initialValue);
     const taxesIfSold = embeddedGains * 0.238;
-    const sellNetEstate = medianPortfolio - taxesIfSold;
+    const sellNetEstate = medianGrossPortfolio - taxesIfSold;
 
     estateAnalysis = {
       bbdNetEstate,
       sellNetEstate,
       bbdAdvantage: bbdNetEstate - sellNetEstate,
+    };
+  }
+
+  // Build debug stats if SBLOC is enabled
+  let debugStats: SimulationOutput['debugStats'];
+  if (config.sbloc && marginCallCounts && totalHaircutLosses && totalInterestCharged && sblocStates && iterationReturns && firstFailureYear) {
+    const mcCounts = marginCallCounts;
+    const finalGrossPortfolios = sblocStates.map(states => states[timeHorizon - 1]?.portfolioValue ?? 0);
+
+    // Analyze failure patterns
+    const failedIterations = firstFailureYear.filter(y => y > 0);
+    const successfulIterations = firstFailureYear.filter(y => y === -1);
+
+    // Get returns for successful vs failed iterations
+    const successfulReturns = iterationReturns.filter((_, i) => firstFailureYear[i] === -1);
+    const failedReturns = iterationReturns.filter((_, i) => firstFailureYear[i] > 0);
+
+    debugStats = {
+      marginCallDistribution: {
+        noMarginCalls: mcCounts.filter(c => c === 0).length,
+        oneMarginCall: mcCounts.filter(c => c === 1).length,
+        twoMarginCalls: mcCounts.filter(c => c === 2).length,
+        threeOrMore: mcCounts.filter(c => c >= 3).length,
+        maxMarginCalls: Math.max(...mcCounts),
+      },
+      haircutLosses: {
+        median: percentile(totalHaircutLosses, 50),
+        mean: mean(totalHaircutLosses),
+        max: Math.max(...totalHaircutLosses),
+      },
+      interestCharged: {
+        median: percentile(totalInterestCharged, 50),
+        mean: mean(totalInterestCharged),
+      },
+      finalGrossPortfolio: {
+        median: percentile(finalGrossPortfolios, 50),
+        mean: mean(finalGrossPortfolios),
+      },
+      // New diagnostics
+      portfolioReturns: {
+        median: percentile(iterationReturns, 50),
+        mean: mean(iterationReturns),
+        p10: percentile(iterationReturns, 10),
+        p90: percentile(iterationReturns, 90),
+      },
+      failureAnalysis: {
+        totalFailed: failedIterations.length,
+        totalSucceeded: successfulIterations.length,
+        medianFailureYear: failedIterations.length > 0 ? percentile(failedIterations, 50) : 0,
+        avgFailureYear: failedIterations.length > 0 ? mean(failedIterations) : 0,
+        successfulAvgReturn: successfulReturns.length > 0 ? mean(successfulReturns) : 0,
+        failedAvgReturn: failedReturns.length > 0 ? mean(failedReturns) : 0,
+      },
+      // Regime parameters used (if regime method)
+      regimeParameters: assetCalibrationResults ? portfolio.assets.map((asset, i) => ({
+        assetId: asset.id,
+        bull: assetCalibrationResults[i].params.bull,
+        bear: assetCalibrationResults[i].params.bear,
+        crash: assetCalibrationResults[i].params.crash,
+        usedFallback: assetCalibrationResults[i].validation.usedFallback,
+        validationIssues: assetCalibrationResults[i].validation.issues.map(iss => iss.message),
+      })) : undefined,
+      calibrationMode: resamplingMethod === 'regime' ? (config.regimeCalibration ?? 'historical') : undefined,
     };
   }
 
@@ -339,6 +538,7 @@ export async function runMonteCarlo(
     sblocTrajectory,
     marginCallStats,
     estateAnalysis,
+    debugStats,
   };
 }
 

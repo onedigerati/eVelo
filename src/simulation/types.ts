@@ -275,6 +275,65 @@ export interface EstateAnalysis {
 }
 
 /**
+ * Debug statistics for SBLOC simulation diagnostics
+ */
+export interface SBLOCDebugStats {
+  /** Distribution of margin call counts across iterations */
+  marginCallDistribution: {
+    noMarginCalls: number;
+    oneMarginCall: number;
+    twoMarginCalls: number;
+    threeOrMore: number;
+    maxMarginCalls: number;
+  };
+  /** Haircut losses from forced liquidations */
+  haircutLosses: {
+    median: number;
+    mean: number;
+    max: number;
+  };
+  /** Total interest charged over simulation */
+  interestCharged: {
+    median: number;
+    mean: number;
+  };
+  /** Final gross portfolio values (before loan subtraction) */
+  finalGrossPortfolio: {
+    median: number;
+    mean: number;
+  };
+  /** Portfolio returns (cumulative over simulation period) */
+  portfolioReturns?: {
+    median: number;
+    mean: number;
+    p10: number;
+    p90: number;
+  };
+  /** Failure analysis */
+  failureAnalysis?: {
+    totalFailed: number;
+    totalSucceeded: number;
+    medianFailureYear: number;
+    avgFailureYear: number;
+    successfulAvgReturn: number;
+    failedAvgReturn: number;
+  };
+  /** Per-asset regime parameters used in simulation */
+  regimeParameters?: {
+    assetId: string;
+    bull: { mean: number; stddev: number };
+    bear: { mean: number; stddev: number };
+    crash: { mean: number; stddev: number };
+    /** Whether fallback to defaults was used due to degenerate calibration */
+    usedFallback?: boolean;
+    /** Validation issues found during calibration */
+    validationIssues?: string[];
+  }[];
+  /** Calibration mode used */
+  calibrationMode?: 'historical' | 'conservative';
+}
+
+/**
  * Complete simulation output from worker
  */
 export interface SimulationOutput {
@@ -290,6 +349,8 @@ export interface SimulationOutput {
   marginCallStats?: MarginCallStats[];
   /** Estate analysis data for BBD comparison */
   estateAnalysis?: EstateAnalysis;
+  /** Debug statistics for SBLOC diagnostics */
+  debugStats?: SBLOCDebugStats;
 }
 
 /**

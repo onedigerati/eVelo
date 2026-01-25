@@ -6,13 +6,14 @@
  * and no additional collateral is added, assets must be sold to reduce the loan.
  *
  * Key concepts:
- * - Target LTV after liquidation: maintenanceMargin * liquidationTargetMultiplier (configurable)
- * - Default multiplier is 0.8 (80%), providing a 20% safety buffer below maintenance
+ * - Target LTV after liquidation: maxLTV * liquidationTargetMultiplier (configurable)
+ * - Default multiplier is 0.8 (80%), providing a 20% safety buffer below maxLTV
+ *   Example: maxLTV=65%, multiplier=0.8 → target=52% (13% buffer before next margin call)
  * - Liquidation haircut: forced sales incur additional losses (typically 5%)
  * - Portfolio failure: when net worth (portfolio - loan) becomes <= 0
  *
- * Reference formulas (from PortfolioStrategySimulator):
- * - targetLTV = maintenanceMargin * liquidationTargetMultiplier
+ * Reference formulas:
+ * - targetLTV = maxLTV * liquidationTargetMultiplier
  * - targetLoc = portfolioValue * targetLTV
  * - excessLoc = locBalance - targetLoc
  * - assetsToSell = excessLoc / (1 - liquidationHaircut)
@@ -73,14 +74,14 @@ export interface LiquidationAmounts {
  *   ...
  * };
  *
- * // Target LTV = 50% * 0.8 = 40%
- * // Target loan = $1M * 0.40 = $400k
- * // Excess loan = $700k - $400k = $300k
- * // Assets to sell = $300k / (1 - 0.05) = $315,789.47
- * // Loan repaid = $315,789.47 * 0.95 = $300k
+ * // Target LTV = 65% * 0.8 = 52%
+ * // Target loan = $1M * 0.52 = $520k
+ * // Excess loan = $700k - $520k = $180k
+ * // Assets to sell = $180k / (1 - 0.05) = $189,473.68
+ * // Loan repaid = $189,473.68 * 0.95 = $180k
  *
  * calculateLiquidationAmount(state, config);
- * // { assetsToSell: 315789.47, loanToRepay: 300000, targetLTV: 0.40 }
+ * // { assetsToSell: 189473.68, loanToRepay: 180000, targetLTV: 0.52 }
  * ```
  */
 export function calculateLiquidationAmount(
@@ -88,7 +89,7 @@ export function calculateLiquidationAmount(
   config: SBLOCConfig
 ): LiquidationAmounts {
   // Get multiplier from config with default fallback
-  // Default 0.8 provides 20% buffer below maintenance to avoid immediate repeat calls
+  // Default 0.8 provides 20% buffer below maxLTV to avoid immediate repeat margin calls
   let multiplier = config.liquidationTargetMultiplier ?? 0.8;
 
   // Validate multiplier is reasonable (must be positive and <= 1)
@@ -100,8 +101,11 @@ export function calculateLiquidationAmount(
     multiplier = 0.8;
   }
 
-  // Target LTV = maintenance margin * multiplier
-  const targetLTV = config.maintenanceMargin * multiplier;
+  // Target LTV = maxLTV * multiplier
+  // Example: If maxLTV = 65% and multiplier = 0.8, target = 52%
+  // This provides a reasonable buffer (13%) below the margin call threshold
+  // while avoiding excessive liquidation (compared to using maintenanceMargin which would target 40%)
+  const targetLTV = config.maxLTV * multiplier;
 
   // Calculate target loan balance at new LTV
   const targetLoanBalance = state.portfolioValue * targetLTV;
@@ -220,18 +224,19 @@ export interface LiquidationResult {
  *
  * const result = executeForcedLiquidation(state, config, 5);
  *
- * // result.newState.portfolioValue = 1000000 - 315789.47 = 684210.53
- * // result.newState.loanBalance = 700000 - 300000 = 400000
- * // result.newState.currentLTV = 400000 / 684210.53 = 0.585
- * // result.portfolioFailed = false (net worth = 684210.53 - 400000 = 284210.53 > 0)
+ * // Target LTV = 65% * 0.8 = 52%
+ * // result.newState.portfolioValue = 1000000 - 189473.68 = 810526.32
+ * // result.newState.loanBalance = 700000 - 180000 = 520000
+ * // result.newState.currentLTV = 520000 / 810526.32 = 0.641
+ * // result.portfolioFailed = false (net worth = 810526.32 - 520000 = 290526.32 > 0)
  *
  * // result.event = {
  * //   year: 5,
- * //   assetsLiquidated: 315789.47,
- * //   haircut: 15789.47,
- * //   loanRepaid: 300000,
- * //   newLoanBalance: 400000,
- * //   newPortfolioValue: 684210.53
+ * //   assetsLiquidated: 189473.68,
+ * //   haircut: 9473.68,
+ * //   loanRepaid: 180000,
+ * //   newLoanBalance: 520000,
+ * //   newPortfolioValue: 810526.32
  * // }
  * ```
  */
