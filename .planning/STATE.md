@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 23 of 23 (Reference Methodology Alignment)
-Plan: 04 of 09
+Plan: 06 of 09
 Status: In progress
-Last activity: 2026-01-25 — Completed 23-04-PLAN.md (Add Survivorship Bias Adjustment)
+Last activity: 2026-01-25 — Completed 23-06-PLAN.md (BBD Dividend Tax Borrowing)
 
-Progress: █████████████████████████████████████████ 92% (97/105 plans complete)
+Progress: █████████████████████████████████████████ 93% (98/105 plans complete)
 
 **Current Phase:**
 Phase 23: Reference Methodology Alignment - 4-regime market model with recovery state
@@ -22,9 +22,9 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 97
-- Average duration: 3.8 min
-- Total execution time: 370 min
+- Total plans completed: 98
+- Average duration: 3.9 min
+- Total execution time: 380.5 min
 
 **By Phase:**
 
@@ -52,11 +52,11 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 | 20-financial-calculation-audit | 2/9 | 6 min | 3.0 min |
 | 21-header-redesign | 1/1 | 4 min | 4.0 min |
 | 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
-| 23-reference-methodology-alignment | 7/9 | 39 min | 5.6 min |
+| 23-reference-methodology-alignment | 8/9 | 49.5 min | 6.2 min |
 
 **Recent Trend:**
-- Last 5 plans: 23-02 (5 min), 23-03 (8 min), 23-04 (9 min), 23-05 (9 min), 23-07 (4 min)
-- Trend: Phase 23 in progress - Reference methodology alignment
+- Last 5 plans: 23-03 (8 min), 23-04 (9 min), 23-05 (9 min), 23-06 (10.5 min), 23-07 (4 min)
+- Trend: Phase 23 in progress - Reference methodology alignment, final plan remaining
 
 ## Accumulated Context
 
@@ -540,6 +540,14 @@ Recent decisions affecting current work:
 - Return clamping at -99% min and +500% max for regime model
 - Calibration mode wiring through Monte Carlo with console logging for transparency
 
+**From 23-06:**
+- BBD borrows to pay dividend taxes via SBLOC (portfolio stays whole, taxes in loan)
+- Sell strategy liquidates to pay same dividend taxes (reduces compound growth)
+- Dividend tax applied after returns, before withdrawals (matches reference order)
+- Monthly mode: dividend tax only in first month (prevents 12x multiplication)
+- Estate analysis uses integrated sell strategy median for fair comparison
+- Dividend taxes forgiven at death by step-up basis (key BBD advantage)
+
 ### Pending Todos
 
 None
@@ -893,8 +901,8 @@ None
 
 ## Session Continuity
 
-Last session: 2026-01-25T22:06:16Z
-Stopped at: Completed 23-03-PLAN.md (Fat-Tail Return Model)
+Last session: 2026-01-25T22:21:21Z
+Stopped at: Completed 23-06-PLAN.md (BBD Dividend Tax Borrowing)
 Resume file: None
 
-**Phase 23 in progress - Reference Methodology Alignment (3/9 plans complete)**
+**Phase 23 in progress - Reference Methodology Alignment (8/9 plans complete)**
