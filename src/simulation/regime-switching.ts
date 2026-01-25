@@ -18,10 +18,12 @@ import type {
   MarketRegime,
   TransitionMatrix,
   RegimeParamsMap,
+  RegimeCalibrationMode,
 } from './types';
 import {
   DEFAULT_TRANSITION_MATRIX,
   DEFAULT_REGIME_PARAMS,
+  SURVIVORSHIP_BIAS,
 } from './types';
 
 /**
@@ -105,9 +107,17 @@ export function validateTransitionMatrix(matrix: TransitionMatrix): boolean {
 }
 
 /**
+ * Return clamping constants
+ * - MIN_RETURN_CLAMP: Floor at -99% (total loss protection)
+ * - MAX_RETURN_CLAMP: Ceiling at +500% (extreme tail protection)
+ */
+const MIN_RETURN_CLAMP = -0.99;
+const MAX_RETURN_CLAMP = 5.0;
+
+/**
  * Generate returns using regime-switching model
  *
- * Simulates a Markov chain of market regimes (bull/bear/crash)
+ * Simulates a Markov chain of market regimes (bull/bear/crash/recovery)
  * and generates returns from each regime's distribution.
  * This captures realistic volatility clustering and crash sequences.
  *
@@ -118,6 +128,7 @@ export function validateTransitionMatrix(matrix: TransitionMatrix): boolean {
  * @param initialRegime Starting market regime (default: 'bull')
  * @param matrix Transition probability matrix
  * @param params Return distribution parameters per regime
+ * @param calibrationMode Mode for survivorship bias adjustment (default: 'historical')
  * @returns Object with returns array and regime sequence
  */
 export function generateRegimeReturns(
@@ -125,11 +136,15 @@ export function generateRegimeReturns(
   rng: () => number,
   initialRegime: MarketRegime = 'bull',
   matrix?: TransitionMatrix,
-  params?: RegimeParamsMap
+  params?: RegimeParamsMap,
+  calibrationMode: RegimeCalibrationMode = 'historical'
 ): RegimeReturnsResult {
   // Use defaults from types if not provided
   const effectiveMatrix = matrix ?? DEFAULT_TRANSITION_MATRIX;
   const effectiveParams = params ?? DEFAULT_REGIME_PARAMS;
+
+  // Get survivorship bias adjustment for this calibration mode
+  const survivorshipBias = SURVIVORSHIP_BIAS[calibrationMode];
 
   const returns: number[] = [];
   const regimes: MarketRegime[] = [];
@@ -141,9 +156,14 @@ export function generateRegimeReturns(
 
     // Generate return from current regime's distribution
     const { mean, stddev } = effectiveParams[currentRegime];
-    const rawReturn = normalRandom(mean, stddev, rng);
-    // Floor at -1 (total loss) - cannot lose more than 100%
-    const yearReturn = Math.max(-1, rawReturn);
+
+    // Apply survivorship bias adjustment to mean
+    const adjustedMean = mean - survivorshipBias;
+
+    const rawReturn = normalRandom(adjustedMean, stddev, rng);
+
+    // Clamp return between -99% and +500%
+    const yearReturn = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, rawReturn));
     returns.push(yearReturn);
 
     // Transition to next regime
@@ -177,6 +197,7 @@ export interface CorrelatedRegimeReturnsResult {
  * @param matrix Transition matrix
  * @param params Shared regime parameters (used if assetRegimeParams not provided)
  * @param assetRegimeParams Optional per-asset regime parameters
+ * @param calibrationMode Mode for survivorship bias adjustment (default: 'historical')
  * @returns Object with 2D returns array [asset][year] and regime sequence
  */
 export function generateCorrelatedRegimeReturns(
@@ -187,10 +208,14 @@ export function generateCorrelatedRegimeReturns(
   initialRegime: MarketRegime = 'bull',
   matrix?: TransitionMatrix,
   params?: RegimeParamsMap,
-  assetRegimeParams?: RegimeParamsMap[]
+  assetRegimeParams?: RegimeParamsMap[],
+  calibrationMode: RegimeCalibrationMode = 'historical'
 ): CorrelatedRegimeReturnsResult {
   const effectiveMatrix = matrix ?? DEFAULT_TRANSITION_MATRIX;
   const effectiveParams = params ?? DEFAULT_REGIME_PARAMS;
+
+  // Get survivorship bias adjustment for this calibration mode
+  const survivorshipBias = SURVIVORSHIP_BIAS[calibrationMode];
 
   // Generate regime sequence first
   const regimes: MarketRegime[] = [];
@@ -233,24 +258,28 @@ export function generateCorrelatedRegimeReturns(
       // Combine: use correlated structure but scale by asset-specific params
       for (let asset = 0; asset < numAssets; asset++) {
         const { mean, stddev } = assetRegimeParams[asset][regime];
-        const rawReturn = mean + stddev * correlated[asset];
-        // Floor at -1 (total loss) - cannot lose more than 100%
-        returns[asset][year] = Math.max(-1, rawReturn);
+        // Apply survivorship bias adjustment to mean
+        const adjustedMean = mean - survivorshipBias;
+        const rawReturn = adjustedMean + stddev * correlated[asset];
+        // Clamp return between -99% and +500%
+        returns[asset][year] = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, rawReturn));
       }
     } else {
       // Shared parameters (original behavior)
       const { mean, stddev } = effectiveParams[regime];
+      // Apply survivorship bias adjustment to mean
+      const adjustedMean = mean - survivorshipBias;
       const yearReturns = correlatedSamples(
         numAssets,
         correlationMatrix,
         rng,
-        mean,
+        adjustedMean,
         stddev
       );
 
-      // Assign to each asset (floor at -1 for total loss protection)
+      // Assign to each asset (clamp between -99% and +500%)
       for (let asset = 0; asset < numAssets; asset++) {
-        returns[asset][year] = Math.max(-1, yearReturns[asset]);
+        returns[asset][year] = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, yearReturns[asset]));
       }
     }
   }
