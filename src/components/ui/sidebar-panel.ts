@@ -18,14 +18,42 @@ export class SidebarPanel extends BaseComponent {
     return ['collapsed'];
   }
 
+  /**
+   * Override to prevent re-render on attribute changes.
+   * CSS handles the collapsed state. We manually update the icon.
+   * Re-rendering would destroy slots and break content distribution.
+   */
+  override attributeChangedCallback(
+    name: string,
+    oldValue: string | null,
+    newValue: string | null
+  ): void {
+    if (oldValue === newValue) return;
+
+    // Only update the icon and aria attributes, don't re-render
+    if (name === 'collapsed') {
+      const isCollapsed = newValue !== null;
+      const icon = this.$('.toggle-icon');
+      const toggleBtn = this.$('.toggle-btn');
+      if (icon) {
+        icon.textContent = isCollapsed ? '\u25B8' : '\u25C2';
+      }
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+        toggleBtn.setAttribute('aria-label', `${isCollapsed ? 'Expand' : 'Collapse'} parameters sidebar`);
+      }
+    }
+  }
+
   protected template(): string {
     const isCollapsed = this.hasAttribute('collapsed');
     return `
       <aside class="sidebar">
         <button class="toggle-btn"
-                aria-label="Toggle sidebar"
+                aria-label="${isCollapsed ? 'Expand' : 'Collapse'} parameters sidebar"
                 aria-expanded="${!isCollapsed}">
-          <span class="icon">${isCollapsed ? '>' : '<'}</span>
+          <span class="toggle-label">eVelo Parameters</span>
+          <span class="toggle-icon" aria-hidden="true">${isCollapsed ? '\u25B8' : '\u25C2'}</span>
         </button>
         <div class="sidebar-content">
           <slot></slot>
@@ -70,33 +98,73 @@ export class SidebarPanel extends BaseComponent {
       .toggle-btn {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        gap: var(--spacing-sm, 8px);
         width: 100%;
         padding: var(--spacing-md, 16px);
-        background: transparent;
+        background: var(--color-primary, #0d9488);
         border: none;
         border-bottom: 1px solid var(--border-color, #e2e8f0);
         cursor: pointer;
         font-size: 1rem;
-        color: var(--text-secondary, #64748b);
+        color: var(--text-inverse, #ffffff);
         transition: background 0.2s ease;
       }
 
       .toggle-btn:hover {
-        background: var(--surface-tertiary, #e2e8f0);
+        background: var(--color-primary-dark, #0f766e);
       }
 
       .toggle-btn:focus-visible {
-        outline: 2px solid var(--color-primary, #0d9488);
+        outline: 2px solid var(--text-inverse, #ffffff);
         outline-offset: -2px;
       }
 
-      :host([collapsed]) .toggle-btn .icon {
-        transform: rotate(180deg);
+      .toggle-label {
+        font-weight: 600;
+        font-size: var(--font-size-sm, 0.875rem);
+        white-space: nowrap;
+        transition: writing-mode 0.3s ease, opacity 0.3s ease;
       }
 
-      .icon {
+      .toggle-icon {
+        font-size: 0.875rem;
         transition: transform 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      /* Desktop collapsed: vertical text using writing-mode */
+      :host([collapsed]) .toggle-btn {
+        justify-content: center;
+        padding: var(--spacing-lg, 24px) var(--spacing-sm, 8px);
+        height: 100%;
+        flex-direction: column;
+      }
+
+      :host([collapsed]) .toggle-label {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+      }
+
+      :host([collapsed]) .toggle-icon {
+        transform: rotate(90deg);
+        margin-top: var(--spacing-sm, 8px);
+      }
+
+      /* Dark theme support */
+      :host-context([data-theme="dark"]) .toggle-btn {
+        background: var(--color-primary, #0d9488);
+      }
+
+      :host-context([data-theme="dark"]) .toggle-btn:hover {
+        background: var(--color-primary-light, #14b8a6);
+      }
+
+      /* Mobile: Always horizontal label, hide icon */
+      @media (max-width: 768px) {
+        .toggle-btn {
+          display: none; /* Hide on mobile - main-layout handles mobile toggle */
+        }
       }
 
       .sidebar-content {
