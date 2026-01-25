@@ -232,7 +232,7 @@ export class ResultsDashboard extends BaseComponent {
           </div>
         </section>
 
-        <section class="chart-section">
+        <section class="chart-section full-width">
           <h3>Terminal Value Distribution</h3>
           <div class="chart-container">
             <histogram-chart id="histogram-chart"></histogram-chart>
