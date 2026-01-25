@@ -123,6 +123,27 @@ export interface SBLOCConfig {
    * @default 0.03 (3% annual growth)
    */
   withdrawalGrowthRate?: number;
+
+  /**
+   * Multiplier for target LTV after forced liquidation (e.g., 0.8 for 80%)
+   *
+   * After a margin call, assets are sold to reduce LTV to:
+   *   targetLTV = maintenanceMargin * liquidationTargetMultiplier
+   *
+   * Example with 50% maintenance margin and 0.8 multiplier:
+   *   targetLTV = 0.50 * 0.8 = 0.40 (40%)
+   *
+   * Lower multiplier = more aggressive deleveraging = fewer repeat margin calls
+   * Higher multiplier = less selling = more capital preserved (but riskier)
+   *
+   * Typical values:
+   * - 0.7-0.8: Conservative (30-40% buffer below maintenance)
+   * - 0.85-0.90: Moderate (10-15% buffer)
+   * - 0.95+: Aggressive (minimal buffer, risky)
+   *
+   * @default 0.8 (targets 80% of maintenance margin)
+   */
+  liquidationTargetMultiplier?: number;
 }
 
 // ============================================================================
@@ -321,6 +342,7 @@ export const DEFAULT_SBLOC_CONFIG: SBLOCConfig = {
   compoundingFrequency: 'annual',
   startYear: 0,
   withdrawalGrowthRate: 0.03,   // 3% annual growth (inflation adjustment)
+  liquidationTargetMultiplier: 0.8, // Target 80% of maintenance margin after liquidation
 };
 
 /**
