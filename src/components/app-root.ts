@@ -1313,6 +1313,14 @@ export class AppRoot extends BaseComponent {
         return;
       }
 
+      // Dispatch event to trigger auto-collapse on mobile
+      this.dispatchEvent(
+        new CustomEvent('simulation-start', {
+          bubbles: true,
+          composed: true,
+        })
+      );
+
       try {
         this._isRunning = true;
         runBtn.disabled = true;
