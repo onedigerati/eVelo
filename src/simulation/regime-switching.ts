@@ -53,14 +53,55 @@ export function nextRegime(
   const probs = matrix[current];
   const r = rng();
 
-  // Cumulative probability selection
+  // Cumulative probability selection for 4-regime system
   if (r < probs.bull) {
     return 'bull';
   }
   if (r < probs.bull + probs.bear) {
     return 'bear';
   }
-  return 'crash';
+  if (r < probs.bull + probs.bear + probs.crash) {
+    return 'crash';
+  }
+  return 'recovery';
+}
+
+/**
+ * Validate transition matrix for sanity
+ *
+ * Checks that:
+ * - All probabilities are non-negative
+ * - Each row sums to 1 (within tolerance)
+ *
+ * @param matrix Transition matrix to validate
+ * @returns True if valid, throws error otherwise
+ */
+export function validateTransitionMatrix(matrix: TransitionMatrix): boolean {
+  const regimes: MarketRegime[] = ['bull', 'bear', 'crash', 'recovery'];
+  const tolerance = 0.0001;
+
+  for (const regime of regimes) {
+    const row = matrix[regime];
+
+    // Check non-negative probabilities
+    for (const targetRegime of regimes) {
+      if (row[targetRegime] < 0) {
+        throw new Error(
+          `Invalid transition probability: ${regime} -> ${targetRegime} = ${row[targetRegime]} (must be non-negative)`
+        );
+      }
+    }
+
+    // Check row sum equals 1
+    const rowSum = row.bull + row.bear + row.crash + row.recovery;
+    if (Math.abs(rowSum - 1.0) > tolerance) {
+      throw new Error(
+        `Invalid transition matrix: ${regime} row sums to ${rowSum} (must sum to 1.0)`
+      );
+    }
+  }
+
+  return true;
 }
 
 /**

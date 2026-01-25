@@ -31,6 +31,11 @@ import {
   type SBLOCConfig as SBLOCEngineConfig,
   type SBLOCState,
 } from '../sbloc';
+import {
+  calculateSellStrategyFromReturns,
+  type SellStrategyFromReturnsConfig,
+  type SellIterationResult,
+} from '../calculations/sell-strategy';
 import type {
   SimulationConfig,
   PortfolioConfig,
@@ -41,6 +46,7 @@ import type {
   MarginCallStats,
   RegimeCalibrationMode,
   RegimeParamsMap,
+  SellStrategyOutput,
 } from './types';
 import { DEFAULT_REGIME_PARAMS } from './types';
 
@@ -148,6 +154,10 @@ export async function runMonteCarlo(
   let iterationReturns: number[] | null = null; // Cumulative return per iteration
   let firstFailureYear: number[] | null = null; // Year when portfolio first failed (-1 if never)
 
+  // Track sell strategy results per iteration (only if sellStrategy config provided)
+  let sellIterationResults: SellIterationResult[] | null = null;
+  let sellYearlyValues: number[][] | null = null; // [iteration][year]
+
   if (config.sbloc) {
     sblocStates = Array.from({ length: iterations }, () => []);
     marginCallYears = new Array(iterations).fill(-1);
@@ -156,6 +166,11 @@ export async function runMonteCarlo(
     totalInterestCharged = new Array(iterations).fill(0);
     iterationReturns = new Array(iterations).fill(0);
     firstFailureYear = new Array(iterations).fill(-1);
+  }
+
+  if (config.sellStrategy) {
+    sellIterationResults = [];
+    sellYearlyValues = Array.from({ length: iterations }, () => []);
   }
 
   // Run iterations in batches
@@ -529,6 +544,7 @@ export async function runMonteCarlo(
         bull: assetCalibrationResults[i].params.bull,
         bear: assetCalibrationResults[i].params.bear,
         crash: assetCalibrationResults[i].params.crash,
+        recovery: assetCalibrationResults[i].params.recovery,
         usedFallback: assetCalibrationResults[i].validation.usedFallback,
         validationIssues: assetCalibrationResults[i].validation.issues.map(iss => iss.message),
       })) : undefined,
