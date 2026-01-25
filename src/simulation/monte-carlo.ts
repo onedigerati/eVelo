@@ -485,7 +485,9 @@ export async function runMonteCarlo(
     console.log(`[MC Debug] ═══════════════════════════════════════════════════`);
   }
 
-  const yearlyPercentiles = calculateYearlyPercentiles(yearlyValues);
+  // Use path-coherent percentile extraction (reference methodology)
+  const { percentiles: yearlyPercentiles, simulationIndices } =
+    extractPathCoherentPercentiles(yearlyValues, terminalValues);
 
   // Compute SBLOC trajectory and margin call stats (if enabled)
   let sblocTrajectory: SBLOCTrajectory | undefined;
@@ -899,6 +901,25 @@ function calculateStatistics(
 
 /**
  * Calculate percentiles for each year
+ *
+ * METHODOLOGY NOTE: There are two approaches to percentile paths:
+ *
+ * 1. POINT-WISE (current implementation):
+ *    - For each year, calculate the Nth percentile VALUE across all iterations
+ *    - Each percentile line may combine values from DIFFERENT simulations
+ *    - Example: P10 at year 5 might be from sim #42, P10 at year 6 from sim #87
+ *    - Pros: Simpler, always shows Nth percentile value for each year
+ *    - Cons: Lines may not represent realistic paths (combining different market histories)
+ *
+ * 2. PATH-COHERENT (reference implementation):
+ *    - Rank all simulations by their TERMINAL value (final year)
+ *    - P10 line = the complete path of the simulation at the 10th percentile ranking
+ *    - Each percentile line represents ONE simulation's journey from start to finish
+ *    - Pros: More realistic paths, coherent market history
+ *    - Cons: Mid-path values may not be exactly the Nth percentile for that year
+ *
+ * The current implementation uses POINT-WISE percentiles.
+ * See extractPathCoherentPercentiles for PATH-COHERENT alternative.
  */
 function calculateYearlyPercentiles(
   yearlyValues: number[][]
@@ -911,6 +932,89 @@ function calculateYearlyPercentiles(
     p75: percentile(values, 75),
     p90: percentile(values, 90),
   }));
+}
+
+/**
+ * Result of path-coherent percentile extraction
+ */
+interface PathCoherentResult {
+  percentiles: YearlyPercentiles[];
+  /** Which simulation index represents each percentile */
+  simulationIndices: {
+    p10: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p90: number;
+  };
+}
+
+/**
+ * Extract path-coherent percentiles
+ *
+ * This is the REFERENCE application methodology:
+ * 1. Rank all simulations by their TERMINAL (final) net worth
+ * 2. Identify which simulation index represents each percentile
+ * 3. Extract the COMPLETE path for each percentile simulation
+ *
+ * Result: Each percentile line represents ONE coherent simulation path,
+ * not a cross-section of different simulations at each year.
+ *
+ * @param yearlyValues 2D array [year][iteration] of portfolio values
+ * @param terminalValues Final net worth for each iteration
+ * @returns Object with percentile paths and simulation indices
+ */
+function extractPathCoherentPercentiles(
+  yearlyValues: number[][],
+  terminalValues: Float64Array | number[]
+): PathCoherentResult {
+  const iterations = terminalValues.length;
+  const years = yearlyValues.length;
+
+  // Create array of [iteration index, terminal value] pairs
+  const rankedSimulations = Array.from(terminalValues)
+    .map((value, index) => ({ index, terminalValue: value }))
+    // Filter out invalid values (NaN, Infinity)
+    .filter(s => isFinite(s.terminalValue))
+    // Sort by terminal value (lowest to highest)
+    .sort((a, b) => a.terminalValue - b.terminalValue);
+
+  const n = rankedSimulations.length;
+
+  // Find simulation index for each percentile
+  const getPercentileIndex = (p: number) => {
+    const rank = Math.min(Math.floor((p / 100) * n), n - 1);
+    return rankedSimulations[rank].index;
+  };
+
+  const simulationIndices = {
+    p10: getPercentileIndex(10),
+    p25: getPercentileIndex(25),
+    p50: getPercentileIndex(50),
+    p75: getPercentileIndex(75),
+    p90: getPercentileIndex(90),
+  };
+
+  // Extract complete paths for each percentile
+  const percentiles: YearlyPercentiles[] = [];
+
+  for (let year = 0; year < years; year++) {
+    percentiles.push({
+      year: year + 1,
+      p10: yearlyValues[year][simulationIndices.p10],
+      p25: yearlyValues[year][simulationIndices.p25],
+      p50: yearlyValues[year][simulationIndices.p50],
+      p75: yearlyValues[year][simulationIndices.p75],
+      p90: yearlyValues[year][simulationIndices.p90],
+    });
+  }
+
+  console.log('[MC] Path-coherent percentiles extracted');
+  console.log(`[MC]   P10 from simulation #${simulationIndices.p10} (terminal: $${rankedSimulations.find(s => s.index === simulationIndices.p10)?.terminalValue.toFixed(0)})`);
+  console.log(`[MC]   P50 from simulation #${simulationIndices.p50} (terminal: $${rankedSimulations.find(s => s.index === simulationIndices.p50)?.terminalValue.toFixed(0)})`);
+  console.log(`[MC]   P90 from simulation #${simulationIndices.p90} (terminal: $${rankedSimulations.find(s => s.index === simulationIndices.p90)?.terminalValue.toFixed(0)})`);
+
+  return { percentiles, simulationIndices };
 }
 
 /**
