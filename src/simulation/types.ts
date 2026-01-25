@@ -44,16 +44,39 @@ export interface SBLOCSimConfig {
 
 /**
  * Withdrawal chapter configuration for multi-phase strategies
+ *
+ * Chapters allow modeling lifestyle changes where withdrawal needs change over time.
+ * Common scenarios:
+ * - Kids leaving home (reduced expenses)
+ * - Mortgage payoff (reduced debt service)
+ * - Retirement phases (different spending patterns)
+ *
+ * Example: Start with $100K/year, reduce 25% at year 15 (Chapter 2), reduce another 25% at year 25 (Chapter 3)
+ * - Years 0-14: $100K/year (growing with inflation)
+ * - Years 15-24: $75K/year (75% of base)
+ * - Years 25+: $56.25K/year (75% of 75% = 56.25% of base)
  */
 export interface WithdrawalChapter {
   /** Years after withdrawal start to begin this chapter */
   yearsAfterStart: number;
-  /** Reduction percentage (positive = reduce, negative = increase) */
+  /**
+   * Reduction percentage (positive = reduce, negative = increase)
+   * Examples:
+   * - 25 = reduce withdrawals by 25% (multiply by 0.75)
+   * - 50 = reduce withdrawals by 50% (multiply by 0.5)
+   * - -20 = increase withdrawals by 20% (multiply by 1.2)
+   */
   reductionPercent: number;
 }
 
 /**
  * Withdrawal chapters configuration
+ *
+ * IMPORTANT: Reductions are CUMULATIVE. If Chapter 2 reduces by 25% and Chapter 3 reduces by 25%,
+ * the final withdrawal is 75% * 75% = 56.25% of the base withdrawal.
+ *
+ * Each chapter's reduction applies to the CURRENT withdrawal amount (after previous chapters),
+ * not to the original base withdrawal.
  */
 export interface WithdrawalChaptersConfig {
   /** Whether multi-phase withdrawal is enabled */
