@@ -33,6 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 18: Fix Regime-Switching Model** - Connect asset historical returns to regime parameters, implement calibration modes, fix preset data year labels
 - [x] **Phase 19: Sell Strategy Accuracy** - Match reference application order of operations, add dividend tax modeling, ensure apples-to-apples comparison
 - [ ] **Phase 20: Financial Calculation Audit** - Comprehensive verification of all calculation accuracy, fix 13 identified risk areas
+- [ ] **Phase 21: Header Redesign** - Elegant, branded header with improved aesthetics, eVelo identity, and responsive mobile experience
 
 ## Phase Details
 
@@ -591,10 +592,45 @@ Wave Structure:
 - Wave 3 (depends on Wave 2): 20-09, 20-10 (testing and UI)
 - Wave 4 (final): 20-11 (verification)
 
+### Phase 21: Header Redesign
+**Goal**: Transform the header into an elegant, branded experience that proudly represents eVelo's identity while maintaining intuitive functionality and responsive mobile design
+**Depends on**: Phase 20
+**Requirements**: UI-01, THEME-01
+**Success Criteria** (what must be TRUE):
+  1. Header design is visually refined with professional typography and spacing
+  2. eVelo branding is prominent with distinctive logo/wordmark treatment
+  3. Tagline or value proposition communicates app purpose clearly
+  4. Action buttons (settings, help, theme) are elegantly integrated
+  5. Mobile view collapses gracefully with hamburger menu or icon-only mode
+  6. Dark theme support with appropriate color adjustments
+  7. Consistent with reference application's visual quality
+  8. Accessible with proper contrast ratios and keyboard navigation
+**Research**: Complete (see 21-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 21-01-PLAN.md -- Create app-header component with branding and tagline (Wave 1)
+- [ ] 21-02-PLAN.md -- Integration into app-root and visual verification (Wave 2)
+
+**Details:**
+Inspiration from reference application:
+- Clean centered title with subtle icon
+- Descriptive tagline below main title
+- Icon buttons in top-right corner (settings, help, theme toggle)
+- Unified dark header bar creates visual anchor
+- Professional, polished aesthetic
+
+Key improvements over current eVelo header:
+- Add visual brand identity (logo or distinctive typography)
+- Add tagline to communicate value proposition
+- Consider gradient or subtle background treatment
+- Improve icon button grouping and spacing
+- Ensure mobile-first responsive behavior
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -619,6 +655,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 18. Fix Regime-Switching Model | 4/4 | Complete | 2026-01-24 |
 | 19. Sell Strategy Accuracy | 4/4 | Complete | 2026-01-24 |
 | 20. Financial Calculation Audit | 0/11 | Planned | - |
+| 21. Header Redesign | 0/2 | Planned | - |
 
-**Total Plans**: 91
+**Total Plans**: 93
 **Completed Plans**: 80
