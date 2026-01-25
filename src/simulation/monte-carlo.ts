@@ -544,7 +544,8 @@ export async function runMonteCarlo(
         timeHorizon,
         sblocBaseWithdrawal,
         sblocRaiseRate,
-        sblocWithdrawalStartYear
+        sblocWithdrawalStartYear,
+        config.withdrawalChapters
       ),
       cumulativeInterest: {
         p50: loanBalancesByYear.map((yv, idx) => {
@@ -552,7 +553,8 @@ export async function runMonteCarlo(
             idx + 1,
             sblocBaseWithdrawal,
             sblocRaiseRate,
-            sblocWithdrawalStartYear
+            sblocWithdrawalStartYear,
+            config.withdrawalChapters
           );
           const medianLoan = percentile(yv, 50);
           return Math.max(0, medianLoan - cumWithdrawal);
@@ -1073,14 +1075,15 @@ function computeMarginCallStats(
 }
 
 /**
- * Calculate cumulative withdrawals for all years, accounting for annual raises
- * and withdrawal start year
+ * Calculate cumulative withdrawals for all years, accounting for annual raises,
+ * withdrawal start year, and chapter reductions
  */
 function calculateCumulativeWithdrawals(
   timeHorizon: number,
   baseWithdrawal: number,
   raiseRate: number,
-  startYear: number
+  startYear: number,
+  chapters?: SimulationConfig['withdrawalChapters']
 ): number[] {
   const result: number[] = [];
   let cumulative = 0;
@@ -1094,7 +1097,12 @@ function calculateCumulativeWithdrawals(
       // Year 0 of withdrawals: baseWithdrawal * (1+r)^0 = baseWithdrawal
       // Year 1 of withdrawals: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
       // etc.
-      const withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
+      let withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
+
+      // Apply chapter multiplier for this year
+      const chapterMultiplier = calculateChapterMultiplier(chapters, simYear, startYear);
+      withdrawal *= chapterMultiplier;
+
       cumulative += withdrawal;
     }
     result.push(cumulative);
@@ -1104,13 +1112,14 @@ function calculateCumulativeWithdrawals(
 }
 
 /**
- * Calculate cumulative withdrawal at a specific year, accounting for raises
+ * Calculate cumulative withdrawal at a specific year, accounting for raises and chapters
  */
 function calculateCumulativeWithdrawalAtYear(
   year: number,
   baseWithdrawal: number,
   raiseRate: number,
-  startYear: number
+  startYear: number,
+  chapters?: SimulationConfig['withdrawalChapters']
 ): number {
   let cumulative = 0;
 
@@ -1121,7 +1130,12 @@ function calculateCumulativeWithdrawalAtYear(
       // Year 0 of withdrawals: baseWithdrawal * (1+r)^0 = baseWithdrawal
       // Year 1 of withdrawals: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
       // etc.
-      const withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
+      let withdrawal = baseWithdrawal * Math.pow(1 + raiseRate, yearsOfWithdrawals);
+
+      // Apply chapter multiplier for this year
+      const chapterMultiplier = calculateChapterMultiplier(chapters, simYear, startYear);
+      withdrawal *= chapterMultiplier;
+
       cumulative += withdrawal;
     }
   }
