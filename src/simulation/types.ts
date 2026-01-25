@@ -128,7 +128,7 @@ export interface SimulationConfig {
   /** Whether to adjust results for inflation (real vs nominal) */
   inflationAdjusted: boolean;
   /** Return resampling method */
-  resamplingMethod: 'simple' | 'block' | 'regime';
+  resamplingMethod: 'simple' | 'block' | 'regime' | 'fat-tail';
   /** Regime calibration mode (only used when resamplingMethod is 'regime') */
   regimeCalibration?: RegimeCalibrationMode;
   /** Block size for block bootstrap (auto-calculated if not provided) */
@@ -169,7 +169,68 @@ export interface AssetConfig {
   historicalReturns: number[];
   /** Regime-specific parameters (optional, used when resamplingMethod is 'regime') */
   regimeParams?: RegimeParamsMap;
+  /** Asset class for fat-tail distribution (optional, used when resamplingMethod is 'fat-tail') */
+  assetClass?: AssetClass;
 }
+
+// ============================================================================
+// Fat-Tail Model Types
+// ============================================================================
+
+/**
+ * Asset class for fat-tail distribution parameters
+ */
+export type AssetClass = 'equity_stock' | 'equity_index' | 'commodity' | 'bond';
+
+/**
+ * Fat-tail distribution parameters for an asset class
+ */
+export interface FatTailParams {
+  /** Survivorship bias adjustment (e.g., 0.005 for 0.5% annual bias) */
+  survivorshipBias: number;
+  /** Volatility scaling factor */
+  volatilityScaling: number;
+  /** Degrees of freedom for Student's t-distribution (lower = fatter tails) */
+  degreesOfFreedom: number;
+  /** Skew multiplier for asymmetric distributions */
+  skewMultiplier: number;
+}
+
+/**
+ * Default fat-tail parameters by asset class
+ *
+ * Based on empirical analysis of tail events and distribution characteristics:
+ * - Lower degrees of freedom = fatter tails (more extreme events)
+ * - Equity has fatter tails than bonds
+ * - Individual stocks have fatter tails than indices
+ * - Survivorship bias accounts for delisted/bankrupt companies not in historical data
+ */
+export const FAT_TAIL_PARAMS: Record<AssetClass, FatTailParams> = {
+  equity_stock: {
+    survivorshipBias: 0.005,      // 0.5% annual bias
+    volatilityScaling: 1.0,
+    degreesOfFreedom: 5,          // Fat tails
+    skewMultiplier: -0.3,         // Negative skew (crashes worse than rallies)
+  },
+  equity_index: {
+    survivorshipBias: 0.002,      // 0.2% annual bias
+    volatilityScaling: 1.0,
+    degreesOfFreedom: 7,          // Moderately fat tails
+    skewMultiplier: -0.2,         // Slight negative skew
+  },
+  commodity: {
+    survivorshipBias: 0.0,        // No survivorship bias
+    volatilityScaling: 1.2,       // Higher volatility
+    degreesOfFreedom: 4,          // Very fat tails
+    skewMultiplier: 0.0,          // Symmetric
+  },
+  bond: {
+    survivorshipBias: 0.0,        // No survivorship bias
+    volatilityScaling: 0.8,       // Lower volatility
+    degreesOfFreedom: 10,         // Thinner tails
+    skewMultiplier: 0.0,          // Symmetric
+  },
+};
 
 // ============================================================================
 // Regime-Switching Types
@@ -178,7 +239,7 @@ export interface AssetConfig {
 /**
  * Market regime identifier
  */
-export type MarketRegime = 'bull' | 'bear' | 'crash';
+export type MarketRegime = 'bull' | 'bear' | 'crash' | 'recovery';
 
 /**
  * Parameters for a single regime's return distribution
@@ -201,11 +262,13 @@ export type RegimeParamsMap = Record<MarketRegime, RegimeParams>;
  */
 export interface TransitionMatrix {
   /** Transition probabilities from bull market */
-  bull: { bull: number; bear: number; crash: number };
+  bull: { bull: number; bear: number; crash: number; recovery: number };
   /** Transition probabilities from bear market */
-  bear: { bull: number; bear: number; crash: number };
+  bear: { bull: number; bear: number; crash: number; recovery: number };
   /** Transition probabilities from crash */
-  crash: { bull: number; bear: number; crash: number };
+  crash: { bull: number; bear: number; crash: number; recovery: number };
+  /** Transition probabilities from recovery */
+  recovery: { bull: number; bear: number; crash: number; recovery: number };
 }
 
 // ============================================================================
@@ -324,6 +387,7 @@ export interface SBLOCDebugStats {
     bull: { mean: number; stddev: number };
     bear: { mean: number; stddev: number };
     crash: { mean: number; stddev: number };
+    recovery: { mean: number; stddev: number };
     /** Whether fallback to defaults was used due to degenerate calibration */
     usedFallback?: boolean;
     /** Validation issues found during calibration */
@@ -331,6 +395,38 @@ export interface SBLOCDebugStats {
   }[];
   /** Calibration mode used */
   calibrationMode?: 'historical' | 'conservative';
+}
+
+/**
+ * Sell strategy output integrated with Monte Carlo simulation.
+ * Uses same market returns as BBD iterations for fair comparison.
+ */
+export interface SellStrategyOutput {
+  /** Terminal portfolio values across all iterations */
+  terminalValues: number[];
+  /** Success rate - percentage where terminal > initial (0-100) */
+  successRate: number;
+  /** Percentile values of terminal outcomes */
+  percentiles: {
+    p10: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p90: number;
+  };
+  /** Tax metrics */
+  taxes: {
+    /** Median lifetime capital gains taxes */
+    medianCapitalGains: number;
+    /** Median lifetime dividend taxes */
+    medianDividend: number;
+    /** Median total taxes (capital gains + dividend) */
+    medianTotal: number;
+  };
+  /** Depletion probability (percentage reaching zero) */
+  depletionProbability: number;
+  /** Yearly percentiles across all iterations */
+  yearlyPercentiles: YearlyPercentiles[];
 }
 
 /**
@@ -351,6 +447,8 @@ export interface SimulationOutput {
   estateAnalysis?: EstateAnalysis;
   /** Debug statistics for SBLOC diagnostics */
   debugStats?: SBLOCDebugStats;
+  /** Sell strategy output (only present if sellStrategy config provided) */
+  sellStrategy?: SellStrategyOutput;
 }
 
 /**
@@ -399,31 +497,58 @@ export interface SimulationStatistics {
 /**
  * Default transition matrix based on historical S&P 500 regime analysis
  *
- * Source: Hamilton (1989) regime-switching model literature
+ * 4-regime model (bull, bear, crash, recovery) from reference application.
+ * Recovery regime captures the post-crash rebound period before returning to normal bull markets.
  *
- * - Bull markets are persistent (97% stay bull)
- * - Bear markets have some persistence but can recover
- * - Crashes are short-lived and transition to bear or bull
+ * Key transitions:
+ * - Bull markets are persistent (96.5% stay bull)
+ * - Bear markets can recover or crash
+ * - Crashes typically transition to recovery (70%)
+ * - Recovery transitions back to bull markets (80%)
  */
 export const DEFAULT_TRANSITION_MATRIX: TransitionMatrix = {
-  // From Bull: 97% stay bull, 2.5% to bear, 0.5% to crash
-  bull: { bull: 0.97, bear: 0.025, crash: 0.005 },
-  // From Bear: 3% to bull, 95% stay bear, 2% to crash
-  bear: { bull: 0.03, bear: 0.95, crash: 0.02 },
-  // From Crash: 10% to bull, 30% to bear, 60% stay crash
-  crash: { bull: 0.10, bear: 0.30, crash: 0.60 },
+  // From Bull: 96.5% stay bull, 2.5% to bear, 0.5% to crash, 0.5% to recovery (rare)
+  bull: { bull: 0.965, bear: 0.025, crash: 0.005, recovery: 0.005 },
+  // From Bear: 3% to bull, 92% stay bear, 2% to crash, 3% to recovery
+  bear: { bull: 0.03, bear: 0.92, crash: 0.02, recovery: 0.03 },
+  // From Crash: 5% to bull, 20% to bear, 5% stay crash, 70% to recovery
+  crash: { bull: 0.05, bear: 0.20, crash: 0.05, recovery: 0.70 },
+  // From Recovery: 80% to bull, 5% to bear, 5% to crash, 10% stay recovery
+  recovery: { bull: 0.80, bear: 0.05, crash: 0.05, recovery: 0.10 },
+};
+
+/**
+ * Conservative transition matrix for stress testing
+ *
+ * Assumptions:
+ * - Lower bull persistence (more likely to transition out)
+ * - Higher bear persistence (harder to escape downturns)
+ * - Higher crash probability from all states
+ * - Slower recovery to bull (longer time in recovery regime)
+ */
+export const CONSERVATIVE_TRANSITION_MATRIX: TransitionMatrix = {
+  // From Bull: 94% stay bull, 4% to bear, 1.5% to crash, 0.5% to recovery
+  bull: { bull: 0.94, bear: 0.04, crash: 0.015, recovery: 0.005 },
+  // From Bear: 2% to bull, 94% stay bear, 3% to crash, 1% to recovery
+  bear: { bull: 0.02, bear: 0.94, crash: 0.03, recovery: 0.01 },
+  // From Crash: 2% to bull, 25% to bear, 10% stay crash, 63% to recovery
+  crash: { bull: 0.02, bear: 0.25, crash: 0.10, recovery: 0.63 },
+  // From Recovery: 70% to bull, 10% to bear, 5% to crash, 15% stay recovery
+  recovery: { bull: 0.70, bear: 0.10, crash: 0.05, recovery: 0.15 },
 };
 
 /**
  * Default regime parameters based on historical S&P 500 data
  *
  * These are annualized return and volatility estimates for each regime:
- * - Bull: Strong positive returns, low volatility
+ * - Bull: Strong positive returns, moderate volatility
  * - Bear: Negative returns, elevated volatility
  * - Crash: Sharp negative returns, very high volatility
+ * - Recovery: Strong positive returns following crash, high volatility
  */
 export const DEFAULT_REGIME_PARAMS: RegimeParamsMap = {
-  bull: { mean: 0.12, stddev: 0.12 },   // 12% return, 12% vol
-  bear: { mean: -0.08, stddev: 0.20 },  // -8% return, 20% vol
-  crash: { mean: -0.30, stddev: 0.35 }, // -30% return, 35% vol
+  bull: { mean: 0.12, stddev: 0.12 },      // 12% return, 12% vol
+  bear: { mean: -0.08, stddev: 0.20 },     // -8% return, 20% vol
+  crash: { mean: -0.30, stddev: 0.35 },    // -30% return, 35% vol
+  recovery: { mean: 0.20, stddev: 0.25 },  // 20% return, 25% vol
 };
