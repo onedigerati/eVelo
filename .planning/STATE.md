@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 23 of 23 (Reference Methodology Alignment)
-Plan: 07 of 09
+Plan: 04 of 09
 Status: In progress
-Last activity: 2026-01-25 — Completed 23-07-PLAN.md (Wire Fat-Tail Model Integration)
+Last activity: 2026-01-25 — Completed 23-04-PLAN.md (Add Survivorship Bias Adjustment)
 
-Progress: █████████████████████████████████████████ 91% (96/105 plans complete)
+Progress: █████████████████████████████████████████ 92% (97/105 plans complete)
 
 **Current Phase:**
 Phase 23: Reference Methodology Alignment - 4-regime market model with recovery state
@@ -22,9 +22,9 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 96
+- Total plans completed: 97
 - Average duration: 3.8 min
-- Total execution time: 361 min
+- Total execution time: 370 min
 
 **By Phase:**
 
@@ -52,10 +52,10 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 | 20-financial-calculation-audit | 2/9 | 6 min | 3.0 min |
 | 21-header-redesign | 1/1 | 4 min | 4.0 min |
 | 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
-| 23-reference-methodology-alignment | 6/9 | 30 min | 5.0 min |
+| 23-reference-methodology-alignment | 7/9 | 39 min | 5.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 23-02 (5 min), 23-03 (8 min), 23-05 (9 min), 23-07 (4 min)
+- Last 5 plans: 23-02 (5 min), 23-03 (8 min), 23-04 (9 min), 23-05 (9 min), 23-07 (4 min)
 - Trend: Phase 23 in progress - Reference methodology alignment
 
 ## Accumulated Context
@@ -533,6 +533,12 @@ Recent decisions affecting current work:
 - Return clamping to [-0.99, +10.0] to prevent extreme outliers in simulation
 - Survivorship bias adjustment varies by asset class (0.5% equity stock, 0.2% equity index)
 - Cholesky decomposition for correlated multivariate fat-tail returns
+
+**From 23-04:**
+- Regime-switching survivorship bias: 1.5% historical, 2.0% conservative
+- Conservative transition matrix for stress testing (lower bull persistence, higher crash probability)
+- Return clamping at -99% min and +500% max for regime model
+- Calibration mode wiring through Monte Carlo with console logging for transparency
 
 ### Pending Todos
 
