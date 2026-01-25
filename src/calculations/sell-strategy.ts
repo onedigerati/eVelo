@@ -10,6 +10,7 @@
 
 import type { YearlyPercentiles } from '../simulation/types';
 import { percentile as calcPercentile } from '../math';
+import { DEFAULT_SELL_CONFIG } from '../config';
 
 // ============================================================================
 // Types
@@ -158,6 +159,16 @@ export interface SellStrategyConfig {
  * 3. Market returns applied to reduced portfolio
  *
  * @param config - Sell strategy configuration including dividend tax params
+ * @param config.costBasisRatio - Cost basis as fraction of portfolio (default: 0.4 = 60% embedded gains)
+ *   Users should adjust based on their portfolio's actual cost basis.
+ *   - Recent IPO investor: 0.9-0.95 (mostly basis, little gain)
+ *   - Long-term holder (20+ years): 0.2-0.4 (mostly gains)
+ *   - Inherited portfolio: varies based on stepped-up basis
+ * @param config.dividendYield - Annual dividend yield (default: 0.02 = 2%)
+ *   S&P 500 average is ~1.5-2%. Growth portfolios may be lower (0.5-1%).
+ *   High-yield or dividend portfolios may be 3-5%.
+ * @param config.capitalGainsRate - Capital gains tax rate (default: 0.238 = 23.8%)
+ * @param config.dividendTaxRate - Dividend tax rate (default: same as capitalGainsRate)
  * @param yearlyPercentiles - Portfolio percentiles from BBD simulation (for growth rates)
  * @returns Sell strategy result with all metrics including dividend taxes
  *
@@ -192,13 +203,14 @@ export function calculateSellStrategy(
     annualWithdrawal,
     withdrawalGrowth,
     timeHorizon,
-    capitalGainsRate = 0.238,
-    costBasisRatio = 0.4,  // Assume 40% cost basis (60% embedded gain)
+    // Use centralized defaults from config module
+    capitalGainsRate = DEFAULT_SELL_CONFIG.capitalGainsRate,
+    costBasisRatio = DEFAULT_SELL_CONFIG.costBasisRatio,
   } = config;
 
-  // Extract dividend config with defaults
-  const dividendYield = config.dividendYield ?? 0.02;  // 2% default
-  const dividendTaxRate = config.dividendTaxRate ?? capitalGainsRate;  // Use cap gains rate
+  // Extract dividend config with centralized defaults
+  const dividendYield = config.dividendYield ?? DEFAULT_SELL_CONFIG.dividendYield;
+  const dividendTaxRate = config.dividendTaxRate ?? DEFAULT_SELL_CONFIG.dividendTaxRate;
 
   // Extract growth rates from yearly percentiles (using median path)
   const growthRates = extractGrowthRates(yearlyPercentiles);
