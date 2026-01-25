@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 22 of 22 (Mobile Sidebar UX Redesign)
-Plan: 01 of 02
-Status: In progress
-Last activity: 2026-01-25 — Completed 22-01-PLAN.md (Mobile Vertical Collapse & Auto-Collapse)
+Plan: 02 of 02
+Status: Phase complete
+Last activity: 2026-01-25 — Completed 22-02-PLAN.md (Branded Toggle with eVelo Parameters Label)
 
-Progress: ██████████████████████████████████████████░░ 98% (90/91 plans complete)
+Progress: ████████████████████████████████████████████ 100% (91/91 plans complete)
 
 **Current Phase:**
 Phase 22: Mobile Sidebar UX Redesign - Vertical collapse/expand with auto-collapse on simulation run
@@ -853,10 +853,18 @@ None
 - Smooth 300ms cubic-bezier transitions with reduced motion support
 - Desktop horizontal collapse behavior unchanged (48px collapsed width)
 
+**From 22-02:**
+- Branded "eVelo Parameters" text label replaces hamburger icons
+- Desktop sidebar toggle uses writing-mode: vertical-rl for 90-degree rotation when collapsed
+- Teal background (#0d9488) with white text for brand consistency
+- Mobile menu button with 48x48px minimum touch target
+- Unicode triangles (▸ ◂ ▾) for directional indicators
+- Icon rotation (90° desktop, 180° mobile) for visual feedback
+
 ## Session Continuity
 
-Last session: 2026-01-25T02:33:39Z
-Stopped at: Completed 22-01-PLAN.md (Mobile Vertical Collapse & Auto-Collapse)
+Last session: 2026-01-25T02:39:42Z
+Stopped at: Completed 22-02-PLAN.md (Branded Toggle with eVelo Parameters Label)
 Resume file: None
 
-**Phase 22 in progress - Mobile Sidebar UX Redesign (90/91 plans complete)**
+**Phase 22 complete - Mobile Sidebar UX Redesign (91/91 plans complete)**
