@@ -1196,6 +1196,22 @@ export class ResultsDashboard extends BaseComponent {
   }
 
   /**
+   * Get the effective cost basis ratio from simulation config or fallback.
+   * Default: 0.4 (40% basis, 60% embedded gains)
+   */
+  private getEffectiveCostBasisRatio(): number {
+    return this._simulationConfig?.sellStrategy?.costBasisRatio ?? 0.4;
+  }
+
+  /**
+   * Get the effective dividend yield for Sell strategy from simulation config or fallback.
+   * Default: 0.02 (2% annual dividend yield)
+   */
+  private getEffectiveSellDividendYield(): number {
+    return this._simulationConfig?.sellStrategy?.dividendYield ?? 0.02;
+  }
+
+  /**
    * Update key metrics banner with summary statistics.
    * Computes metrics from simulation data and estate analysis.
    */
@@ -1239,7 +1255,8 @@ export class ResultsDashboard extends BaseComponent {
           withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
           timeHorizon,
           capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
-          costBasisRatio: 0.4,
+          costBasisRatio: this.getEffectiveCostBasisRatio(),
+          dividendYield: this.getEffectiveSellDividendYield(),
         },
         percentilesWithYear0,
       );
@@ -1395,7 +1412,8 @@ export class ResultsDashboard extends BaseComponent {
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
-        costBasisRatio: 0.4, // Assume 40% cost basis
+        costBasisRatio: this.getEffectiveCostBasisRatio(),
+        dividendYield: this.getEffectiveSellDividendYield(),
       },
       percentilesWithYear0,
     );
@@ -1527,7 +1545,8 @@ export class ResultsDashboard extends BaseComponent {
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
-        costBasisRatio: 0.4,
+        costBasisRatio: this.getEffectiveCostBasisRatio(),
+        dividendYield: this.getEffectiveSellDividendYield(),
       },
       percentilesWithYear0,
     );
@@ -1822,7 +1841,8 @@ export class ResultsDashboard extends BaseComponent {
         withdrawalGrowth: this._simulationConfig?.sbloc?.annualWithdrawalRaise ?? 0.03,
         timeHorizon,
         capitalGainsRate: this._simulationConfig?.taxModeling?.ltcgTaxRate ?? 0.238,
-        costBasisRatio: 0.4,
+        costBasisRatio: this.getEffectiveCostBasisRatio(),
+        dividendYield: this.getEffectiveSellDividendYield(),
       },
       percentilesWithYear0,
     );
