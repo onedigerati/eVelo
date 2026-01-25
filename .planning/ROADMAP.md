@@ -35,6 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 20: Financial Calculation Audit** - Comprehensive verification of all calculation accuracy, fix 13 identified risk areas
 - [ ] **Phase 21: Header Redesign** - Elegant, branded header with improved aesthetics, eVelo identity, and responsive mobile experience
 - [ ] **Phase 22: Mobile Sidebar UX Redesign** - Vertical collapse/expand on mobile, auto-collapse on simulation, "eVelo Parameters" label replacing hamburger icon
+- [ ] **Phase 23: Reference Methodology Alignment** - Align Monte Carlo simulation with reference application methodology (bootstrap correlation, 4-regime system, fat-tail model, dividend tax modeling)
 
 ## Phase Details
 
@@ -645,8 +646,8 @@ Key improvements over current eVelo header:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- Mobile vertical collapse behavior and auto-collapse on simulation
-- [ ] 22-02-PLAN.md -- Desktop rotated label and integration testing
+- [x] 22-01-PLAN.md -- Mobile vertical collapse behavior and auto-collapse on simulation
+- [x] 22-02-PLAN.md -- Desktop rotated label and integration testing
 
 **Details:**
 User-requested UX improvements:
@@ -661,10 +662,65 @@ Implementation approach:
 - Event listener on simulation button to trigger collapse
 - Update main-layout.ts and sidebar-panel.ts components
 
+### Phase 23: Reference Methodology Alignment
+**Goal**: Align eVelo's Monte Carlo simulation with the reference PortfolioStrategySimulator.html methodology for accurate, matching results
+**Depends on**: Phase 22
+**Requirements**: SIM-01, SIM-02, SIM-03, SIM-04, SIM-05, SIM-06, CALC-05, SBLOC-01
+**Success Criteria** (what must be TRUE):
+  1. Bootstrap model uses shared year index to preserve natural asset correlations
+  2. Regime model implements 4 states (bull/bear/crash/recovery) with proper transition matrices
+  3. Fat-tail model implements Student's t-distribution with asset-class specific parameters
+  4. Survivorship bias adjustment applied based on regime mode (1.5% historical, 2.0% conservative)
+  5. Sell strategy runs 1-per-iteration using same return path as BBD (not synthetic scenarios)
+  6. Dividend tax modeled for both strategies (BBD borrows via SBLOC, Sell liquidates)
+  7. Chapter system implemented for withdrawal reductions
+  8. Path-coherent percentiles extract complete simulation paths (not year-by-year percentiles)
+  9. Asset class differentiation (equity_stock, equity_index, commodity, bond) with specific parameters
+  10. Results match reference application within reasonable tolerance
+**Research**: Complete (see 23-REFERENCE-METHODOLOGY.md)
+**Plans**: 9 plans
+
+Plans:
+- [ ] 23-01-PLAN.md -- Bootstrap correlation preservation (shared year index sampling)
+- [ ] 23-02-PLAN.md -- 4-regime system with recovery state and transition matrices
+- [ ] 23-03-PLAN.md -- Fat-tail model with Student's t-distribution and asset-class params
+- [ ] 23-04-PLAN.md -- Survivorship bias adjustment for regime model
+- [ ] 23-05-PLAN.md -- Sell strategy alignment (1-per-iteration with same returns)
+- [ ] 23-06-PLAN.md -- Dividend tax modeling for BBD and Sell strategies
+- [ ] 23-07-PLAN.md -- Wire fat-tail model into Monte Carlo simulation
+- [ ] 23-08-PLAN.md -- Chapter system for withdrawal reductions
+- [ ] 23-09-PLAN.md -- Path-coherent percentile extraction verification
+
+**Details:**
+Critical methodology gaps identified from reference analysis:
+
+1. **Bootstrap Correlation (CRITICAL)**: Reference uses `sharedYearIndex` to sample same historical year for all assets, preserving natural correlations. eVelo samples independently, breaking correlations.
+
+2. **4-Regime System**: Reference has bull/bear/crash/recovery states. eVelo has bull/bear/crash only. Recovery state has specific transition probabilities and parameters.
+
+3. **Fat-Tail Distribution**: Reference uses Student's t-distribution with asset-class specific degrees of freedom and skew multipliers. eVelo doesn't implement this model.
+
+4. **Sell Strategy Mismatch (CRITICAL)**: Reference runs sell strategy with SAME return path as BBD iteration (apples-to-apples comparison). eVelo runs 10 synthetic scenarios with derived growth rates.
+
+5. **Dividend Tax**: Reference models dividend tax differently:
+   - BBD: Borrows via SBLOC to pay dividend tax (portfolio stays whole)
+   - Sell: Liquidates from portfolio to pay dividend tax (portfolio reduced)
+
+6. **Chapter System**: Reference supports 3-chapter withdrawal reductions (e.g., reduce spending after kids leave, after mortgage paid off).
+
+Key constants from reference:
+- Historical survivorship bias: 1.5%
+- Conservative survivorship bias: 2.0%
+- Bull→Bull transition: 0.89
+- Crash return clamp: -99% to +500%
+- Fat-tail degrees of freedom: 4-7 depending on asset class
+
+See: .planning/phases/23-reference-methodology-alignment/23-REFERENCE-METHODOLOGY.md
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -690,7 +746,8 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 19. Sell Strategy Accuracy | 4/4 | Complete | 2026-01-24 |
 | 20. Financial Calculation Audit | 0/11 | Planned | - |
 | 21. Header Redesign | 0/2 | Planned | - |
-| 22. Mobile Sidebar UX Redesign | 0/2 | Planned | - |
+| 22. Mobile Sidebar UX Redesign | 2/2 | Complete | 2026-01-25 |
+| 23. Reference Methodology Alignment | 0/9 | Planned | - |
 
-**Total Plans**: 95
-**Completed Plans**: 80
+**Total Plans**: 105
+**Completed Plans**: 91
