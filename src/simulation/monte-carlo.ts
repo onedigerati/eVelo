@@ -25,6 +25,8 @@ import {
   calculatePortfolioRegimeParams,
   type CalibratedRegimeResult,
 } from './regime-calibration';
+import { generateCorrelatedFatTailReturns } from './fat-tail';
+import type { AssetClass } from './types';
 import {
   initializeSBLOCState,
   stepSBLOCYear,
@@ -687,6 +689,33 @@ function generateIterationReturns(
       undefined, // shared params (not used when assetRegimeParams provided)
       assetRegimeParams
     );
+    return returns;
+  }
+
+  if (method === 'fat-tail') {
+    // Use fat-tail model with Student's t-distribution
+    const allHistoricalReturns = portfolio.assets.map(asset => asset.historicalReturns);
+    const assetClasses = portfolio.assets.map(asset => asset.assetClass ?? 'equity_index');
+
+    console.log('[MC Debug] Fat-tail model selected');
+    console.log('[MC Debug] Asset classes:', assetClasses);
+
+    // Generate returns for all years
+    const returns: number[][] = Array(numAssets).fill(0).map(() => []);
+
+    for (let year = 0; year < years; year++) {
+      const yearReturns = generateCorrelatedFatTailReturns(
+        allHistoricalReturns,
+        assetClasses,
+        portfolio.correlationMatrix
+      );
+
+      // Assign year returns to each asset
+      for (let asset = 0; asset < numAssets; asset++) {
+        returns[asset].push(yearReturns[asset]);
+      }
+    }
+
     return returns;
   }
 
