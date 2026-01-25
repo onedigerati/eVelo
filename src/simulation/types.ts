@@ -19,7 +19,18 @@ export interface SBLOCSimConfig {
   interestRate: number;
   /** Annual withdrawal amount in dollars */
   annualWithdrawal: number;
-  /** Annual percentage raise for withdrawals (e.g., 0.03 for 3%) */
+  /**
+   * Annual percentage raise for withdrawals (e.g., 0.03 for 3%)
+   *
+   * This is equivalent to SBLOCConfig.withdrawalGrowthRate and is used
+   * in Monte Carlo simulation. The withdrawal is computed externally:
+   * effectiveWithdrawal = annualWithdrawal * (1 + annualWithdrawalRaise)^years
+   *
+   * Typical values:
+   * - 0.00: Fixed withdrawals (no inflation adjustment)
+   * - 0.02-0.03: Matches historical inflation (2-3%)
+   * - 0.05+: Aggressive lifestyle inflation
+   */
   annualWithdrawalRaise: number;
   /** Whether to withdraw monthly (true) or annually (false) */
   monthlyWithdrawal: boolean;
