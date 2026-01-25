@@ -22,6 +22,11 @@ export {
   generateCorrelatedRegimeReturns
 } from './regime-switching';
 export * from './regime-calibration';
+export {
+  studentT,
+  generateFatTailReturn,
+  generateCorrelatedFatTailReturns
+} from './fat-tail';
 
 /**
  * Lazy-initialized worker instance
