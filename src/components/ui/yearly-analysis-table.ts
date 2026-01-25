@@ -157,6 +157,12 @@ export class YearlyAnalysisTable extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .table-container {
@@ -189,8 +195,6 @@ export class YearlyAnalysisTable extends BaseComponent {
 
       .table-wrapper {
         overflow-x: auto;
-        max-height: 500px;
-        overflow-y: auto;
       }
 
       .analysis-table {
@@ -325,14 +329,43 @@ export class YearlyAnalysisTable extends BaseComponent {
           padding: var(--spacing-md, 16px);
         }
 
+        .table-header h3 {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .analysis-table {
+          min-width: 600px;
+        }
+
         .analysis-table th,
         .analysis-table td {
           padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
           font-size: var(--font-size-xs, 0.75rem);
         }
+      }
 
-        .table-wrapper {
-          max-height: 400px;
+      @media (max-width: 480px) {
+        .table-header {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .table-icon {
+          font-size: 1rem;
+        }
+
+        .table-header h3 {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .analysis-table th,
+        .analysis-table td {
+          padding: 3px 4px;
+          font-size: 0.65rem;
         }
       }
     `;

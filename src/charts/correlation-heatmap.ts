@@ -47,9 +47,15 @@ function interpolateHexColor(color1: string, color2: string, t: number): string 
 /**
  * Get color for a correlation value using the diverging color scale.
  * @param value - Correlation coefficient (-1 to 1)
+ * @param isDiagonal - Whether this is a diagonal cell (self-correlation)
  * @returns Hex color string
  */
-export function interpolateColor(value: number): string {
+export function interpolateColor(value: number, isDiagonal: boolean = false): string {
+  // Special case: diagonal cells (1.00) use theme teal color
+  if (isDiagonal || value === 1.0) {
+    return '#0d9488'; // teal-600 - matches theme
+  }
+
   // Clamp value to valid range
   const clamped = Math.max(-1, Math.min(1, value));
 
@@ -149,6 +155,12 @@ export class CorrelationHeatmap extends BaseComponent {
         display: block;
         width: 100%;
         height: 100%;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .heatmap-wrapper {
@@ -168,7 +180,6 @@ export class CorrelationHeatmap extends BaseComponent {
         width: 100%;
         border-collapse: collapse;
         font-size: var(--font-size-sm, 0.875rem);
-        table-layout: fixed;
       }
 
       .correlation-table th,
@@ -253,6 +264,8 @@ export class CorrelationHeatmap extends BaseComponent {
         padding: var(--spacing-md, 16px);
         font-size: var(--font-size-sm, 0.875rem);
         color: var(--text-secondary, #475569);
+        overflow-wrap: break-word;
+        word-wrap: break-word;
       }
 
       .note-section p {
@@ -273,19 +286,70 @@ export class CorrelationHeatmap extends BaseComponent {
       }
 
       /* Mobile responsive */
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
+        .heatmap-wrapper {
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .table-container {
+          /* Allow horizontal scrolling on mobile */
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          margin: 0 calc(-1 * var(--spacing-sm, 8px));
+          padding: 0 var(--spacing-sm, 8px);
+        }
+
         .correlation-table {
           font-size: var(--font-size-xs, 0.75rem);
+          min-width: max-content;
         }
 
         .correlation-table th,
         .correlation-table td {
-          padding: var(--spacing-xs, 4px) 2px;
-          min-width: 50px;
+          padding: var(--spacing-xs, 4px) var(--spacing-xs, 4px);
+          min-width: 48px;
+          white-space: nowrap;
         }
 
         .correlation-table th.stats-header {
-          min-width: 70px;
+          min-width: 60px;
+          font-size: 0.65rem;
+        }
+
+        .correlation-table td.row-label {
+          padding-left: var(--spacing-sm, 8px);
+          min-width: 60px;
+        }
+
+        .note-section {
+          padding: var(--spacing-sm, 8px);
+          font-size: 0.75rem;
+          line-height: 1.5;
+        }
+
+        .note-section p {
+          margin-bottom: var(--spacing-xs, 4px);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .correlation-table {
+          font-size: 0.65rem;
+        }
+
+        .correlation-table th,
+        .correlation-table td {
+          padding: 3px 2px;
+          min-width: 40px;
+        }
+
+        .correlation-table th.stats-header {
+          min-width: 50px;
+          font-size: 0.6rem;
+        }
+
+        .correlation-table td.row-label {
+          min-width: 50px;
         }
       }
     `;
@@ -337,7 +401,8 @@ export class CorrelationHeatmap extends BaseComponent {
 
       for (let col = 0; col < matrix[row].length; col++) {
         const value = matrix[row][col];
-        const bgColor = interpolateColor(value);
+        const isDiagonal = row === col;
+        const bgColor = interpolateColor(value, isDiagonal);
         const textColor = getContrastTextColor(bgColor);
         bodyHtml += `<td class="correlation-cell" style="background-color: ${bgColor}; color: ${textColor};">${value.toFixed(2)}</td>`;
       }

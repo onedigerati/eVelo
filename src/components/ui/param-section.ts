@@ -41,23 +41,34 @@ export class ParamSection extends BaseComponent {
     return `
       :host {
         display: block;
+        margin-bottom: var(--spacing-md, 16px);
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       details {
-        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        background: var(--surface-secondary, #f8fafc);
+        border-radius: var(--border-radius-lg, 12px);
+        border-left: 4px solid var(--color-primary, #0d9488);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
       }
 
       summary {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: var(--spacing-md, 16px);
+        padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
         cursor: pointer;
         user-select: none;
         list-style: none;
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-primary, #1e293b);
         transition: background 0.2s ease;
+        gap: var(--spacing-sm, 8px);
       }
 
       summary::-webkit-details-marker {
@@ -69,7 +80,7 @@ export class ParamSection extends BaseComponent {
       }
 
       summary:hover {
-        background: var(--surface-tertiary, #e2e8f0);
+        background: var(--surface-hover, rgba(0, 0, 0, 0.02));
       }
 
       summary:focus-visible {
@@ -80,18 +91,24 @@ export class ParamSection extends BaseComponent {
       .section-icon {
         display: flex;
         align-items: center;
+        justify-content: center;
         flex-shrink: 0;
-        margin-right: var(--spacing-sm, 8px);
+        width: 24px;
+        height: 24px;
         color: var(--section-icon-color, var(--color-primary, #0d9488));
       }
 
       .section-icon svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
       }
 
       .section-title {
-        font-size: var(--font-size-md, 1rem);
+        flex: 1;
+        font-size: var(--font-size-sm, 0.875rem);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-primary, #1e293b);
       }
 
       .chevron {
@@ -101,6 +118,7 @@ export class ParamSection extends BaseComponent {
         border-right: 5px solid transparent;
         border-top: 6px solid var(--text-secondary, #64748b);
         transition: transform 0.2s ease;
+        flex-shrink: 0;
       }
 
       details[open] .chevron {
@@ -108,7 +126,7 @@ export class ParamSection extends BaseComponent {
       }
 
       .section-content {
-        padding: 0 var(--spacing-md, 16px) var(--spacing-md, 16px);
+        padding: 0 var(--spacing-lg, 24px) var(--spacing-lg, 24px);
       }
     `;
   }

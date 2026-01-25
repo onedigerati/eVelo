@@ -314,6 +314,12 @@ export class StrategyAnalysis extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .strategy-analysis {
@@ -662,25 +668,155 @@ export class StrategyAnalysis extends BaseComponent {
 
       /* Mobile responsive */
       @media (max-width: 768px) {
-        .comparison-grid {
-          grid-template-columns: 1fr;
+        .strategy-analysis {
+          padding: var(--spacing-md, 16px);
         }
 
-        .differential-grid {
-          grid-template-columns: 1fr;
+        .analysis-header {
+          margin-bottom: var(--spacing-md, 16px);
+          gap: var(--spacing-sm, 8px);
         }
 
-        .benefit-cards {
-          grid-template-columns: 1fr;
+        .header-icon {
+          font-size: 1.5rem;
+        }
+
+        .header-text h2 {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .header-subtitle {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .disclaimer-badge {
+          font-size: 0.65rem;
+          padding: 2px var(--spacing-xs, 4px);
         }
 
         .verdict-banner {
+          padding: var(--spacing-md, 16px);
+          margin-bottom: var(--spacing-md, 16px);
           flex-direction: column;
           align-items: flex-start;
         }
 
+        .verdict-icon {
+          width: 36px;
+          height: 36px;
+          font-size: 1.2rem;
+        }
+
+        .verdict-text h3 {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .verdict-text p {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
         .success-dial {
+          width: 80px;
+          height: 80px;
           align-self: center;
+        }
+
+        .dial-text {
+          font-size: 1rem;
+        }
+
+        .comparison-grid {
+          grid-template-columns: 1fr;
+          gap: var(--spacing-sm, 8px);
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .comparison-card {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .card-title {
+          font-size: var(--font-size-sm, 0.875rem);
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .card-icon {
+          font-size: 1rem;
+        }
+
+        .metric-row {
+          padding: 2px 0;
+        }
+
+        .metric-label,
+        .metric-value {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .differential-section {
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .section-title {
+          font-size: var(--font-size-sm, 0.875rem);
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .differential-grid {
+          grid-template-columns: 1fr;
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .differential-card {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .diff-icon {
+          font-size: 1.25rem;
+        }
+
+        .diff-label {
+          font-size: 0.65rem;
+        }
+
+        .diff-value {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .insights-section {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .insight-quote {
+          padding: var(--spacing-sm, 8px);
+          font-size: var(--font-size-xs, 0.75rem);
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .insight-explanation {
+          font-size: var(--font-size-xs, 0.75rem);
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .benefit-cards {
+          grid-template-columns: 1fr;
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .benefit-card {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .benefit-icon {
+          font-size: 1.25rem;
+        }
+
+        .benefit-label {
+          font-size: 0.65rem;
+        }
+
+        .benefit-value {
+          font-size: var(--font-size-sm, 0.875rem);
         }
       }
     `;

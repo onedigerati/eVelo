@@ -160,6 +160,12 @@ export class PercentileSpectrum extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .spectrum-container {
@@ -275,55 +281,94 @@ export class PercentileSpectrum extends BaseComponent {
       }
 
       /* Mobile responsive */
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         .spectrum-container {
           padding: var(--spacing-md, 16px);
         }
 
-        .label-row {
-          flex-direction: column;
-          gap: var(--spacing-xs, 4px);
+        .spectrum-title {
+          font-size: var(--font-size-xs, 0.75rem);
           margin-bottom: var(--spacing-md, 16px);
         }
 
-        .label {
-          align-items: center !important;
+        .label-text {
+          font-size: 0.6rem;
         }
 
-        .label.left, .label.center, .label.right {
+        .label-subtext {
+          font-size: 0.55rem;
+        }
+
+        .gradient-bar {
+          height: 6px;
+          margin: var(--spacing-sm, 8px) 0;
+        }
+
+        .value-row {
+          flex-wrap: wrap;
+          gap: var(--spacing-xs, 4px);
+        }
+
+        .value-box {
+          min-width: 60px;
+          flex: 1;
+          padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .value-box.p50 {
+          min-width: 80px;
+          flex: 1.5;
+          padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+          font-size: var(--font-size-base, 1rem);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .spectrum-container {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .label-row {
           display: none;
         }
 
         .value-row {
           flex-direction: column;
-          gap: var(--spacing-sm, 8px);
-          align-items: center;
+          gap: var(--spacing-xs, 4px);
+          align-items: stretch;
         }
 
         .value-box {
           width: 100%;
-          max-width: 200px;
+          min-width: unset;
+          font-size: var(--font-size-xs, 0.75rem);
         }
 
         .value-box.p50 {
+          min-width: unset;
+          font-size: var(--font-size-sm, 0.875rem);
           order: -1;
         }
-      }
 
-      @media (min-width: 641px) and (max-width: 768px) {
-        .value-box {
-          min-width: 80px;
-          padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-          font-size: var(--font-size-sm, 0.875rem);
+        .value-box::before {
+          font-size: 0.6rem;
+          margin-right: var(--spacing-sm, 8px);
         }
 
-        .value-box.p50 {
-          min-width: 100px;
-          font-size: var(--font-size-base, 1rem);
+        .value-box.p10::before {
+          content: "10th %ile: ";
+          font-weight: normal;
         }
 
-        .label-text, .label-subtext {
-          font-size: 0.65rem;
+        .value-box.p50::before {
+          content: "Median: ";
+          font-weight: normal;
+        }
+
+        .value-box.p90::before {
+          content: "90th %ile: ";
+          font-weight: normal;
         }
       }
     `;

@@ -21,6 +21,12 @@ export class RangeSlider extends BaseComponent {
     const step = this.getAttribute('step') ?? '1';
     const suffix = this.getAttribute('suffix') ?? '';
 
+    // Calculate initial fill percentage
+    const numValue = parseFloat(value);
+    const numMin = parseFloat(min);
+    const numMax = parseFloat(max);
+    const fillPercent = ((numValue - numMin) / (numMax - numMin)) * 100;
+
     return `
       <div class="range-wrapper">
         ${label ? `<label class="label">${label}</label>` : ''}
@@ -31,6 +37,7 @@ export class RangeSlider extends BaseComponent {
             max="${max}"
             step="${step}"
             value="${value}"
+            style="--fill-percent: ${fillPercent}%"
           />
           ${showValue ? `<span class="value-display">${value}${suffix}</span>` : ''}
         </div>
@@ -43,6 +50,12 @@ export class RangeSlider extends BaseComponent {
       :host {
         display: block;
         width: 100%;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .range-wrapper {
@@ -66,8 +79,14 @@ export class RangeSlider extends BaseComponent {
         -webkit-appearance: none;
         appearance: none;
         flex: 1;
-        height: 6px;
-        background: var(--surface-tertiary, #e2e8f0);
+        height: 8px;
+        background: linear-gradient(
+          to right,
+          var(--color-primary, #0d9488) 0%,
+          var(--color-primary, #0d9488) var(--fill-percent, 0%),
+          var(--slider-track-bg, #e2e8f0) var(--fill-percent, 0%),
+          var(--slider-track-bg, #e2e8f0) 100%
+        );
         border-radius: var(--border-radius-sm, 4px);
         outline: none;
         cursor: pointer;
@@ -79,19 +98,23 @@ export class RangeSlider extends BaseComponent {
         appearance: none;
         width: 18px;
         height: 18px;
+        margin-top: -5px; /* Center on 8px track: -(18-8)/2 */
         background: var(--color-primary, #0d9488);
+        border: 3px solid var(--surface-primary, #ffffff);
         border-radius: 50%;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
 
       input[type="range"]::-webkit-slider-thumb:hover {
         background: var(--color-primary-hover, #0f766e);
+        transform: scale(1.1);
       }
 
       input[type="range"]::-webkit-slider-runnable-track {
-        height: 6px;
-        background: var(--surface-tertiary, #e2e8f0);
+        height: 8px;
+        background: transparent;
         border-radius: var(--border-radius-sm, 4px);
       }
 
@@ -100,20 +123,29 @@ export class RangeSlider extends BaseComponent {
         width: 18px;
         height: 18px;
         background: var(--color-primary, #0d9488);
-        border: none;
+        border: 3px solid var(--surface-primary, #ffffff);
         border-radius: 50%;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
 
       input[type="range"]::-moz-range-thumb:hover {
         background: var(--color-primary-hover, #0f766e);
+        transform: scale(1.1);
       }
 
       input[type="range"]::-moz-range-track {
-        height: 6px;
-        background: var(--surface-tertiary, #e2e8f0);
+        height: 8px;
+        background: transparent;
         border-radius: var(--border-radius-sm, 4px);
+      }
+
+      /* Firefox progress fill */
+      input[type="range"]::-moz-range-progress {
+        height: 8px;
+        background: var(--color-primary, #0d9488);
+        border-radius: var(--border-radius-sm, 4px) 0 0 var(--border-radius-sm, 4px);
       }
 
       .value-display {
@@ -154,10 +186,16 @@ export class RangeSlider extends BaseComponent {
     const value = parseFloat(input.value);
     const suffix = this.getAttribute('suffix') ?? '';
 
+    // Update fill percentage for the track gradient
+    const min = parseFloat(this.getAttribute('min') ?? '0');
+    const max = parseFloat(this.getAttribute('max') ?? '100');
+    const fillPercent = ((value - min) / (max - min)) * 100;
+    input.style.setProperty('--fill-percent', `${fillPercent}%`);
+
     // Update value display if present
     const valueDisplay = this.$('.value-display');
     if (valueDisplay) {
-      valueDisplay.textContent = `${input.value}${suffix}`;
+      valueDisplay.textContent = `${this.formatValue(value)}${suffix}`;
     }
 
     // Dispatch change event
@@ -186,12 +224,36 @@ export class RangeSlider extends BaseComponent {
     const input = this.$('input') as HTMLInputElement | null;
     if (input) {
       input.value = String(val);
+      // Update fill percentage for the track gradient
+      const min = parseFloat(this.getAttribute('min') ?? '0');
+      const max = parseFloat(this.getAttribute('max') ?? '100');
+      const fillPercent = ((val - min) / (max - min)) * 100;
+      input.style.setProperty('--fill-percent', `${fillPercent}%`);
     }
     const valueDisplay = this.$('.value-display');
     if (valueDisplay) {
       const suffix = this.getAttribute('suffix') ?? '';
-      valueDisplay.textContent = `${val}${suffix}`;
+      valueDisplay.textContent = `${this.formatValue(val)}${suffix}`;
     }
+  }
+
+  /**
+   * Format value to avoid floating-point display issues.
+   * Rounds to the appropriate decimal places based on step.
+   */
+  private formatValue(value: number): string {
+    const step = parseFloat(this.getAttribute('step') ?? '1');
+    const stepStr = step.toString();
+    const decimalIndex = stepStr.indexOf('.');
+    const decimals = decimalIndex === -1 ? 0 : stepStr.length - decimalIndex - 1;
+    const formatted = value.toFixed(decimals);
+
+    // Only strip trailing zeros from decimal portion, not integer portion
+    // e.g., "7.50" → "7.5", but "70" stays "70"
+    if (decimals > 0) {
+      return formatted.replace(/\.?0+$/, '') || '0';
+    }
+    return formatted;
   }
 }
 

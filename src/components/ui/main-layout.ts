@@ -37,12 +37,14 @@ export class MainLayout extends BaseComponent {
     return `
       <div class="layout">
         <header class="main-header">
+          <slot name="header"></slot>
+        </header>
+        <div class="mobile-toggle-row">
           <button class="mobile-menu-btn" aria-label="Toggle parameters sidebar">
             <span class="menu-label">eVelo Parameters</span>
             <span class="menu-icon" aria-hidden="true">&#9662;</span>
           </button>
-          <slot name="header"></slot>
-        </header>
+        </div>
         <div class="sidebar-area">
           <slot name="sidebar"></slot>
         </div>
@@ -73,8 +75,11 @@ export class MainLayout extends BaseComponent {
         height: 100%;
       }
 
-      :host([sidebar-collapsed]) .layout {
-        grid-template-columns: var(--sidebar-collapsed-width, 48px) 1fr;
+      /* Desktop only: collapsed sidebar width */
+      @media (min-width: 769px) {
+        :host([sidebar-collapsed]) .layout {
+          grid-template-columns: var(--sidebar-collapsed-width, 48px) 1fr;
+        }
       }
 
       .main-header {
@@ -102,8 +107,12 @@ export class MainLayout extends BaseComponent {
         overflow: hidden;
       }
 
-      .mobile-menu-btn {
+      .mobile-toggle-row {
         display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
         align-items: center;
         justify-content: center;
         gap: var(--spacing-xs, 4px);
@@ -114,9 +123,8 @@ export class MainLayout extends BaseComponent {
         cursor: pointer;
         padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
         color: var(--text-inverse, #ffffff);
-        border-radius: var(--border-radius-sm, 4px);
-        margin-left: var(--spacing-sm, 8px);
-        min-width: 48px;
+        border-radius: 0;
+        width: 100%;
         min-height: 48px;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
         touch-action: manipulation;
@@ -161,8 +169,18 @@ export class MainLayout extends BaseComponent {
       .main-content {
         flex: 1;
         overflow-y: auto;
+        overflow-x: auto;
         padding: var(--spacing-lg, 24px);
         background: var(--surface-primary, #ffffff);
+        /* Prevent content from exceeding viewport */
+        max-width: 100%;
+      }
+
+      /* Reduce padding on mobile for more content space */
+      @media (max-width: 768px) {
+        .main-content {
+          padding: var(--spacing-md, 16px) var(--spacing-sm, 8px);
+        }
       }
 
       .sidebar-backdrop {
@@ -174,38 +192,47 @@ export class MainLayout extends BaseComponent {
         .layout {
           grid-template-areas:
             "header"
+            "toggle"
             "sidebar"
             "main";
-          grid-template-rows: auto auto 1fr;
+          grid-template-rows: auto auto auto 1fr;
           grid-template-columns: 1fr;
         }
 
+        .mobile-toggle-row {
+          grid-area: toggle;
+          display: block;
+          width: 100%;
+        }
+
         .sidebar-area {
+          grid-area: sidebar;
           position: relative;
           width: 100%;
-          max-height: 60vh;
+          max-height: none;
           overflow-y: auto;
-          transform: translateY(0);
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                      opacity 0.3s ease;
+          transition: opacity 0.3s ease;
           border-right: none;
           border-bottom: 1px solid var(--border-color, #e2e8f0);
         }
 
+        /* Hide sidebar when collapsed */
         :host([sidebar-collapsed]) .sidebar-area {
-          transform: translateY(-100%);
-          max-height: 0;
-          overflow: hidden;
-          opacity: 0;
+          display: none;
+        }
+
+        /* Hide main content when sidebar is expanded (NOT collapsed) */
+        .main-area {
+          display: none;
+        }
+
+        /* Show main content only when sidebar is collapsed */
+        :host([sidebar-collapsed]) .main-area {
+          display: flex;
         }
 
         .sidebar-backdrop {
           display: none;
-        }
-
-        .mobile-menu-btn {
-          display: flex;
         }
       }
 
@@ -218,6 +245,11 @@ export class MainLayout extends BaseComponent {
   }
 
   protected override afterRender(): void {
+    // On mobile, start with sidebar collapsed to show dashboard first
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      this.setAttribute('sidebar-collapsed', '');
+    }
+
     // Listen for 'toggle' event from sidebar-panel, update sidebar-collapsed attribute
     this.addEventListener('toggle', ((e: CustomEvent) => {
       if (e.detail.collapsed) {
@@ -239,8 +271,9 @@ export class MainLayout extends BaseComponent {
       }
     });
 
-    // Auto-collapse sidebar when simulation runs (mobile only)
-    this.addEventListener('simulation-start', () => {
+    // Auto-collapse sidebar when simulation completes (mobile only)
+    // Listen on document since event bubbles from app-root
+    document.addEventListener('simulation-complete', () => {
       if (window.matchMedia('(max-width: 768px)').matches) {
         this.setAttribute('sidebar-collapsed', '');
       }

@@ -61,6 +61,18 @@ export class ComparisonDashboard extends BaseComponent {
   /** Current active tab for mobile view */
   private _activeTab: 'previous' | 'current' | 'delta' = 'previous';
 
+  /** Portfolio weights for donut chart */
+  private _portfolioWeights: { symbol: string; weight: number }[] | null = null;
+
+  /** Correlation matrix for heatmap */
+  private _correlationMatrix: { labels: string[]; matrix: number[][] } | null = null;
+
+  /** Initial portfolio value for param summary */
+  private _initialValue: number = 1000000;
+
+  /** Simulation configuration for param summary */
+  private _simulationConfig: SimulationConfig | null = null;
+
   connectedCallback(): void {
     super.connectedCallback();
 
@@ -90,7 +102,10 @@ export class ComparisonDashboard extends BaseComponent {
         state.currentPresetName
       );
     } else if (!state.isComparisonMode && state.currentResult) {
-      this.exitComparisonMode();
+      // Only exit comparison mode if we're currently in it (prevents infinite loop)
+      if (this._isComparisonMode) {
+        this.exitComparisonMode();
+      }
       this.data = state.currentResult;
     }
   };
@@ -152,6 +167,141 @@ export class ComparisonDashboard extends BaseComponent {
    */
   get data(): SimulationOutput | null {
     return this._currentData;
+  }
+
+  /**
+   * Set portfolio weights for donut chart.
+   */
+  set portfolioWeights(value: { symbol: string; weight: number }[] | null) {
+    this._portfolioWeights = value;
+    this.updateChildDashboardPortfolioData();
+  }
+
+  /**
+   * Get portfolio weights.
+   */
+  get portfolioWeights(): { symbol: string; weight: number }[] | null {
+    return this._portfolioWeights;
+  }
+
+  /**
+   * Set correlation matrix for heatmap.
+   */
+  set correlationMatrix(value: { labels: string[]; matrix: number[][] } | null) {
+    this._correlationMatrix = value;
+    this.updateChildDashboardPortfolioData();
+  }
+
+  /**
+   * Get correlation matrix.
+   */
+  get correlationMatrix(): { labels: string[]; matrix: number[][] } | null {
+    return this._correlationMatrix;
+  }
+
+  /**
+   * Set initial portfolio value for param summary.
+   */
+  set initialValue(value: number) {
+    this._initialValue = value;
+    this.updateChildDashboardConfigData();
+  }
+
+  /**
+   * Get initial portfolio value.
+   */
+  get initialValue(): number {
+    return this._initialValue;
+  }
+
+  /**
+   * Set simulation configuration for param summary.
+   */
+  set simulationConfig(value: SimulationConfig | null) {
+    this._simulationConfig = value;
+    this.updateChildDashboardConfigData();
+  }
+
+  /**
+   * Get simulation configuration.
+   */
+  get simulationConfig(): SimulationConfig | null {
+    return this._simulationConfig;
+  }
+
+  /**
+   * Set time horizon (forwarded to child dashboards).
+   * Note: Also available in simulationConfig.timeHorizon.
+   */
+  set timeHorizon(value: number) {
+    const singleDashboard = this.$('#single-dashboard') as any;
+    if (singleDashboard) singleDashboard.timeHorizon = value;
+  }
+
+  /**
+   * Set annual withdrawal (forwarded to child dashboards).
+   * Note: Also available in simulationConfig.sbloc.annualWithdrawal.
+   */
+  set annualWithdrawal(value: number) {
+    const singleDashboard = this.$('#single-dashboard') as any;
+    if (singleDashboard) singleDashboard.annualWithdrawal = value;
+  }
+
+  /**
+   * Set effective tax rate (forwarded to child dashboards).
+   */
+  set effectiveTaxRate(value: number) {
+    const singleDashboard = this.$('#single-dashboard') as any;
+    if (singleDashboard) singleDashboard.effectiveTaxRate = value;
+  }
+
+  /**
+   * Update child dashboards with config data (initialValue and simulationConfig).
+   * Called when initialValue or simulationConfig is set.
+   */
+  private updateChildDashboardConfigData(): void {
+    const singleDashboard = this.$('#single-dashboard') as any;
+    if (singleDashboard) {
+      singleDashboard.initialValue = this._initialValue;
+      if (this._simulationConfig) singleDashboard.simulationConfig = this._simulationConfig;
+    }
+  }
+
+  /**
+   * Update child dashboards with portfolio data (weights and correlation matrix).
+   * Called when portfolioWeights or correlationMatrix is set.
+   */
+  private updateChildDashboardPortfolioData(): void {
+    // Update single dashboard
+    const singleDashboard = this.$('#single-dashboard') as any;
+    if (singleDashboard) {
+      if (this._portfolioWeights) singleDashboard.portfolioWeights = this._portfolioWeights;
+      if (this._correlationMatrix) singleDashboard.correlationMatrix = this._correlationMatrix;
+    }
+
+    // Update comparison mode dashboards (desktop)
+    const prevDashboard = this.$('#previous-dashboard') as any;
+    const currDashboard = this.$('#current-dashboard') as any;
+    if (prevDashboard) {
+      if (this._portfolioWeights) prevDashboard.portfolioWeights = this._portfolioWeights;
+      if (this._correlationMatrix) prevDashboard.correlationMatrix = this._correlationMatrix;
+    }
+    if (currDashboard) {
+      if (this._portfolioWeights) currDashboard.portfolioWeights = this._portfolioWeights;
+      if (this._correlationMatrix) currDashboard.correlationMatrix = this._correlationMatrix;
+    }
+
+    // Update comparison mode dashboards (mobile)
+    const mobilePrevDashboard = this.$('#mobile-previous-dashboard') as any;
+    const mobileCurrDashboard = this.$('#mobile-current-dashboard') as any;
+    if (mobilePrevDashboard) {
+      if (this._portfolioWeights) mobilePrevDashboard.portfolioWeights = this._portfolioWeights;
+      if (this._correlationMatrix) mobilePrevDashboard.correlationMatrix = this._correlationMatrix;
+    }
+    if (mobileCurrDashboard) {
+      if (this._portfolioWeights) mobileCurrDashboard.portfolioWeights = this._portfolioWeights;
+      if (this._correlationMatrix) mobileCurrDashboard.correlationMatrix = this._correlationMatrix;
+    }
   }
 
   protected template(): string {
@@ -305,6 +455,12 @@ export class ComparisonDashboard extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       /* Comparison mode styles */
@@ -527,6 +683,9 @@ export class ComparisonDashboard extends BaseComponent {
             prevDashboard.annualWithdrawal = this._previousConfig.sbloc.annualWithdrawal;
           }
         }
+        // Pass portfolio data for visualization
+        if (this._portfolioWeights) prevDashboard.portfolioWeights = this._portfolioWeights;
+        if (this._correlationMatrix) prevDashboard.correlationMatrix = this._correlationMatrix;
       }
 
       if (currDashboard && this._currentData) {
@@ -539,6 +698,9 @@ export class ComparisonDashboard extends BaseComponent {
             currDashboard.annualWithdrawal = this._currentConfig.sbloc.annualWithdrawal;
           }
         }
+        // Pass portfolio data for visualization
+        if (this._portfolioWeights) currDashboard.portfolioWeights = this._portfolioWeights;
+        if (this._correlationMatrix) currDashboard.correlationMatrix = this._correlationMatrix;
       }
 
       // Pass data to mobile child dashboards
@@ -555,6 +717,9 @@ export class ComparisonDashboard extends BaseComponent {
             mobilePrevDashboard.annualWithdrawal = this._previousConfig.sbloc.annualWithdrawal;
           }
         }
+        // Pass portfolio data for visualization
+        if (this._portfolioWeights) mobilePrevDashboard.portfolioWeights = this._portfolioWeights;
+        if (this._correlationMatrix) mobilePrevDashboard.correlationMatrix = this._correlationMatrix;
       }
 
       if (mobileCurrDashboard && this._currentData) {
@@ -567,6 +732,9 @@ export class ComparisonDashboard extends BaseComponent {
             mobileCurrDashboard.annualWithdrawal = this._currentConfig.sbloc.annualWithdrawal;
           }
         }
+        // Pass portfolio data for visualization
+        if (this._portfolioWeights) mobileCurrDashboard.portfolioWeights = this._portfolioWeights;
+        if (this._correlationMatrix) mobileCurrDashboard.correlationMatrix = this._correlationMatrix;
       }
 
       // Wire up tab navigation (mobile)
@@ -585,6 +753,12 @@ export class ComparisonDashboard extends BaseComponent {
       const singleDashboard = this.$('#single-dashboard') as any;
       if (singleDashboard && this._currentData) {
         singleDashboard.data = this._currentData;
+        // Pass portfolio data for visualization
+        if (this._portfolioWeights) singleDashboard.portfolioWeights = this._portfolioWeights;
+        if (this._correlationMatrix) singleDashboard.correlationMatrix = this._correlationMatrix;
+        // Pass config data for param summary
+        singleDashboard.initialValue = this._initialValue;
+        if (this._simulationConfig) singleDashboard.simulationConfig = this._simulationConfig;
       }
     }
   }

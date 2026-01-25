@@ -37,6 +37,13 @@ export class AppHeader extends BaseComponent {
     return `
       :host {
         display: block;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .app-header {
@@ -46,6 +53,8 @@ export class AppHeader extends BaseComponent {
         padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
         background: var(--color-primary, #0d9488);
         color: var(--text-inverse, #ffffff);
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .header-brand {

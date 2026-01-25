@@ -427,6 +427,13 @@ export class ResultsDashboard extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .dashboard-grid {
@@ -731,22 +738,142 @@ export class ResultsDashboard extends BaseComponent {
       @media (max-width: 768px) {
         .dashboard-grid {
           grid-template-columns: 1fr;
+          gap: var(--spacing-md, 16px);
+        }
+
+        .chart-section,
+        .stats-section {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .chart-section h3,
+        .stats-section h3 {
+          font-size: var(--font-size-base, 1rem);
+          margin-bottom: var(--spacing-sm, 8px);
         }
 
         .chart-container {
-          height: 300px;
+          height: 280px;
         }
 
         .stats-grid {
           grid-template-columns: repeat(2, 1fr);
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .stat-item {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .stat-label {
+          font-size: 0.75rem;
+        }
+
+        .stat-value {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .correlation-container {
+          /* Allow table to scroll horizontally */
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
 
         .comparison-grid {
           grid-template-columns: 1fr;
+          gap: var(--spacing-md, 16px);
+        }
+
+        .comparison-wrapper {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .comparison-wrapper h3 {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .comparison-chart-card {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .comparison-chart-card h4 {
+          font-size: var(--font-size-sm, 0.875rem);
+          margin-bottom: var(--spacing-sm, 8px);
         }
 
         .comparison-chart-container {
-          height: 280px;
+          height: 250px;
+        }
+
+        .comparison-chart-container.short {
+          height: 220px;
+        }
+
+        .bbd-container {
+          height: 250px;
+        }
+
+        /* Debt spectrum section mobile adjustments */
+        .debt-spectrum-wrapper {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .debt-box {
+          padding: var(--spacing-sm, 8px);
+        }
+
+        .debt-box-header {
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .debt-box-header h4 {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .debt-explanation {
+          margin-top: var(--spacing-md, 16px);
+          padding-top: var(--spacing-sm, 8px);
+        }
+
+        .debt-explanation p,
+        .debt-explanation ul {
+          font-size: 0.75rem;
+        }
+      }
+
+      /* Extra small screens */
+      @media (max-width: 480px) {
+        .chart-container {
+          height: 240px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: var(--spacing-xs, 4px);
+        }
+
+        .stat-item {
+          padding: var(--spacing-xs, 4px);
+        }
+
+        .stat-label {
+          font-size: 0.65rem;
+        }
+
+        .stat-value {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .comparison-chart-container {
+          height: 220px;
+        }
+
+        .comparison-chart-container.short {
+          height: 200px;
+        }
+
+        .bbd-container {
+          height: 220px;
         }
       }
     `;
@@ -1756,6 +1883,10 @@ export class ResultsDashboard extends BaseComponent {
       // Utilization = loan / portfolio * 100
       // Best case (P10 utilization): low loan, high portfolio -> p10 loan / p90 portfolio
       // Worst case (P90 utilization): high loan, low portfolio -> p90 loan / p10 portfolio
+      //
+      // Cap utilization at 200% to avoid chart distortion when portfolio approaches zero.
+      // Above 100% means "underwater" (loan > portfolio); >200% provides no additional insight.
+      const MAX_UTILIZATION = 200;
 
       const portfolioP10 = yearData.p10 || 1;
       const portfolioP25 = yearData.p25 || 1;
@@ -1770,15 +1901,15 @@ export class ResultsDashboard extends BaseComponent {
       const loanP90 = traj.loanBalance.p90[idx] || 0;
 
       // Best case: low loan / high portfolio (optimistic scenario)
-      p10.push((loanP10 / portfolioP90) * 100);
+      p10.push(Math.min((loanP10 / portfolioP90) * 100, MAX_UTILIZATION));
       // Good case
-      p25.push((loanP25 / portfolioP75) * 100);
+      p25.push(Math.min((loanP25 / portfolioP75) * 100, MAX_UTILIZATION));
       // Median case
-      p50.push((loanP50 / portfolioP50) * 100);
+      p50.push(Math.min((loanP50 / portfolioP50) * 100, MAX_UTILIZATION));
       // Bad case
-      p75.push((loanP75 / portfolioP25) * 100);
+      p75.push(Math.min((loanP75 / portfolioP25) * 100, MAX_UTILIZATION));
       // Worst case: high loan / low portfolio (pessimistic scenario)
-      p90.push((loanP90 / portfolioP10) * 100);
+      p90.push(Math.min((loanP90 / portfolioP10) * 100, MAX_UTILIZATION));
     }
 
     // Get max borrowing from config or default

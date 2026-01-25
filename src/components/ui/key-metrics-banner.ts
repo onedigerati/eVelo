@@ -188,6 +188,12 @@ export class KeyMetricsBanner extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .banner-grid {
@@ -362,16 +368,71 @@ export class KeyMetricsBanner extends BaseComponent {
       @media (max-width: 1024px) {
         .banner-grid {
           grid-template-columns: 1fr;
+          gap: var(--spacing-md, 16px);
         }
       }
 
       @media (max-width: 768px) {
-        .hero-value {
-          font-size: 2rem;
+        .banner-grid {
+          gap: var(--spacing-sm, 8px);
         }
 
         .metric-card {
           padding: var(--spacing-md, 16px);
+        }
+
+        .card-header {
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .title-text {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .subtitle {
+          font-size: 0.65rem;
+        }
+
+        .hero-value {
+          font-size: 2rem;
+        }
+
+        .hero-label {
+          font-size: 0.65rem;
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .metrics-grid {
+          padding-top: var(--spacing-sm, 8px);
+          gap: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+        }
+
+        .metric-value {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .metric-label {
+          font-size: 0.65rem;
+        }
+
+        .card-footer {
+          margin-top: var(--spacing-sm, 8px);
+          padding-top: var(--spacing-xs, 4px);
+        }
+
+        .footer-label,
+        .footer-value {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-value {
+          font-size: 1.75rem;
+        }
+
+        .metrics-grid {
+          grid-template-columns: 1fr 1fr;
         }
       }
     `;

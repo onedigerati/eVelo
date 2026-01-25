@@ -154,6 +154,12 @@ export class SalaryEquivalentSection extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .salary-banner {
@@ -205,20 +211,50 @@ export class SalaryEquivalentSection extends BaseComponent {
         margin-left: auto;
         margin-right: auto;
         line-height: 1.5;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
       }
 
       /* Mobile responsive */
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
         .salary-banner {
           padding: var(--spacing-lg, 24px) var(--spacing-md, 16px);
+          border-radius: var(--radius-md, 8px);
         }
 
         .banner-header {
           font-size: var(--font-size-sm, 0.875rem);
         }
 
+        .withdrawal-amount {
+          margin-bottom: var(--spacing-sm, 8px);
+        }
+
+        .equivalent-amount {
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
         .explanation {
           font-size: var(--font-size-xs, 0.75rem);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .salary-banner {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .banner-header {
+          font-size: 0.75rem;
+        }
+
+        .equivalent-text {
+          font-size: 0.75rem;
+        }
+
+        .explanation {
+          font-size: 0.65rem;
+          line-height: 1.4;
         }
       }
     `;

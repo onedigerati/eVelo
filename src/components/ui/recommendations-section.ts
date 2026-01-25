@@ -131,6 +131,12 @@ export class RecommendationsSection extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .recommendations-wrapper {
@@ -370,7 +376,65 @@ export class RecommendationsSection extends BaseComponent {
       }
 
       /* Mobile Responsive */
-      @media (max-width: 640px) {
+      @media (max-width: 768px) {
+        .recommendations-header {
+          padding: var(--spacing-md, 16px);
+          padding-bottom: 0;
+        }
+
+        .recommendations-header h3 {
+          font-size: var(--font-size-base, 1rem);
+        }
+
+        .insights-section,
+        .considerations-section {
+          padding: var(--spacing-md, 16px);
+        }
+
+        .section-header h4,
+        .section-toggle h4 {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .count-badge {
+          min-width: 20px;
+          height: 20px;
+          font-size: 0.65rem;
+        }
+
+        .insight-card {
+          padding: var(--spacing-sm, 8px);
+          gap: var(--spacing-sm, 8px);
+        }
+
+        .insight-title {
+          font-size: var(--font-size-sm, 0.875rem);
+        }
+
+        .insight-message {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .insight-action {
+          font-size: var(--font-size-xs, 0.75rem);
+          padding: var(--spacing-xs, 4px);
+        }
+
+        .consideration-item {
+          padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+        }
+
+        .consideration-title {
+          font-size: var(--font-size-xs, 0.75rem);
+        }
+
+        .consideration-message,
+        .consideration-action {
+          font-size: 0.65rem;
+        }
+      }
+
+      @media (max-width: 480px) {
         .recommendations-wrapper {
           border-radius: 0;
           border-left: none;
@@ -379,7 +443,7 @@ export class RecommendationsSection extends BaseComponent {
 
         .insight-card {
           flex-direction: column;
-          gap: var(--spacing-sm, 8px);
+          gap: var(--spacing-xs, 4px);
         }
 
         .insight-icon {
@@ -388,7 +452,11 @@ export class RecommendationsSection extends BaseComponent {
 
         .consideration-item {
           flex-direction: column;
-          gap: var(--spacing-xs, 4px);
+          gap: 2px;
+        }
+
+        .consideration-icon {
+          align-self: flex-start;
         }
       }
     `;

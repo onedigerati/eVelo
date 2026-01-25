@@ -41,6 +41,12 @@ export class NumberInput extends BaseComponent {
     return `
       :host {
         display: block;
+        max-width: 100%;
+      }
+
+      /* Shadow DOM reset - global box-sizing doesn't penetrate */
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       .input-wrapper {
@@ -66,16 +72,21 @@ export class NumberInput extends BaseComponent {
         font-size: var(--font-size-md, 1rem);
         font-family: var(--font-family, system-ui, sans-serif);
         color: var(--text-primary, #1e293b);
-        background: var(--surface-primary, #ffffff);
-        border: 1px solid var(--border-color, #e2e8f0);
+        background: var(--input-bg, var(--surface-primary, #ffffff));
+        border: 1px solid var(--input-border, var(--border-color, #e2e8f0));
         border-radius: var(--border-radius-md, 8px);
         outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+
+      input[type="number"]:hover {
+        border-color: var(--border-color-hover, #cbd5e1);
       }
 
       input[type="number"]:focus {
         border-color: var(--color-primary, #0d9488);
         box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        background: var(--surface-primary, #ffffff);
       }
 
       input[type="number"]::-webkit-inner-spin-button,
