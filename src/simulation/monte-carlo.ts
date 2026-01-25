@@ -168,6 +168,11 @@ export async function runMonteCarlo(
         // SBLOC simulation step (if enabled)
         if (config.sbloc && sblocStates && marginCallYears) {
           // Calculate effective withdrawal for this year (with annual raises)
+          // Note: We compute effectiveWithdrawal externally (using sblocRaiseRate growth)
+          // rather than using the SBLOC engine's withdrawalGrowthRate. This keeps the
+          // engine stateless - it just uses the withdrawal amount we pass each year.
+          // The SBLOCConfig.withdrawalGrowthRate field exists for standalone engine use.
+          //
           // yearsOfWithdrawals = how many years of withdrawals have occurred (0-indexed)
           // Year 0: baseWithdrawal * (1+r)^0 = baseWithdrawal
           // Year 1: baseWithdrawal * (1+r)^1 = baseWithdrawal * (1+r)
@@ -195,8 +200,9 @@ export async function runMonteCarlo(
             : sblocStates[i][year - 1];
 
           // Step SBLOC forward one year
-          // Note: portfolioReturn is the portfolio return this year (before being applied)
-          // The SBLOC engine expects the portfolio return as a decimal
+          // Note: portfolioReturn is the annual return. The SBLOC engine applies this
+          // return to its internal portfolio tracking (independent of MC's portfolioValue).
+          // After the SBLOC step, we sync MC's portfolioValue to match the SBLOC state.
           // stepSBLOCYear handles monthly vs annual mode internally based on monthlyWithdrawal flag
           const yearResult = stepSBLOCYear(
             prevState,
@@ -212,10 +218,12 @@ export async function runMonteCarlo(
             marginCallYears[i] = year + 1;
           }
 
-          // Adjust portfolio value for forced liquidation if any
-          if (yearResult.portfolioFailed) {
-            portfolioValue = 0;
-          }
+          // Sync portfolio value with SBLOC engine's tracked value
+          // This accounts for any forced liquidations that reduced the portfolio
+          // Note: We sync to the SBLOC state's portfolioValue, NOT set to 0 on failure
+          // portfolioFailed means net worth (portfolio - loan) <= 0, but the portfolio
+          // still has value - it's just less than the loan balance
+          portfolioValue = yearResult.newState.portfolioValue;
         }
 
         // Store yearly value
@@ -245,7 +253,22 @@ export async function runMonteCarlo(
 
   // Calculate statistics
   const terminalArray = Array.from(terminalValues);
+
+  // Diagnostic logging for CAGR debugging
+  const negativeCount = terminalArray.filter(v => v < 0).length;
+  const zeroCount = terminalArray.filter(v => v === 0).length;
+  const minTerminal = Math.min(...terminalArray);
+  const maxTerminal = Math.max(...terminalArray);
+  console.log(`[MC Debug] Terminal values: min=${minTerminal.toFixed(0)}, max=${maxTerminal.toFixed(0)}, negative=${negativeCount}, zero=${zeroCount}, total=${iterations}`);
+  if (negativeCount > 0) {
+    console.warn(`[MC Debug] WARNING: ${negativeCount} negative terminal values found!`);
+    const negatives = terminalArray.filter(v => v < 0).slice(0, 5);
+    console.warn(`[MC Debug] Sample negative values:`, negatives);
+  }
+
   const statistics = calculateStatistics(terminalArray, initialValue);
+  console.log(`[MC Debug] Statistics: median=${statistics.median.toFixed(0)}, mean=${statistics.mean.toFixed(0)}, successRate=${statistics.successRate.toFixed(1)}%`);
+
   const yearlyPercentiles = calculateYearlyPercentiles(yearlyValues);
 
   // Compute SBLOC trajectory and margin call stats (if enabled)
