@@ -6,12 +6,13 @@
  * and no additional collateral is added, assets must be sold to reduce the loan.
  *
  * Key concepts:
- * - Target LTV after liquidation: maintenanceMargin * 0.8 (safety buffer)
+ * - Target LTV after liquidation: maintenanceMargin * liquidationTargetMultiplier (configurable)
+ * - Default multiplier is 0.8 (80%), providing a 20% safety buffer below maintenance
  * - Liquidation haircut: forced sales incur additional losses (typically 5%)
  * - Portfolio failure: when net worth (portfolio - loan) becomes <= 0
  *
  * Reference formulas (from PortfolioStrategySimulator):
- * - targetLTV = maintenanceMargin * 0.8
+ * - targetLTV = maintenanceMargin * liquidationTargetMultiplier
  * - targetLoc = portfolioValue * targetLTV
  * - excessLoc = locBalance - targetLoc
  * - assetsToSell = excessLoc / (1 - liquidationHaircut)
@@ -41,11 +42,11 @@ export interface LiquidationAmounts {
  * Calculate how much to liquidate to restore safe LTV
  *
  * When LTV exceeds maxLTV, we need to sell assets to bring it back down.
- * The target is not just at maxLTV, but at 80% of maintenance margin
- * to provide a safety buffer against further declines.
+ * The target is not just at maxLTV, but at a configurable fraction of
+ * maintenance margin to provide a safety buffer against further declines.
  *
  * Formula derivation:
- * 1. targetLTV = maintenanceMargin * 0.8 (safety buffer)
+ * 1. targetLTV = maintenanceMargin * liquidationTargetMultiplier (default 0.8)
  * 2. targetLoanBalance = portfolioValue * targetLTV (where we want to be)
  * 3. excessLoan = currentLoanBalance - targetLoanBalance
  * 4. To repay X in loan, we must sell X / (1 - haircut) in assets
@@ -68,6 +69,7 @@ export interface LiquidationAmounts {
  *   maintenanceMargin: 0.50,
  *   maxLTV: 0.65,
  *   liquidationHaircut: 0.05,
+ *   liquidationTargetMultiplier: 0.8,  // Optional, default 0.8
  *   ...
  * };
  *
@@ -85,8 +87,21 @@ export function calculateLiquidationAmount(
   state: SBLOCState,
   config: SBLOCConfig
 ): LiquidationAmounts {
-  // Target LTV is 80% of maintenance margin for safety buffer
-  const targetLTV = config.maintenanceMargin * 0.8;
+  // Get multiplier from config with default fallback
+  // Default 0.8 provides 20% buffer below maintenance to avoid immediate repeat calls
+  let multiplier = config.liquidationTargetMultiplier ?? 0.8;
+
+  // Validate multiplier is reasonable (must be positive and <= 1)
+  if (multiplier <= 0 || multiplier > 1) {
+    console.warn(
+      `Invalid liquidationTargetMultiplier ${multiplier}, using default 0.8. ` +
+      `Multiplier must be > 0 and <= 1.`
+    );
+    multiplier = 0.8;
+  }
+
+  // Target LTV = maintenance margin * multiplier
+  const targetLTV = config.maintenanceMargin * multiplier;
 
   // Calculate target loan balance at new LTV
   const targetLoanBalance = state.portfolioValue * targetLTV;
@@ -161,7 +176,16 @@ export interface LiquidationResult {
 }
 
 /**
- * Execute forced liquidation and return new state
+ * Execute forced liquidation to reduce LTV after margin call
+ *
+ * Liquidation Process:
+ * 1. Calculate target LTV = maintenanceMargin * liquidationTargetMultiplier
+ * 2. Determine excess loan (amount above target)
+ * 3. Calculate assets to sell (accounting for haircut)
+ * 4. Sell assets, reduce loan, update state
+ *
+ * The haircut represents forced-sale discount (typically 5%).
+ * The multiplier controls how aggressively we deleverage (default 0.8 = 20% buffer).
  *
  * This is the main liquidation function that:
  * 1. Calculates how much to liquidate
@@ -239,9 +263,14 @@ export function executeForcedLiquidation(
   // Calculate haircut loss
   const haircut = calculateHaircutLoss(assetsToSell, config.liquidationHaircut);
 
+  // Cap assetsToSell at portfolio value - can't sell more than you have
+  // If loan exceeds portfolio value, sell everything and apply proceeds to loan
+  const actualAssetsToSell = Math.min(assetsToSell, state.portfolioValue);
+  const actualLoanToRepay = actualAssetsToSell * (1 - config.liquidationHaircut);
+
   // Update values
-  const newPortfolioValue = state.portfolioValue - assetsToSell;
-  const newLoanBalance = state.loanBalance - loanToRepay;
+  const newPortfolioValue = Math.max(0, state.portfolioValue - actualAssetsToSell);
+  const newLoanBalance = Math.max(0, state.loanBalance - actualLoanToRepay);
 
   // Recalculate LTV
   const newLTV = calculateLTV(newLoanBalance, newPortfolioValue);
@@ -265,9 +294,9 @@ export function executeForcedLiquidation(
   // Create liquidation event
   const event: LiquidationEvent = {
     year: year ?? state.yearsSinceStart,
-    assetsLiquidated: assetsToSell,
-    haircut,
-    loanRepaid: loanToRepay,
+    assetsLiquidated: actualAssetsToSell,
+    haircut: calculateHaircutLoss(actualAssetsToSell, config.liquidationHaircut),
+    loanRepaid: actualLoanToRepay,
     newLoanBalance,
     newPortfolioValue,
   };
