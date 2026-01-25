@@ -50,7 +50,7 @@ import type {
   RegimeParamsMap,
   SellStrategyOutput,
 } from './types';
-import { DEFAULT_REGIME_PARAMS } from './types';
+import { DEFAULT_REGIME_PARAMS, FAT_TAIL_PARAMS } from './types';
 
 /** Batch size for progress reporting */
 const BATCH_SIZE = 1000;
@@ -578,6 +578,56 @@ export async function runMonteCarlo(
         validationIssues: assetCalibrationResults[i].validation.issues.map(iss => iss.message),
       })) : undefined,
       calibrationMode: resamplingMethod === 'regime' ? (config.regimeCalibration ?? 'historical') : undefined,
+      // Fat-tail parameters used (if fat-tail method)
+      fatTailParameters: resamplingMethod === 'fat-tail' ? portfolio.assets.map(asset => {
+        const assetClass = asset.assetClass ?? 'equity_index';
+        const params = FAT_TAIL_PARAMS[assetClass];
+        return {
+          assetId: asset.id,
+          assetClass,
+          degreesOfFreedom: params.degreesOfFreedom,
+          skewMultiplier: params.skewMultiplier,
+          survivorshipBias: params.survivorshipBias,
+          volatilityScaling: params.volatilityScaling,
+        };
+      }) : undefined,
+    };
+  } else if (resamplingMethod === 'fat-tail') {
+    // Build minimal debug stats for fat-tail method (without SBLOC)
+    debugStats = {
+      marginCallDistribution: {
+        noMarginCalls: 0,
+        oneMarginCall: 0,
+        twoMarginCalls: 0,
+        threeOrMore: 0,
+        maxMarginCalls: 0,
+      },
+      haircutLosses: {
+        median: 0,
+        mean: 0,
+        max: 0,
+      },
+      interestCharged: {
+        median: 0,
+        mean: 0,
+      },
+      finalGrossPortfolio: {
+        median: 0,
+        mean: 0,
+      },
+      // Fat-tail parameters
+      fatTailParameters: portfolio.assets.map(asset => {
+        const assetClass = asset.assetClass ?? 'equity_index';
+        const params = FAT_TAIL_PARAMS[assetClass];
+        return {
+          assetId: asset.id,
+          assetClass,
+          degreesOfFreedom: params.degreesOfFreedom,
+          skewMultiplier: params.skewMultiplier,
+          survivorshipBias: params.survivorshipBias,
+          volatilityScaling: params.volatilityScaling,
+        };
+      }),
     };
   }
 

@@ -409,6 +409,15 @@ export interface SBLOCDebugStats {
   }[];
   /** Calibration mode used */
   calibrationMode?: 'historical' | 'conservative';
+  /** Per-asset fat-tail parameters used in simulation */
+  fatTailParameters?: {
+    assetId: string;
+    assetClass: AssetClass;
+    degreesOfFreedom: number;
+    skewMultiplier: number;
+    survivorshipBias: number;
+    volatilityScaling: number;
+  }[];
 }
 
 /**
