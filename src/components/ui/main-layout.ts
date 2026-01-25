@@ -6,7 +6,6 @@ import { BaseComponent } from '../base-component';
  *
  * @element main-layout
  * @attr {boolean} sidebar-collapsed - When present, sidebar is collapsed
- * @attr {boolean} sidebar-open - Mobile only - when present, sidebar overlay is visible
  *
  * @example
  * <main-layout>
@@ -17,7 +16,7 @@ import { BaseComponent } from '../base-component';
  */
 export class MainLayout extends BaseComponent {
   static override get observedAttributes(): string[] {
-    return ['sidebar-collapsed', 'sidebar-open'];
+    return ['sidebar-collapsed'];
   }
 
   /**
@@ -136,40 +135,44 @@ export class MainLayout extends BaseComponent {
         .layout {
           grid-template-areas:
             "header"
+            "sidebar"
             "main";
-          grid-template-columns: 1fr;
-        }
-
-        /* Override collapsed state on mobile - sidebar is overlay, not collapsed */
-        :host([sidebar-collapsed]) .layout {
+          grid-template-rows: auto auto 1fr;
           grid-template-columns: 1fr;
         }
 
         .sidebar-area {
-          position: fixed;
-          left: 0;
-          top: 0;
-          height: 100%;
-          width: var(--sidebar-width, 320px);
-          z-index: 100;
-          transform: translateX(-100%);
-          transition: transform 0.3s ease;
+          position: relative;
+          width: 100%;
+          max-height: 60vh;
+          overflow-y: auto;
+          transform: translateY(0);
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      opacity 0.3s ease;
+          border-right: none;
+          border-bottom: 1px solid var(--border-color, #e2e8f0);
         }
 
-        :host([sidebar-open]) .sidebar-area {
-          transform: translateX(0);
+        :host([sidebar-collapsed]) .sidebar-area {
+          transform: translateY(-100%);
+          max-height: 0;
+          overflow: hidden;
+          opacity: 0;
         }
 
-        :host([sidebar-open]) .sidebar-backdrop {
-          display: block;
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 99;
+        .sidebar-backdrop {
+          display: none;
         }
 
         .mobile-menu-btn {
           display: block;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .sidebar-area {
+          transition: none;
         }
       }
     `;
@@ -180,27 +183,28 @@ export class MainLayout extends BaseComponent {
     this.addEventListener('toggle', ((e: CustomEvent) => {
       if (e.detail.collapsed) {
         this.setAttribute('sidebar-collapsed', '');
-        // On mobile, also close the overlay when sidebar is collapsed
-        // This removes the backdrop that would otherwise cover the main content
-        this.removeAttribute('sidebar-open');
       } else {
         this.removeAttribute('sidebar-collapsed');
       }
     }) as EventListener);
 
-    // Mobile menu button opens sidebar overlay
+    // Mobile menu button toggles sidebar collapse
     this.$('.mobile-menu-btn')?.addEventListener('click', () => {
-      this.setAttribute('sidebar-open', '');
-      // Clear any collapsed state so sidebar content is visible
-      this.removeAttribute('sidebar-collapsed');
-      // Also clear sidebar-panel's collapsed attribute (content hidden via display:none)
-      const sidebarPanel = this.querySelector('sidebar-panel');
-      sidebarPanel?.removeAttribute('collapsed');
+      if (this.hasAttribute('sidebar-collapsed')) {
+        this.removeAttribute('sidebar-collapsed');
+        // Also clear sidebar-panel's collapsed attribute
+        const sidebarPanel = this.querySelector('sidebar-panel');
+        sidebarPanel?.removeAttribute('collapsed');
+      } else {
+        this.setAttribute('sidebar-collapsed', '');
+      }
     });
 
-    // Backdrop click closes sidebar overlay
-    this.$('.sidebar-backdrop')?.addEventListener('click', () => {
-      this.removeAttribute('sidebar-open');
+    // Auto-collapse sidebar when simulation runs (mobile only)
+    this.addEventListener('simulation-start', () => {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        this.setAttribute('sidebar-collapsed', '');
+      }
     });
   }
 }
