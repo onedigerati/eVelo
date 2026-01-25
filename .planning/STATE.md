@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 23 of 23 (Reference Methodology Alignment)
-Plan: 09 of 09
-Status: Phase complete
-Last activity: 2026-01-25 — Completed 23-09-PLAN.md (Path-Coherent Percentiles)
+Plan: 08 of 09
+Status: In progress
+Last activity: 2026-01-25 — Completed 23-08-PLAN.md (Withdrawal Chapters)
 
 Progress: █████████████████████████████████████████ 94% (99/105 plans complete)
 
@@ -24,7 +24,7 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 **Velocity:**
 - Total plans completed: 99
 - Average duration: 3.9 min
-- Total execution time: 382.75 min
+- Total execution time: 386.75 min
 
 **By Phase:**
 
@@ -52,11 +52,11 @@ Phase 23: Reference Methodology Alignment - 4-regime market model with recovery 
 | 20-financial-calculation-audit | 2/9 | 6 min | 3.0 min |
 | 21-header-redesign | 1/1 | 4 min | 4.0 min |
 | 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
-| 23-reference-methodology-alignment | 9/9 | 51.75 min | 5.75 min |
+| 23-reference-methodology-alignment | 8/9 | 55.75 min | 6.97 min |
 
 **Recent Trend:**
-- Last 5 plans: 23-04 (9 min), 23-05 (9 min), 23-06 (10.5 min), 23-07 (4 min), 23-09 (2 min)
-- Trend: Phase 23 COMPLETE - All reference methodology alignment work finished
+- Last 5 plans: 23-05 (9 min), 23-06 (10.5 min), 23-07 (4 min), 23-08 (4 min), 23-09 (2 min)
+- Trend: Phase 23 nearing completion - 8/9 plans done
 
 ## Accumulated Context
 
@@ -899,6 +899,14 @@ None
 - Preserves natural crisis correlations from historical data (e.g., 2008 crash)
 - Test demonstration: independent sampling destroyed correlation (0.999→-0.066), correlated preserved (0.999→1.000)
 
+**From 23-08:**
+- Multi-phase withdrawal chapter system for lifecycle modeling
+- Reductions are cumulative: 25% + 25% = 56.25% of base (not 50%)
+- Chapter multipliers apply after inflation adjustment in year loop
+- Console logging shows chapter configuration and cumulative reduction at simulation start
+- calculateChapterMultiplier() helper returns multiplier based on active chapters
+- Cumulative withdrawal functions updated to account for chapter reductions
+
 **From 23-09:**
 - Path-coherent percentile extraction (reference methodology)
 - Rank simulations by terminal value, extract complete paths for each percentile
@@ -910,8 +918,6 @@ None
 
 ## Session Continuity
 
-Last session: 2026-01-25T22:27:25Z
-Stopped at: Completed 23-09-PLAN.md (Path-Coherent Percentiles)
+Last session: 2026-01-25T22:29:03Z
+Stopped at: Completed 23-08-PLAN.md (Withdrawal Chapters)
 Resume file: None
-
-**Phase 23 COMPLETE - Reference Methodology Alignment (9/9 plans complete)**
