@@ -41,6 +41,7 @@ export class WelcomeScreen extends BaseComponent {
       <div class="welcome-container">
         <!-- Hero Section -->
         <header class="hero-section">
+          <img src="/logo.png" alt="eVelo logo" class="hero-logo" />
           <h1 class="hero-title">Welcome to eVelo Portfolio Simulator</h1>
           <p class="hero-subtitle">
             Explore the Buy-Borrow-Die wealth strategy through Monte Carlo simulation.
@@ -180,6 +181,24 @@ export class WelcomeScreen extends BaseComponent {
         margin-bottom: var(--spacing-xl, 32px);
       }
 
+      .hero-logo {
+        width: 120px;
+        height: 120px;
+        margin-bottom: var(--spacing-lg, 24px);
+        animation: logoEntrance 0.6s ease-out;
+      }
+
+      @keyframes logoEntrance {
+        0% {
+          opacity: 0;
+          transform: scale(0.8) translateY(-10px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
       .hero-title {
         margin: 0 0 var(--spacing-md, 16px) 0;
         font-size: 2rem;
@@ -234,6 +253,13 @@ export class WelcomeScreen extends BaseComponent {
         border-radius: var(--border-radius-lg, 12px);
         padding: var(--spacing-lg, 24px);
         text-align: center;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .step-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .step-icon {
@@ -270,6 +296,14 @@ export class WelcomeScreen extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--border-radius-lg, 12px);
         padding: var(--spacing-lg, 24px);
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .benefits-column:hover,
+      .risks-column:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .column-title {
@@ -404,6 +438,11 @@ export class WelcomeScreen extends BaseComponent {
       @media (max-width: 768px) {
         .welcome-container {
           padding: var(--spacing-lg, 24px);
+        }
+
+        .hero-logo {
+          width: 80px;
+          height: 80px;
         }
 
         .hero-title {
