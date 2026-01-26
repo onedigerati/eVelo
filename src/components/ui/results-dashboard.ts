@@ -417,10 +417,6 @@ export class ResultsDashboard extends BaseComponent {
         </section>
       </div>
 
-      <div class="no-data" id="no-data">
-        <p>Run a simulation to see results</p>
-      </div>
-
       <!-- Debug Panel (development only) -->
       <section class="debug-section" id="debug-section">
         <div class="debug-header">
@@ -468,6 +464,16 @@ export class ResultsDashboard extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         padding: var(--spacing-lg, 24px);
+        transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    border-color 0.3s ease;
+      }
+
+      .chart-section:hover,
+      .stats-section:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .chart-section h3,
@@ -517,6 +523,14 @@ export class ResultsDashboard extends BaseComponent {
         border-radius: var(--radius-md, 6px);
         padding: var(--spacing-md, 16px);
         text-align: center;
+        transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    border-color 0.3s ease;
+      }
+
+      .stat-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md, 0 4px 12px rgba(26, 36, 36, 0.08));
       }
 
       .stat-label {
@@ -616,6 +630,15 @@ export class ResultsDashboard extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         padding: var(--spacing-lg, 24px);
+        transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    border-color 0.3s ease;
+      }
+
+      .debt-spectrum-wrapper:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .debt-intro {
@@ -694,6 +717,15 @@ export class ResultsDashboard extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         padding: var(--spacing-lg, 24px);
+        transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    border-color 0.3s ease;
+      }
+
+      .comparison-wrapper:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .comparison-wrapper h3 {
@@ -720,6 +752,15 @@ export class ResultsDashboard extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-md, 6px);
         padding: var(--spacing-md, 16px);
+        transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                    border-color 0.3s ease;
+      }
+
+      .comparison-chart-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .comparison-chart-card.full-width {
@@ -750,6 +791,27 @@ export class ResultsDashboard extends BaseComponent {
         inset: 0;
         width: 100%;
         height: 100%;
+      }
+
+      /* Reduced motion support - disable animations for users who prefer reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .chart-section,
+        .stats-section,
+        .stat-item,
+        .comparison-chart-card,
+        .debt-spectrum-wrapper,
+        .comparison-wrapper {
+          transition: none;
+        }
+
+        .chart-section:hover,
+        .stats-section:hover,
+        .stat-item:hover,
+        .comparison-chart-card:hover,
+        .debt-spectrum-wrapper:hover,
+        .comparison-wrapper:hover {
+          transform: none;
+        }
       }
 
       /* Mobile responsive: single column on small screens */
@@ -1622,6 +1684,7 @@ export class ResultsDashboard extends BaseComponent {
       peakUtilizationP90,
       safetyBufferP10,
       mostDangerousYear,
+      timeHorizon,
     };
   }
 
@@ -2646,23 +2709,21 @@ export class ResultsDashboard extends BaseComponent {
         lines.push('');
       }
 
-      // Regime parameters (if regime method was used)
+      // Regime parameters (if regime method was used) - multiplier-based approach
       if (ds.regimeParameters && ds.regimeParameters.length > 0) {
-        lines.push(`  REGIME PARAMETERS (4-regime, calibration: ${ds.calibrationMode || 'unknown'}):`);
+        lines.push(`  REGIME PARAMETERS (4-regime, multiplier-based, mode: ${ds.calibrationMode || 'unknown'}):`);
         for (const asset of ds.regimeParameters) {
-          const fallbackNote = asset.usedFallback ? ' ⚠️ FALLBACK TO DEFAULTS' : '';
-          lines.push(`    ${asset.assetId}:${fallbackNote}`);
+          // Show asset class and historical stats if available
+          const assetClass = asset.assetClass || 'unknown';
+          const histMean = asset.historicalMean !== undefined ? `${(asset.historicalMean * 100).toFixed(1)}%` : 'N/A';
+          const histStddev = asset.historicalStddev !== undefined ? `${(asset.historicalStddev * 100).toFixed(1)}%` : 'N/A';
+          lines.push(`    ${asset.assetId} (${assetClass}):`);
+          lines.push(`      Historical: mean=${histMean}, stddev=${histStddev}`);
           lines.push(`      Bull:     mean=${(asset.bull.mean * 100).toFixed(1)}%, stddev=${(asset.bull.stddev * 100).toFixed(1)}%`);
           lines.push(`      Bear:     mean=${(asset.bear.mean * 100).toFixed(1)}%, stddev=${(asset.bear.stddev * 100).toFixed(1)}%`);
           lines.push(`      Crash:    mean=${(asset.crash.mean * 100).toFixed(1)}%, stddev=${(asset.crash.stddev * 100).toFixed(1)}%`);
-          // Phase 23-02: Display recovery regime (4th state)
           if (asset.recovery) {
             lines.push(`      Recovery: mean=${(asset.recovery.mean * 100).toFixed(1)}%, stddev=${(asset.recovery.stddev * 100).toFixed(1)}%`);
-          }
-          if (asset.validationIssues && asset.validationIssues.length > 0) {
-            for (const issue of asset.validationIssues) {
-              lines.push(`      ⚠️ ${issue}`);
-            }
           }
         }
         lines.push('');
