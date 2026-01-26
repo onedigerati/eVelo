@@ -658,6 +658,15 @@ None
 | 011 | Reorganize parameter sections UX | 2026-01-23 | 26abaac | [011-reorganize-parameter-sections-ux](./quick/011-reorganize-parameter-sections-ux/) |
 | 012 | Save all params to portfolio presets | 2026-01-23 | 7626f22 | [012-save-all-params-to-portfolio-presets](./quick/012-save-all-params-to-portfolio-presets/) |
 | 013 | Sell Strategy yearly analysis table | 2026-01-24 | e4d9ef7 | [013-sell-strategy-yearly-analysis-table](./quick/013-sell-strategy-yearly-analysis-table/) |
+| 014 | Dashboard hover effects with lift animations | 2026-01-26 | 01b7677 | [014-dashboard-hover-effects](./quick/014-dashboard-hover-effects/) |
+
+**From quick-014:**
+- Four-level shadow CSS token system (sm/md/lg/hover) for light and dark themes
+- Hover effects on dashboard cards: lift (translateY), enhanced shadows, teal borders
+- Smooth transitions with cubic-bezier(0.23, 1, 0.32, 1) spring easing
+- Progressive hover: 4px lift for sections, 2px for stat items
+- Reduced motion accessibility support via @media query (WCAG 2.1 compliant)
+- Applied to 6 card types: chart-section, stats-section, stat-item, comparison-chart-card, debt-spectrum-wrapper, comparison-wrapper
 
 **From quick-005:**
 - Dynamic Y-axis scaling for SBLOC utilization chart based on actual data range
