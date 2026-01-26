@@ -100,6 +100,28 @@ export class MainLayout extends BaseComponent {
         border-right: 1px solid var(--border-color, #e2e8f0);
       }
 
+      /* Custom scrollbar styling - 30% thinner */
+      .sidebar-area::-webkit-scrollbar,
+      .main-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .sidebar-area::-webkit-scrollbar-track,
+      .main-content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .sidebar-area::-webkit-scrollbar-thumb,
+      .main-content::-webkit-scrollbar-thumb {
+        background: #b4bcc5;
+        border-radius: 4px;
+      }
+
+      .sidebar-area::-webkit-scrollbar-thumb:hover,
+      .main-content::-webkit-scrollbar-thumb:hover {
+        background: #8b96a6;
+      }
+
       .main-area {
         grid-area: main;
         display: flex;

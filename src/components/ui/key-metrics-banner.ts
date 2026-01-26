@@ -350,6 +350,15 @@ export class KeyMetricsBanner extends BaseComponent {
         z-index: 1;
       }
 
+      .hero-title .brand {
+        font-weight: 800;
+      }
+
+      .hero-title .suffix {
+        font-weight: 500;
+        opacity: 0.7;
+      }
+
       /* ============================================
          Alert Card Styles
          ============================================ */
@@ -954,7 +963,9 @@ export class KeyMetricsBanner extends BaseComponent {
       heroBanner.classList.add(isSuccess ? 'status-success' : 'status-warning');
     }
     if (heroTitle) {
-      heroTitle.textContent = isSuccess ? 'Escape Velocity Unlocked!' : 'Not ready yet, but keep it going!';
+      heroTitle.innerHTML = isSuccess
+        ? '<span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!'
+        : 'Not ready yet, but keep it going!';
     }
     // Show logo for success, muscle arm emoji for warning
     if (heroLogo) {

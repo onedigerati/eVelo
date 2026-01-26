@@ -433,9 +433,18 @@ export class AppRoot extends BaseComponent {
               </svg>
             </button>
             <button id="btn-settings" class="header-btn" aria-label="Settings" title="Settings">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <!-- Center circle -->
                 <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                <!-- 8 radial dots -->
+                <circle cx="12" cy="3" r="1.5"></circle>
+                <circle cx="18.36" cy="5.64" r="1.5"></circle>
+                <circle cx="21" cy="12" r="1.5"></circle>
+                <circle cx="18.36" cy="18.36" r="1.5"></circle>
+                <circle cx="12" cy="21" r="1.5"></circle>
+                <circle cx="5.64" cy="18.36" r="1.5"></circle>
+                <circle cx="3" cy="12" r="1.5"></circle>
+                <circle cx="5.64" cy="5.64" r="1.5"></circle>
               </svg>
             </button>
           </div>
@@ -571,21 +580,24 @@ export class AppRoot extends BaseComponent {
       }
 
       .header-btn {
-        background: transparent;
-        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         font-size: 1.5rem;
         cursor: pointer;
-        padding: var(--spacing-xs, 4px);
-        border-radius: var(--radius-sm, 4px);
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
         color: var(--text-inverse, #ffffff);
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s, color 0.2s;
+        transition: background 0.2s, border-color 0.2s;
       }
 
       .header-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
       }
 
       .header-btn:focus-visible {

@@ -19,12 +19,13 @@ export class AppHeader extends BaseComponent {
   protected template(): string {
     return `
       <header class="app-header">
+        <img src="/logo.png" alt="" class="header-watermark" aria-hidden="true" />
         <div class="header-brand">
           <div class="brand-wordmark">
             <img src="/logo.png" alt="eVelo logo" class="brand-logo" />
             <h1 class="brand-title">eVelo</h1>
           </div>
-          <p class="brand-tagline">Tax-Efficient Portfolio Strategy Simulator</p>
+          <p class="brand-tagline">Escape Fincancial Gravity.</p>
         </div>
         <div class="header-actions">
           <slot name="actions"></slot>
@@ -55,12 +56,29 @@ export class AppHeader extends BaseComponent {
         color: var(--text-inverse, #ffffff);
         width: 100%;
         box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header-watermark {
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 120%;
+        width: auto;
+        opacity: 0.08;
+        filter: brightness(0) invert(1);
+        pointer-events: none;
+        z-index: 0;
       }
 
       .header-brand {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-xs, 4px);
+        position: relative;
+        z-index: 1;
       }
 
       .brand-wordmark {
@@ -76,6 +94,22 @@ export class AppHeader extends BaseComponent {
         filter: brightness(0) invert(1);
         transition: transform 0.2s ease, filter 0.2s ease;
         cursor: pointer;
+        animation: logoEntrance 0.8s ease-out;
+      }
+
+      @keyframes logoEntrance {
+        0% {
+          opacity: 0;
+          transform: scale(0.5) rotate(-180deg);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(1.1) rotate(10deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
       }
 
       .brand-logo:hover {
@@ -104,6 +138,9 @@ export class AppHeader extends BaseComponent {
         display: flex;
         align-items: center;
         gap: var(--spacing-sm, 8px);
+        position: relative;
+        z-index: 1;
+        padding-right: 40px;
       }
 
       /* Slotted action buttons styling */
@@ -132,13 +169,17 @@ export class AppHeader extends BaseComponent {
         outline-offset: 2px;
       }
 
-      /* Mobile responsive: hide tagline */
+      /* Mobile responsive: hide tagline and watermark */
       @media (max-width: 768px) {
         .app-header {
           padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
         }
 
         .brand-tagline {
+          display: none;
+        }
+
+        .header-watermark {
           display: none;
         }
 

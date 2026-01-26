@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eVelo Banner Logo Concepts</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #1e293b;
+    }
+
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .concept {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .concept-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .concept-description {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* =============================================
+       BASE BANNER STYLES
+       ============================================= */
+    .hero-banner {
+      border-radius: 12px;
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2D9B8A 0%, #247A6D 100%);
+    }
+
+    .hero-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Shimmer effect */
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      animation: shimmerGlow 2s infinite;
+      z-index: 1;
+    }
+
+    @keyframes shimmerGlow {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(0); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* =============================================
+       CONCEPT 1: Simple Logo Replace
+       ============================================= */
+    .concept-1 .hero-logo {
+      width: 56px;
+      height: 56px;
+      filter: brightness(0) invert(1);
+      position: relative;
+      z-index: 2;
+      animation: rocketBounce 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rocketBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* =============================================
+       CONCEPT 2: Logo + Large Watermark
+       ============================================= */
+    .concept-2 .hero-banner {
+      justify-content: flex-start;
+      padding-left: 48px;
+    }
+
+    .concept-2 .hero-logo {
+      width: 48px;
+      height: 48px;
+      filter: brightness(0) invert(1);
+      position: relative;
+      z-index: 2;
+      animation: rocketBounce 1.5s ease-in-out infinite;
+    }
+
+    .concept-2 .watermark {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      height: 200px;
+      opacity: 0.08;
+      filter: brightness(0) invert(1);
+      z-index: 0;
+    }
+
+    /* =============================================
+       CONCEPT 3: Animated Trail
+       ============================================= */
+    .concept-3 .hero-banner {
+      justify-content: flex-start;
+      padding-left: 48px;
+    }
+
+    .concept-3 .hero-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .concept-3 .hero-logo {
+      width: 48px;
+      height: 48px;
+      filter: brightness(0) invert(1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .concept-3 .trail {
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+      border-radius: 2px;
+      animation: trailPulse 1.5s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes trailPulse {
+      0%, 100% {
+        opacity: 0.3;
+        width: 80px;
+      }
+      50% {
+        opacity: 0.7;
+        width: 140px;
+      }
+    }
+
+    /* =============================================
+       CONCEPT 4: Breaking the Edge (Launch)
+       ============================================= */
+    .concept-4 .hero-banner {
+      justify-content: flex-start;
+      padding-left: 80px;
+    }
+
+    .concept-4 .hero-logo {
+      position: absolute;
+      left: -10px;
+      top: 50%;
+      width: 72px;
+      height: 72px;
+      filter: brightness(0) invert(1);
+      z-index: 3;
+      animation: launchUp 2s ease-in-out infinite;
+    }
+
+    @keyframes launchUp {
+      0%, 100% {
+        transform: translateY(-50%) rotate(-15deg);
+      }
+      50% {
+        transform: translateY(-60%) rotate(-10deg);
+      }
+    }
+
+    .concept-4 .launch-glow {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 100px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+      z-index: 1;
+    }
+
+    /* =============================================
+       CONCEPT 5: Particle Burst
+       ============================================= */
+    .concept-5 .hero-logo {
+      width: 56px;
+      height: 56px;
+      filter: brightness(0) invert(1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .concept-5 .particles {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      z-index: 1;
+    }
+
+    .concept-5 .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 50%;
+      animation: particleBurst 2s ease-out infinite;
+    }
+
+    .concept-5 .particle:nth-child(1) { animation-delay: 0s; left: 50%; top: 10%; }
+    .concept-5 .particle:nth-child(2) { animation-delay: 0.2s; left: 80%; top: 30%; }
+    .concept-5 .particle:nth-child(3) { animation-delay: 0.4s; left: 90%; top: 60%; }
+    .concept-5 .particle:nth-child(4) { animation-delay: 0.6s; left: 70%; top: 85%; }
+    .concept-5 .particle:nth-child(5) { animation-delay: 0.1s; left: 30%; top: 85%; }
+    .concept-5 .particle:nth-child(6) { animation-delay: 0.3s; left: 10%; top: 60%; }
+    .concept-5 .particle:nth-child(7) { animation-delay: 0.5s; left: 20%; top: 30%; }
+
+    @keyframes particleBurst {
+      0% {
+        opacity: 0;
+        transform: scale(0);
+      }
+      20% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0) translateY(-20px);
+      }
+    }
+
+    /* =============================================
+       CONCEPT 6: Circular Badge
+       ============================================= */
+    .concept-6 .logo-badge {
+      width: 64px;
+      height: 64px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    .concept-6 .hero-logo {
+      width: 44px;
+      height: 44px;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(255,255,255,0.4);
+      }
+      50% {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 8px rgba(255,255,255,0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .concepts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>eVelo Banner Logo Concepts</h1>
+
+  <div class="concepts-grid">
+    <!-- Concept 1: Simple Logo Replace -->
+    <div class="concept concept-1">
+      <h2 class="concept-title">1. Simple Logo Replace</h2>
+      <p class="concept-description">
+        Direct replacement of the rocket emoji with the eVelo logo. Clean and straightforward.
+        White logo on teal gradient with the existing bounce animation.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title">Escape Velocity Unlocked!</span>
+      </div>
+    </div>
+
+    <!-- Concept 2: Logo + Watermark -->
+    <div class="concept concept-2">
+      <h2 class="concept-title">2. Logo + Background Watermark</h2>
+      <p class="concept-description">
+        Small animated logo on the left, with a large faded watermark on the right.
+        Adds depth and brand presence without being distracting.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title">Escape Velocity Unlocked!</span>
+      </div>
+    </div>
+
+    <!-- Concept 3: Animated Trail -->
+    <div class="concept concept-3">
+      <h2 class="concept-title">3. Animated Velocity Trail</h2>
+      <p class="concept-description">
+        Logo with a pulsing light trail extending behind it.
+        Conveys the "velocity" theme - motion and momentum.
+      </p>
+      <div class="hero-banner">
+        <div class="trail"></div>
+        <div class="hero-content">
+          <img src="../public/logo.png" alt="" class="hero-logo" />
+          <span class="hero-title">Escape Velocity Unlocked!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 4: Breaking Edge -->
+    <div class="concept concept-4">
+      <h2 class="concept-title">4. Launch Breaking the Edge</h2>
+      <p class="concept-description">
+        Logo positioned at the edge, tilted upward as if launching out of the banner.
+        Dynamic and energetic. Subtle glow at launch point.
+      </p>
+      <div class="hero-banner">
+        <div class="launch-glow"></div>
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title">Escape Velocity Unlocked!</span>
+      </div>
+    </div>
+
+    <!-- Concept 5: Particle Burst -->
+    <div class="concept concept-5">
+      <h2 class="concept-title">5. Celebration Particles</h2>
+      <p class="concept-description">
+        Logo with sparkle particles bursting outward.
+        Celebratory effect perfect for "unlocked" achievement moment.
+      </p>
+      <div class="hero-banner">
+        <div class="particles">
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+        </div>
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title">Escape Velocity Unlocked!</span>
+      </div>
+    </div>
+
+    <!-- Concept 6: Circular Badge -->
+    <div class="concept concept-6">
+      <h2 class="concept-title">6. White Badge with Full-Color Logo</h2>
+      <p class="concept-description">
+        Logo inside a white circular badge, showing full gradient colors.
+        Pulsing glow effect. Premium, polished appearance.
+      </p>
+      <div class="hero-banner">
+        <div class="logo-badge">
+          <img src="../public/logo.png" alt="" class="hero-logo" />
+        </div>
+        <span class="hero-title">Escape Velocity Unlocked!</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

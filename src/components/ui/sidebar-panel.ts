@@ -104,7 +104,7 @@ export class SidebarPanel extends BaseComponent {
         padding: var(--spacing-md, 16px);
         background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
         border: none;
-        border-bottom: 2px solid #5eead4;
+        border-bottom: 2px solid #0d9488;
         cursor: pointer;
         font-size: 1rem;
         font-weight: 700;
@@ -182,6 +182,24 @@ export class SidebarPanel extends BaseComponent {
       .sidebar-content {
         overflow-y: auto;
         padding: var(--spacing-sm, 8px);
+      }
+
+      /* Custom scrollbar styling - 30% thinner */
+      .sidebar-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .sidebar-content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .sidebar-content::-webkit-scrollbar-thumb {
+        background: #b4bcc5;
+        border-radius: 4px;
+      }
+
+      .sidebar-content::-webkit-scrollbar-thumb:hover {
+        background: #8b96a6;
       }
 
       .sidebar-footer {

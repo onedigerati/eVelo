@@ -286,11 +286,32 @@ export class PortfolioComposition extends BaseComponent {
 
       /* Available Assets List */
       .available-assets-list {
-        max-height: 250px;
+        height: 250px;
+        min-height: 120px;
+        max-height: 500px;
         overflow-y: auto;
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--border-radius-md, 8px);
         background: var(--surface-secondary, #f8fafc);
+        resize: vertical;
+      }
+
+      /* Custom scrollbar styling - 30% thinner */
+      .available-assets-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .available-assets-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .available-assets-list::-webkit-scrollbar-thumb {
+        background: #b4bcc5;
+        border-radius: 4px;
+      }
+
+      .available-assets-list::-webkit-scrollbar-thumb:hover {
+        background: #8b96a6;
       }
 
       .available-asset-item {
@@ -337,6 +358,22 @@ export class PortfolioComposition extends BaseComponent {
         color: var(--text-secondary, #64748b);
         text-transform: uppercase;
         vertical-align: middle;
+      }
+
+      /* Asset type badge colors */
+      .asset-badge.type-stock {
+        background: #e0f7fa;
+        color: #0e7490;
+      }
+
+      .asset-badge.type-commodity {
+        background: #ffedd5;
+        color: #9a3412;
+      }
+
+      .asset-badge.type-index {
+        background: #f5d0fe;
+        color: #86198f;
       }
 
       .asset-stats {
@@ -698,12 +735,28 @@ export class PortfolioComposition extends BaseComponent {
         display: inline-block;
         margin-top: 4px;
         padding: 2px 6px;
-        background: var(--color-primary, #0d9488);
+        background: var(--surface-tertiary, #e2e8f0);
         border-radius: var(--border-radius-sm, 4px);
         font-size: 10px;
         font-weight: 600;
-        color: white;
+        color: var(--text-secondary, #64748b);
         text-transform: uppercase;
+      }
+
+      /* Selected asset type badge colors */
+      .selected-asset-badge.type-stock {
+        background: #e0f7fa;
+        color: #0e7490;
+      }
+
+      .selected-asset-badge.type-commodity {
+        background: #ffedd5;
+        color: #9a3412;
+      }
+
+      .selected-asset-badge.type-index {
+        background: #f5d0fe;
+        color: #86198f;
       }
 
       .selected-asset-stats {
@@ -1039,7 +1092,7 @@ export class PortfolioComposition extends BaseComponent {
           <div class="asset-info">
             <div>
               <span class="asset-name">${asset.symbol}</span>
-              <span class="asset-badge">${asset.assetClass}</span>
+              <span class="asset-badge type-${asset.assetClass.toLowerCase()}">${asset.assetClass}</span>
             </div>
             <div class="asset-stats">
               ${asset.years} years | Avg: ${asset.avgReturn.toFixed(1)}% | Vol: ${asset.volatility.toFixed(1)}%
@@ -1126,7 +1179,7 @@ export class PortfolioComposition extends BaseComponent {
         <div class="color-swatch" style="background-color: ${asset.color}"></div>
         <div class="selected-asset-info">
           <div class="selected-asset-name">${asset.name}</div>
-          <div class="selected-asset-badge">${asset.assetClass}</div>
+          <div class="selected-asset-badge type-${asset.assetClass.toLowerCase()}">${asset.assetClass}</div>
           <div class="selected-asset-stats">
             Avg: ${asset.avgReturn.toFixed(1)}% | Vol: ${asset.volatility.toFixed(1)}%
           </div>

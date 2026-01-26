@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eVelo Brand Highlighting Concepts</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 12px;
+      color: #1e293b;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .concept {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .concept-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .concept-description {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .pros-cons {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+    }
+
+    .pros, .cons {
+      flex: 1;
+    }
+
+    .pros-title {
+      color: #22c55e;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .cons-title {
+      color: #ef4444;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .pros ul, .cons ul {
+      color: #64748b;
+      padding-left: 16px;
+    }
+
+    /* =============================================
+       BASE BANNER STYLES
+       ============================================= */
+    .hero-banner {
+      border-radius: 12px;
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2D9B8A 0%, #247A6D 100%);
+    }
+
+    .hero-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Shimmer effect */
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      animation: shimmerGlow 2s infinite;
+      z-index: 1;
+    }
+
+    @keyframes shimmerGlow {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(0); }
+      100% { transform: translateX(100%); }
+    }
+
+    .hero-logo {
+      width: 48px;
+      height: 48px;
+      filter: brightness(0) invert(1);
+      position: relative;
+      z-index: 2;
+      animation: rocketBounce 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rocketBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .watermark {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      height: 200px;
+      opacity: 0.08;
+      filter: brightness(0) invert(1);
+      z-index: 0;
+    }
+
+    /* =============================================
+       CONCEPT 1: Opacity Fade on "city"
+       ============================================= */
+    .concept-1 .brand {
+      font-weight: 800;
+    }
+    .concept-1 .suffix {
+      opacity: 0.7;
+      font-weight: 500;
+    }
+
+    /* =============================================
+       CONCEPT 2: Gold/Yellow Accent on "eVelo"
+       ============================================= */
+    .concept-2 .brand {
+      color: #FFD700;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .concept-2 .suffix { }
+
+    /* =============================================
+       CONCEPT 3: Weight Difference
+       ============================================= */
+    .concept-3 .brand {
+      font-weight: 800;
+    }
+    .concept-3 .suffix {
+      font-weight: 400;
+      opacity: 0.85;
+    }
+
+    /* =============================================
+       CONCEPT 4: Gradient on "eVelo"
+       ============================================= */
+    .concept-4 .brand {
+      background: linear-gradient(90deg, #fff 0%, #a8e6cf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .concept-4 .suffix {
+      opacity: 0.75;
+    }
+
+    /* =============================================
+       CONCEPT 5: Underline Accent
+       ============================================= */
+    .concept-5 .brand {
+      position: relative;
+    }
+    .concept-5 .brand::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 2px;
+    }
+    .concept-5 .suffix {
+      opacity: 0.8;
+    }
+
+    /* =============================================
+       CONCEPT 6: Subtle Separator
+       ============================================= */
+    .concept-6 .brand { }
+    .concept-6 .separator {
+      opacity: 0.4;
+      margin: 0 1px;
+      font-weight: 400;
+    }
+    .concept-6 .suffix {
+      opacity: 0.7;
+    }
+
+    /* =============================================
+       CONCEPT 7: Lighter Teal for "city"
+       ============================================= */
+    .concept-7 .brand { }
+    .concept-7 .suffix {
+      color: #a8e6cf;
+    }
+
+    /* =============================================
+       CONCEPT 8: Italic "city"
+       ============================================= */
+    .concept-8 .brand { }
+    .concept-8 .suffix {
+      font-style: italic;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    /* =============================================
+       CONCEPT 9: Glow on "eVelo"
+       ============================================= */
+    .concept-9 .brand {
+      text-shadow:
+        0 0 4px rgba(255, 255, 255, 0.5),
+        0 0 8px rgba(255, 255, 255, 0.25);
+    }
+    .concept-9 .suffix {
+      opacity: 0.75;
+    }
+
+    /* =============================================
+       CONCEPT 10: Warm Cream/Champagne Accent
+       ============================================= */
+    .concept-10 .brand {
+      color: #FFF8DC;
+    }
+    .concept-10 .suffix {
+      opacity: 0.75;
+    }
+
+    /* =============================================
+       CONCEPT 11: Small Caps "city"
+       ============================================= */
+    .concept-11 .brand { }
+    .concept-11 .suffix {
+      font-variant: small-caps;
+      font-size: 0.85em;
+      letter-spacing: 0.05em;
+      opacity: 0.8;
+    }
+
+    /* =============================================
+       CONCEPT 12: Combined - Gold + Weight + Opacity
+       ============================================= */
+    .concept-12 .brand {
+      color: #F0E68C;
+      font-weight: 800;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .concept-12 .suffix {
+      font-weight: 500;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 900px) {
+      .concepts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>eVelo Brand Highlighting Concepts</h1>
+  <p class="subtitle">Different approaches to emphasize "eVelo" within "eVelocity"</p>
+
+  <div class="concepts-grid">
+    <!-- Concept 1: Opacity Fade -->
+    <div class="concept concept-1">
+      <h2 class="concept-title">1. Opacity Fade on "city"</h2>
+      <p class="concept-description">
+        Keep "eVelo" at full brightness, fade "city" to ~70% opacity.
+        Subtle but effective distinction.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Subtle, elegant</li><li>Easy to implement</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May be too subtle</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 2: Gold Accent -->
+    <div class="concept concept-2">
+      <h2 class="concept-title">2. Gold/Yellow Accent</h2>
+      <p class="concept-description">
+        Make "eVelo" a warm gold color that pops against the teal.
+        Premium, award-like feel.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>High contrast</li><li>Premium feel</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May clash with brand</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 3: Weight Difference -->
+    <div class="concept concept-3">
+      <h2 class="concept-title">3. Weight Difference</h2>
+      <p class="concept-description">
+        "eVelo" in extra bold (800), "city" in regular weight (400).
+        Creates hierarchy through typography.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Professional</li><li>Clear hierarchy</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Needs good font</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 4: Gradient -->
+    <div class="concept concept-4">
+      <h2 class="concept-title">4. Gradient Text on "eVelo"</h2>
+      <p class="concept-description">
+        Apply a white-to-mint gradient just on "eVelo".
+        Modern, dynamic appearance.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Modern look</li><li>Eye-catching</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Browser support</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 5: Underline -->
+    <div class="concept concept-5">
+      <h2 class="concept-title">5. Underline Accent</h2>
+      <p class="concept-description">
+        Add a subtle underline/highlight bar under "eVelo".
+        Clear visual marker without changing color.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Clear distinction</li><li>Unique approach</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May look like link</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 6: Separator -->
+    <div class="concept concept-6">
+      <h2 class="concept-title">6. Subtle Separator (eVelo·city)</h2>
+      <p class="concept-description">
+        Add a faint middle dot between "eVelo" and "city".
+        Makes the split explicit but tasteful.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="separator">·</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Clear split</li><li>Easy to read</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Changes word form</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 7: Lighter Teal -->
+    <div class="concept concept-7">
+      <h2 class="concept-title">7. Lighter Teal "city"</h2>
+      <p class="concept-description">
+        Keep "eVelo" white, make "city" a lighter mint/teal shade.
+        Stays within brand color family.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>On-brand colors</li><li>Harmonious</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Lower contrast</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 8: Italic -->
+    <div class="concept concept-8">
+      <h2 class="concept-title">8. Italic "city"</h2>
+      <p class="concept-description">
+        Keep "eVelo" upright and bold, make "city" italic and lighter.
+        Typographic contrast without color change.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Elegant flow</li><li>Dynamic feel</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May look odd</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 9: Glow -->
+    <div class="concept concept-9">
+      <h2 class="concept-title">9. Glow Effect on "eVelo"</h2>
+      <p class="concept-description">
+        Add a soft white glow/halo around "eVelo" letters.
+        Creates emphasis through luminosity.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Eye-catching</li><li>Premium feel</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Can look fuzzy</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 10: Cream Accent -->
+    <div class="concept concept-10">
+      <h2 class="concept-title">10. Warm Cream/Champagne</h2>
+      <p class="concept-description">
+        Make "eVelo" a warm off-white cream color.
+        Softer than gold, still distinct.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Subtle warmth</li><li>Less flashy</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May be too subtle</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 11: Small Caps -->
+    <div class="concept concept-11">
+      <h2 class="concept-title">11. Small Caps "city"</h2>
+      <p class="concept-description">
+        Use small caps for "city" - smaller but all uppercase.
+        Creates visual hierarchy through letter form.
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Sophisticated</li><li>Typographic interest</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>Font dependent</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concept 12: Combined -->
+    <div class="concept concept-12">
+      <h2 class="concept-title">12. Combined: Khaki + Weight + Opacity</h2>
+      <p class="concept-description">
+        Combine multiple techniques: warm khaki color on "eVelo",
+        extra bold weight, and faded lighter "city".
+      </p>
+      <div class="hero-banner">
+        <img src="../public/logo.png" alt="" class="watermark" />
+        <img src="../public/logo.png" alt="" class="hero-logo" />
+        <span class="hero-title"><span class="brand">eVelo</span><span class="suffix">city</span> Unlocked!</span>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul><li>Very clear</li><li>Multiple cues</li></ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul><li>May be too much</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

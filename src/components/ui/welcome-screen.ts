@@ -185,7 +185,7 @@ export class WelcomeScreen extends BaseComponent {
         width: 120px;
         height: 120px;
         margin-bottom: var(--spacing-lg, 24px);
-        animation: logoEntrance 0.6s ease-out;
+        animation: logoEntrance 0.8s ease-out;
         transition: transform 0.3s ease, filter 0.3s ease;
         cursor: pointer;
       }
@@ -198,11 +198,15 @@ export class WelcomeScreen extends BaseComponent {
       @keyframes logoEntrance {
         0% {
           opacity: 0;
-          transform: scale(0.8) translateY(-10px);
+          transform: scale(0.5) rotate(-180deg);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(1.1) rotate(10deg);
         }
         100% {
           opacity: 1;
-          transform: scale(1) translateY(0);
+          transform: scale(1) rotate(0deg);
         }
       }
 
