@@ -167,6 +167,12 @@ export class SalaryEquivalentSection extends BaseComponent {
         border-radius: var(--radius-lg, 12px);
         padding: var(--spacing-xl, 32px) var(--spacing-lg, 24px);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .salary-banner:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -4px rgba(13, 148, 136, 0.3), 0 8px 16px -4px rgba(0, 0, 0, 0.15);
       }
 
       .banner-content {

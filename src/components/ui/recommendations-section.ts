@@ -144,6 +144,13 @@ export class RecommendationsSection extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .recommendations-wrapper:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .recommendations-header {

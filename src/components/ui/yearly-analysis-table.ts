@@ -170,6 +170,13 @@ export class YearlyAnalysisTable extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .table-container:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       .table-header {
@@ -224,14 +231,16 @@ export class YearlyAnalysisTable extends BaseComponent {
         text-align: left;
       }
 
-      .withdrawal-header {
+      .analysis-table th.withdrawal-header {
         background: var(--surface-secondary, #f8fafc);
         color: var(--text-secondary, #475569);
+        text-align: center;
       }
 
-      .percentile-header {
+      .analysis-table th.percentile-header {
         background: rgba(13, 148, 136, 0.1);
         color: var(--color-primary, #0d9488);
+        text-align: center;
       }
 
       .analysis-table th.p10 {

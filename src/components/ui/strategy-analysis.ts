@@ -327,6 +327,13 @@ export class StrategyAnalysis extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         padding: var(--spacing-lg, 24px);
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .strategy-analysis:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       /* Header */
@@ -492,6 +499,12 @@ export class StrategyAnalysis extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-md, 6px);
         padding: var(--spacing-md, 16px);
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .comparison-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
 
       .bbd-card {

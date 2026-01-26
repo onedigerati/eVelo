@@ -185,6 +185,13 @@ export class ParamSummary extends BaseComponent {
         border: 1px solid #99f6e4;
         border-radius: var(--radius-lg, 12px);
         overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(26, 36, 36, 0.12));
+        border-color: var(--color-primary, #0d9488);
       }
 
       /* Portfolio Section */
@@ -282,6 +289,7 @@ export class ParamSummary extends BaseComponent {
         padding: 0 var(--spacing-md, 16px);
         border-radius: var(--radius-sm, 4px);
         overflow: hidden;
+        background: white;
       }
 
       .asset-bar-row::before {
@@ -590,14 +598,21 @@ export class ParamSummary extends BaseComponent {
     // Sort assets by weight descending
     const sortedAssets = [...assets].sort((a, b) => b.weight - a.weight);
 
-    // Render asset bars
-    assetBars.innerHTML = sortedAssets.map(asset => `
-      <div class="asset-bar-row" style="--bar-width: ${asset.weight}%; --bar-color: ${asset.color};">
-        <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
-        <span class="asset-bar-name">${asset.name}</span>
-        <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
-      </div>
-    `).join('');
+    // Find maximum weight for relative bar scaling
+    const maxWeight = sortedAssets.length > 0 ? sortedAssets[0].weight : 100;
+
+    // Render asset bars with widths relative to the largest
+    assetBars.innerHTML = sortedAssets.map(asset => {
+      // Scale bar width so largest asset = 100%, others proportional
+      const relativeWidth = (asset.weight / maxWeight) * 100;
+      return `
+        <div class="asset-bar-row" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
+          <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
+          <span class="asset-bar-name">${asset.name}</span>
+          <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
+        </div>
+      `;
+    }).join('');
 
     // Update donut chart
     if (this.donutChart) {
