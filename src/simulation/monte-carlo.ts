@@ -20,11 +20,8 @@ import {
   correlatedBlockBootstrap,
 } from './bootstrap';
 import { generateCorrelatedRegimeReturns } from './regime-switching';
-import {
-  calibrateRegimeModelWithValidation,
-  calculatePortfolioRegimeParams,
-  type CalibratedRegimeResult,
-} from './regime-calibration';
+// Note: regime-calibration module is no longer used for main simulation
+// The multiplier-based approach from REGIME_CONFIG is used instead
 import { generateCorrelatedFatTailReturns } from './fat-tail';
 import type { AssetClass } from './types';
 import {
@@ -49,15 +46,17 @@ import type {
   RegimeCalibrationMode,
   RegimeParamsMap,
   SellStrategyOutput,
+  AssetHistoricalStats,
 } from './types';
 import {
   DEFAULT_REGIME_PARAMS,
   FAT_TAIL_PARAMS,
   CONSERVATIVE_TRANSITION_MATRIX,
+  REGIME_CONFIG,
 } from './types';
 
-/** Batch size for progress reporting */
-const BATCH_SIZE = 1000;
+/** Batch size for progress reporting (smaller = better UI responsiveness) */
+const BATCH_SIZE = 500;
 
 /** Default inflation rate (3%) */
 const DEFAULT_INFLATION_RATE = 0.03;
@@ -107,41 +106,35 @@ export async function runMonteCarlo(
   const numAssets = portfolio.assets.length;
   const weights = portfolio.assets.map(a => a.weight);
 
-  // Calibrate regime parameters if using regime method
-  let assetRegimeParams: RegimeParamsMap[] | undefined;
-  let assetCalibrationResults: CalibratedRegimeResult[] | undefined;
+  // Compute historical stats for regime multiplier approach
+  let assetHistoricalStats: AssetHistoricalStats[] | undefined;
 
   if (resamplingMethod === 'regime') {
     const calibrationMode = config.regimeCalibration ?? 'historical';
-    console.log(`Regime calibration mode: ${calibrationMode}`);
+    const regimeConfig = REGIME_CONFIG[calibrationMode];
+    console.log(`Regime model: Multiplier-based approach (${calibrationMode} mode)`);
+    console.log(`  Survivorship bias: ${(regimeConfig.survivorshipBias * 100).toFixed(1)}%`);
 
-    // Calibrate each asset's regime parameters from its historical data (with validation)
-    assetCalibrationResults = portfolio.assets.map((asset) => {
-      if (asset.historicalReturns.length >= 10) {
-        const result = calibrateRegimeModelWithValidation(
-          asset.historicalReturns,
-          calibrationMode,
-          asset.id
-        );
-        const status = result.validation.usedFallback ? '⚠️ FALLBACK' : '✓';
-        console.log(`Asset ${asset.id} regime params (${calibrationMode}) ${status}:`, {
-          bull: { mean: (result.params.bull.mean * 100).toFixed(1) + '%', stddev: (result.params.bull.stddev * 100).toFixed(1) + '%' },
-          bear: { mean: (result.params.bear.mean * 100).toFixed(1) + '%', stddev: (result.params.bear.stddev * 100).toFixed(1) + '%' },
-          crash: { mean: (result.params.crash.mean * 100).toFixed(1) + '%', stddev: (result.params.crash.stddev * 100).toFixed(1) + '%' },
-        });
-        if (result.validation.issues.length > 0) {
-          console.log(`  Issues:`, result.validation.issues.map(i => `[${i.severity}] ${i.message}`));
-        }
-        return result;
-      }
-      console.log(`Asset ${asset.id}: Using default params (insufficient data)`);
+    // Compute historical mean/stddev for each asset (multiplier-based approach)
+    assetHistoricalStats = portfolio.assets.map((asset) => {
+      const returns = asset.historicalReturns;
+      const assetMean = returns.length > 0 ? mean(returns) : 0.10;
+      const assetStddev = returns.length > 1 ? stddev(returns) : 0.20;
+      const assetClass = asset.assetClass ?? 'equity_stock';
+
+      console.log(`Asset ${asset.id} (${assetClass}):`, {
+        historicalMean: (assetMean * 100).toFixed(1) + '%',
+        historicalStddev: (assetStddev * 100).toFixed(1) + '%',
+        dataPoints: returns.length,
+      });
+
       return {
-        params: DEFAULT_REGIME_PARAMS,
-        validation: { isValid: true, issues: [], usedFallback: true },
-      } as CalibratedRegimeResult;
+        id: asset.id,
+        mean: assetMean,
+        stddev: assetStddev,
+        assetClass,
+      };
     });
-
-    assetRegimeParams = assetCalibrationResults.map(r => r.params);
   }
 
   // Track SBLOC state per iteration per year (only if sbloc config provided)
@@ -234,7 +227,7 @@ export async function runMonteCarlo(
         rng,
         blockSize,
         config.regimeCalibration,
-        assetRegimeParams
+        assetHistoricalStats
       );
 
       // Simulate portfolio growth
@@ -648,16 +641,38 @@ export async function runMonteCarlo(
         successfulAvgReturn: successfulReturns.length > 0 ? mean(successfulReturns) : 0,
         failedAvgReturn: failedReturns.length > 0 ? mean(failedReturns) : 0,
       },
-      // Regime parameters used (if regime method)
-      regimeParameters: assetCalibrationResults ? portfolio.assets.map((asset, i) => ({
-        assetId: asset.id,
-        bull: assetCalibrationResults[i].params.bull,
-        bear: assetCalibrationResults[i].params.bear,
-        crash: assetCalibrationResults[i].params.crash,
-        recovery: assetCalibrationResults[i].params.recovery,
-        usedFallback: assetCalibrationResults[i].validation.usedFallback,
-        validationIssues: assetCalibrationResults[i].validation.issues.map(iss => iss.message),
-      })) : undefined,
+      // Regime parameters used (if regime method) - now using multiplier-based approach
+      regimeParameters: assetHistoricalStats ? portfolio.assets.map((asset, i) => {
+        const stats = assetHistoricalStats[i];
+        const calibrationMode = config.regimeCalibration ?? 'historical';
+        const regimeConfig = REGIME_CONFIG[calibrationMode];
+        // Compute what multipliers produce for each regime
+        const getRegimeParams = (regime: 'bull' | 'bear' | 'crash' | 'recovery'): { mean: number; stddev: number } => {
+          // Get multipliers: use asset class override if available, otherwise base params
+          let multipliers = regimeConfig.baseParams[regime];
+          if (regime === 'bear' && regimeConfig.bearMarketOverrides[stats.assetClass]) {
+            multipliers = regimeConfig.bearMarketOverrides[stats.assetClass]!;
+          } else if (regime === 'crash' && regimeConfig.crashMarketOverrides[stats.assetClass]) {
+            multipliers = regimeConfig.crashMarketOverrides[stats.assetClass]!;
+          }
+          return {
+            mean: (stats.mean * multipliers.meanMultiplier) + multipliers.meanAdjustment - regimeConfig.survivorshipBias,
+            stddev: stats.stddev * multipliers.volMultiplier,
+          };
+        };
+        return {
+          assetId: asset.id,
+          assetClass: stats.assetClass,
+          historicalMean: stats.mean,
+          historicalStddev: stats.stddev,
+          bull: getRegimeParams('bull'),
+          bear: getRegimeParams('bear'),
+          crash: getRegimeParams('crash'),
+          recovery: getRegimeParams('recovery'),
+          usedFallback: false, // Multiplier approach never needs fallback
+          validationIssues: [] as string[],
+        };
+      }) : undefined,
       calibrationMode: resamplingMethod === 'regime' ? (config.regimeCalibration ?? 'historical') : undefined,
       // Fat-tail parameters used (if fat-tail method)
       fatTailParameters: resamplingMethod === 'fat-tail' ? portfolio.assets.map(asset => {
@@ -859,24 +874,13 @@ function generateIterationReturns(
   rng: () => number,
   blockSize?: number,
   regimeCalibration?: RegimeCalibrationMode,
-  assetRegimeParams?: RegimeParamsMap[]
+  assetHistoricalStats?: AssetHistoricalStats[]
 ): number[][] {
   const numAssets = portfolio.assets.length;
 
   if (method === 'regime') {
-    // Use regime-switching with correlation and calibrated params
+    // Use regime-switching with multiplier-based approach (aligned with reference)
     const calibrationMode = regimeCalibration ?? 'historical';
-
-    // Log survivorship bias application and transition matrix selection
-    const bias = calibrationMode === 'conservative' ? '2.0%' : '1.5%';
-    const matrixType = calibrationMode === 'conservative' ? 'conservative' : 'historical';
-    console.log(`[Regime] Applying ${bias} survivorship bias adjustment (${calibrationMode} mode)`);
-    console.log(`[Regime] Using ${matrixType} transition matrix`);
-
-    // Use conservative transition matrix when in conservative mode
-    const transitionMatrix = calibrationMode === 'conservative'
-      ? CONSERVATIVE_TRANSITION_MATRIX
-      : undefined; // undefined means use default (historical) matrix
 
     const { returns } = generateCorrelatedRegimeReturns(
       years,
@@ -884,10 +888,11 @@ function generateIterationReturns(
       portfolio.correlationMatrix,
       rng,
       'bull', // initialRegime
-      transitionMatrix,
-      undefined, // shared params (not used when assetRegimeParams provided)
-      assetRegimeParams,
-      calibrationMode
+      undefined, // matrix - let function use REGIME_CONFIG transitions
+      undefined, // shared params (legacy, not used)
+      undefined, // assetRegimeParams (legacy, not used)
+      calibrationMode,
+      assetHistoricalStats // NEW: multiplier-based approach
     );
     return returns;
   }
@@ -896,9 +901,6 @@ function generateIterationReturns(
     // Use fat-tail model with Student's t-distribution
     const allHistoricalReturns = portfolio.assets.map(asset => asset.historicalReturns);
     const assetClasses = portfolio.assets.map(asset => asset.assetClass ?? 'equity_index');
-
-    console.log('[MC Debug] Fat-tail model selected');
-    console.log('[MC Debug] Asset classes:', assetClasses);
 
     // Generate returns for all years
     const returns: number[][] = Array(numAssets).fill(0).map(() => []);

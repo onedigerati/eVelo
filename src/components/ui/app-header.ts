@@ -21,7 +21,7 @@ export class AppHeader extends BaseComponent {
       <header class="app-header">
         <div class="header-brand">
           <div class="brand-wordmark">
-            <span class="brand-icon" aria-hidden="true">&#9889;</span>
+            <img src="/logo.png" alt="eVelo logo" class="brand-logo" />
             <h1 class="brand-title">eVelo</h1>
           </div>
           <p class="brand-tagline">Tax-Efficient Portfolio Strategy Simulator</p>
@@ -69,9 +69,18 @@ export class AppHeader extends BaseComponent {
         gap: var(--spacing-sm, 8px);
       }
 
-      .brand-icon {
-        font-size: clamp(1.25rem, 2.5vw + 0.5rem, 1.75rem);
-        line-height: 1;
+      .brand-logo {
+        height: clamp(1.5rem, 3vw + 0.5rem, 2rem);
+        width: auto;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+        transition: transform 0.2s ease, filter 0.2s ease;
+        cursor: pointer;
+      }
+
+      .brand-logo:hover {
+        transform: scale(1.1) rotate(-5deg);
+        filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
       }
 
       .brand-title {

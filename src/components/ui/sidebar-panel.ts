@@ -102,26 +102,29 @@ export class SidebarPanel extends BaseComponent {
         gap: var(--spacing-sm, 8px);
         width: 100%;
         padding: var(--spacing-md, 16px);
-        background: var(--color-primary, #0d9488);
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
         border: none;
-        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        border-bottom: 2px solid #5eead4;
         cursor: pointer;
         font-size: 1rem;
-        color: var(--text-inverse, #ffffff);
-        transition: background 0.2s ease;
+        font-weight: 700;
+        color: #065f56;
+        box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2), 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
       }
 
       .toggle-btn:hover {
-        background: var(--color-primary-dark, #0f766e);
+        background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25), 0 2px 4px rgba(0,0,0,0.12);
       }
 
       .toggle-btn:focus-visible {
-        outline: 2px solid var(--text-inverse, #ffffff);
-        outline-offset: -2px;
+        outline: 2px solid #0d9488;
+        outline-offset: 2px;
       }
 
       .toggle-label {
-        font-weight: 600;
+        font-weight: 700;
         font-size: var(--font-size-sm, 0.875rem);
         white-space: nowrap;
         transition: writing-mode 0.3s ease, opacity 0.3s ease;
@@ -131,6 +134,7 @@ export class SidebarPanel extends BaseComponent {
         font-size: 0.875rem;
         transition: transform 0.3s ease;
         flex-shrink: 0;
+        color: #0d9488;
       }
 
       /* Desktop collapsed: vertical text using writing-mode */
@@ -139,6 +143,8 @@ export class SidebarPanel extends BaseComponent {
         padding: var(--spacing-lg, 24px) var(--spacing-sm, 8px);
         height: 100%;
         flex-direction: column;
+        border-bottom: none;
+        border-right: 2px solid #5eead4;
       }
 
       :host([collapsed]) .toggle-label {
@@ -153,11 +159,17 @@ export class SidebarPanel extends BaseComponent {
 
       /* Dark theme support */
       :host-context([data-theme="dark"]) .toggle-btn {
-        background: var(--color-primary, #0d9488);
+        background: linear-gradient(135deg, #134e4a 0%, #115e59 100%);
+        color: #ccfbf1;
+        border-bottom-color: #0d9488;
       }
 
       :host-context([data-theme="dark"]) .toggle-btn:hover {
-        background: var(--color-primary-light, #14b8a6);
+        background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
+      }
+
+      :host-context([data-theme="dark"]) .toggle-icon {
+        color: #5eead4;
       }
 
       /* Mobile: Always horizontal label, hide icon */

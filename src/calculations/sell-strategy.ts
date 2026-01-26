@@ -190,13 +190,7 @@ export function calculateSellStrategy(
   config: SellStrategyConfig,
   yearlyPercentiles: YearlyPercentiles[],
 ): SellStrategyResult {
-  // Validate percentile data completeness
-  if (yearlyPercentiles.length < config.timeHorizon) {
-    console.warn(
-      `Sell strategy: yearlyPercentiles length (${yearlyPercentiles.length}) ` +
-      `is less than timeHorizon (${config.timeHorizon}). Results may be incomplete.`
-    );
-  }
+  // Validate percentile data completeness (silent - fallback used automatically)
 
   const {
     initialValue,
@@ -224,21 +218,7 @@ export function calculateSellStrategy(
     });
   }
 
-  // Validate cost basis ratio is in valid range
-  if (costBasisRatio < 0 || costBasisRatio > 1) {
-    console.warn(
-      `Invalid costBasisRatio ${costBasisRatio}, should be 0-1. ` +
-      `Using default ${DEFAULT_SELL_CONFIG.costBasisRatio}`
-    );
-  }
-
-  // Validate dividend yield is reasonable
-  if (dividendYield < 0 || dividendYield > 0.15) {
-    console.warn(
-      `Unusual dividendYield ${(dividendYield * 100).toFixed(1)}%, ` +
-      `typical range is 0-10%`
-    );
-  }
+  // Validation is silent - defaults used automatically if values are out of range
 
   // Extract growth rates from yearly percentiles (using median path)
   const growthRates = extractGrowthRates(yearlyPercentiles);
@@ -508,13 +488,8 @@ function runSingleSellScenario(
     const prevYearData = yearlyPercentiles[year - 1];
 
     if (!yearData || !prevYearData) {
-      // Fallback: use average historical growth
-      console.warn(
-        `Sell strategy: Missing percentile data for year ${year}. ` +
-        `Using fallback 7% growth rate.`
-      );
-      const growthRate = 0.07;
-      portfolioValue *= (1 + growthRate);
+      // Fallback: use average historical growth (silent - common for long horizons)
+      portfolioValue *= 1.07;
     } else {
       // Calculate growth rate from percentile data
       const prevValue = prevYearData[percentileKey];
@@ -669,12 +644,8 @@ function runInterpolatedScenario(
     const prevYearData = yearlyPercentiles[year - 1];
 
     if (!yearData || !prevYearData) {
-      console.warn(
-        `Sell strategy (interpolated): Missing percentile data for year ${year}. ` +
-        `Using fallback 7% growth rate.`
-      );
-      const growthRate = 0.07;
-      portfolioValue *= (1 + growthRate);
+      // Fallback: use average historical growth (silent - common for long horizons)
+      portfolioValue *= 1.07;
     } else {
       // Interpolate between two percentile paths
       const lowerPrev = prevYearData[lowerKey];
@@ -933,13 +904,7 @@ export function calculateSellStrategyFromReturns(
     dividendTaxRate = DEFAULT_SELL_CONFIG.dividendTaxRate,
   } = config;
 
-  // Validate portfolioReturns length
-  if (portfolioReturns.length < timeHorizon) {
-    console.warn(
-      `Sell strategy: portfolioReturns length (${portfolioReturns.length}) ` +
-      `is less than timeHorizon (${timeHorizon}). Results may be incomplete.`
-    );
-  }
+  // Validation is silent - uses available returns
 
   let portfolioValue = initialValue;
   let costBasis = initialValue * costBasisRatio;

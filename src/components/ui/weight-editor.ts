@@ -275,6 +275,18 @@ export class WeightEditor extends BaseComponent {
           this.dispatchWeightsChange();
         }
       });
+
+      // Dispatch commit event on Enter to trigger simulation
+      input?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.dispatchEvent(new CustomEvent('commit', {
+            bubbles: true,
+            composed: true,
+            detail: { source: 'weight-input' }
+          }));
+        }
+      });
     });
   }
 

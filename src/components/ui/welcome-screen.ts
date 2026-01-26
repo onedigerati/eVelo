@@ -186,6 +186,13 @@ export class WelcomeScreen extends BaseComponent {
         height: 120px;
         margin-bottom: var(--spacing-lg, 24px);
         animation: logoEntrance 0.6s ease-out;
+        transition: transform 0.3s ease, filter 0.3s ease;
+        cursor: pointer;
+      }
+
+      .hero-logo:hover {
+        transform: scale(1.1) rotate(5deg);
+        filter: drop-shadow(0 8px 24px rgba(13, 148, 136, 0.4));
       }
 
       @keyframes logoEntrance {

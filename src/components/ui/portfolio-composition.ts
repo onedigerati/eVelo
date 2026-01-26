@@ -1101,16 +1101,20 @@ export class PortfolioComposition extends BaseComponent {
     // Sort assets by weight descending for visualization
     const sortedAssets = [...this.selectedAssets].sort((a, b) => b.weight - a.weight);
 
-    // Render horizontal bars
+    // Render horizontal bars with relative widths (max weight = 100% width)
     const barsList = visualization.querySelector('.asset-bars-list');
     if (barsList) {
-      barsList.innerHTML = sortedAssets.map(asset => `
-        <div class="asset-bar-row" style="--bar-width: ${asset.weight}%; --bar-color: ${asset.color};">
+      const maxWeight = Math.max(...sortedAssets.map(a => a.weight), 1);
+      barsList.innerHTML = sortedAssets.map(asset => {
+        const relativeWidth = (asset.weight / maxWeight) * 100;
+        return `
+        <div class="asset-bar-row" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
           <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
           <span class="asset-bar-name">${asset.name}</span>
           <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Update donut chart
@@ -1154,6 +1158,17 @@ export class PortfolioComposition extends BaseComponent {
           this.updateTotal();
           this.markDirty();
           this.dispatchPortfolioChange();
+        }
+      });
+      // Dispatch commit event on Enter to trigger simulation
+      input.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Enter') {
+          e.preventDefault();
+          this.dispatchEvent(new CustomEvent('commit', {
+            bubbles: true,
+            composed: true,
+            detail: { source: 'weight-input' }
+          }));
         }
       });
     });
@@ -1854,16 +1869,20 @@ export class PortfolioComposition extends BaseComponent {
     // Sort assets by weight descending
     const sortedAssets = [...this.selectedAssets].sort((a, b) => b.weight - a.weight);
 
-    // Render horizontal bars
+    // Render horizontal bars with relative widths (max weight = 100% width)
     const barsList = visualization.querySelector('.asset-bars-list');
     if (barsList) {
-      barsList.innerHTML = sortedAssets.map(asset => `
-        <div class="asset-bar-row" style="--bar-width: ${asset.weight}%; --bar-color: ${asset.color};">
+      const maxWeight = Math.max(...sortedAssets.map(a => a.weight), 1);
+      barsList.innerHTML = sortedAssets.map(asset => {
+        const relativeWidth = (asset.weight / maxWeight) * 100;
+        return `
+        <div class="asset-bar-row" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
           <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
           <span class="asset-bar-name">${asset.name}</span>
           <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Update donut chart

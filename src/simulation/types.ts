@@ -426,16 +426,23 @@ export interface SBLOCDebugStats {
     successfulAvgReturn: number;
     failedAvgReturn: number;
   };
-  /** Per-asset regime parameters used in simulation */
+  /** Per-asset regime parameters used in simulation (multiplier-based approach) */
   regimeParameters?: {
     assetId: string;
+    /** Asset class used for regime overrides */
+    assetClass?: AssetClass;
+    /** Historical mean return (before regime adjustment) */
+    historicalMean?: number;
+    /** Historical stddev (before regime adjustment) */
+    historicalStddev?: number;
+    /** Computed regime params after applying multipliers */
     bull: { mean: number; stddev: number };
     bear: { mean: number; stddev: number };
     crash: { mean: number; stddev: number };
     recovery: { mean: number; stddev: number };
-    /** Whether fallback to defaults was used due to degenerate calibration */
+    /** Whether fallback to defaults was used (always false for multiplier approach) */
     usedFallback?: boolean;
-    /** Validation issues found during calibration */
+    /** Validation issues found during calibration (empty for multiplier approach) */
     validationIssues?: string[];
   }[];
   /** Calibration mode used */
@@ -624,3 +631,279 @@ export const DEFAULT_REGIME_PARAMS: RegimeParamsMap = {
   crash: { mean: -0.30, stddev: 0.35 },    // -30% return, 35% vol
   recovery: { mean: 0.20, stddev: 0.25 },  // 20% return, 25% vol
 };
+
+// ============================================================================
+// Multiplier-Based Regime Configuration (Reference Methodology)
+// ============================================================================
+
+/**
+ * Regime multipliers for transforming historical asset statistics
+ *
+ * This approach applies fixed multipliers to an asset's overall historical
+ * mean and stddev, rather than calibrating per-regime statistics from data.
+ * This avoids degenerate parameters for volatile assets.
+ *
+ * Formula for each year:
+ *   adjustedMean = (historicalMean * meanMultiplier) + meanAdjustment
+ *   adjustedStddev = historicalStddev * volMultiplier
+ */
+export interface RegimeMultipliers {
+  /** Multiplier applied to historical mean (e.g., 1.0 = full mean, 0.0 = ignore mean) */
+  meanMultiplier: number;
+  /** Absolute adjustment added to mean (as decimal, e.g., -0.12 for -12%) */
+  meanAdjustment: number;
+  /** Multiplier applied to historical stddev (e.g., 1.8 = 80% higher vol) */
+  volMultiplier: number;
+  /** Correlation spike during this regime (for future multi-asset correlation adjustment) */
+  correlationSpike: number;
+}
+
+/**
+ * Asset class overrides for bear and crash regimes
+ * Different asset classes behave differently during market stress
+ */
+export type AssetClassOverrides = Partial<Record<AssetClass, RegimeMultipliers>>;
+
+/**
+ * Complete regime configuration for a calibration mode
+ */
+export interface RegimeConfigMode {
+  /** Transition probabilities between regimes */
+  transitions: TransitionMatrix;
+  /** Survivorship bias adjustment (as decimal, e.g., 0.02 for 2%) */
+  survivorshipBias: number;
+  /** Base multipliers for each regime */
+  baseParams: Record<MarketRegime, RegimeMultipliers>;
+  /** Asset class-specific overrides for bear markets */
+  bearMarketOverrides: AssetClassOverrides;
+  /** Asset class-specific overrides for crash markets */
+  crashMarketOverrides: AssetClassOverrides;
+}
+
+/**
+ * Historical statistics for an asset (used with multiplier approach)
+ */
+export interface AssetHistoricalStats {
+  /** Asset identifier */
+  id: string;
+  /** Overall historical mean return (as decimal) */
+  mean: number;
+  /** Overall historical standard deviation (as decimal) */
+  stddev: number;
+  /** Asset class for regime overrides */
+  assetClass: AssetClass;
+}
+
+/**
+ * Regime configuration by calibration mode
+ *
+ * Aligned with reference PortfolioStrategySimulator.html methodology.
+ * Uses multiplier-based approach rather than per-regime calibration.
+ */
+export const REGIME_CONFIG: Record<RegimeCalibrationMode, RegimeConfigMode> = {
+  historical: {
+    // Transition probabilities calibrated to historical regime durations
+    // Bull ~9yr, Bear ~1.8yr, Crash ~1yr, Recovery ~1.5yr
+    transitions: {
+      bull:     { bull: 0.89, bear: 0.06, crash: 0.02, recovery: 0.03 },
+      bear:     { bull: 0.05, bear: 0.45, crash: 0.20, recovery: 0.30 },
+      crash:    { bull: 0.00, bear: 0.20, crash: 0.10, recovery: 0.70 }, // Faster exit
+      recovery: { bull: 0.50, bear: 0.05, crash: 0.02, recovery: 0.43 }, // Faster to bull
+    },
+    survivorshipBias: 0.015, // 1.5%
+    baseParams: {
+      bull: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0,
+        volMultiplier: 0.80,
+        correlationSpike: 0.0,
+      },
+      bear: {
+        meanMultiplier: 0.30,
+        meanAdjustment: -0.10, // -10%
+        volMultiplier: 1.60,
+        correlationSpike: 0.35,
+      },
+      crash: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.30, // -30%
+        volMultiplier: 2.50,
+        correlationSpike: 0.65,
+      },
+      recovery: {
+        meanMultiplier: 0.75,
+        meanAdjustment: 0.10, // +10%
+        volMultiplier: 1.30,
+        correlationSpike: 0.20,
+      },
+    },
+    bearMarketOverrides: {
+      commodity: {
+        meanMultiplier: 0.90,
+        meanAdjustment: 0.04, // +4% (flight to safety)
+        volMultiplier: 1.30,
+        correlationSpike: 0.08,
+      },
+      bond: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0.05, // +5% (rate cuts, safe haven)
+        volMultiplier: 1.20,
+        correlationSpike: -0.12,
+      },
+      equity_index: {
+        meanMultiplier: 0.30,
+        meanAdjustment: -0.10,
+        volMultiplier: 1.60,
+        correlationSpike: 0.35,
+      },
+      equity_stock: {
+        meanMultiplier: 0.25,
+        meanAdjustment: -0.12, // -12% (higher beta)
+        volMultiplier: 1.80,
+        correlationSpike: 0.45,
+      },
+    },
+    crashMarketOverrides: {
+      commodity: {
+        meanMultiplier: 0.75,
+        meanAdjustment: 0.08, // +8% (strong safe-haven)
+        volMultiplier: 1.80,
+        correlationSpike: 0.05,
+      },
+      bond: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0.06, // +6%
+        volMultiplier: 1.60,
+        correlationSpike: -0.25,
+      },
+      equity_index: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.30,
+        volMultiplier: 2.50,
+        correlationSpike: 0.65,
+      },
+      equity_stock: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.36, // -36% (higher beta)
+        volMultiplier: 3.00,
+        correlationSpike: 0.75,
+      },
+    },
+  },
+  conservative: {
+    // Stress-testing transition probabilities
+    // Bull ~9yr, Bear ~1.8yr, Crash ~1.5yr (extended), Recovery ~1.8yr
+    transitions: {
+      bull:     { bull: 0.89, bear: 0.06, crash: 0.02, recovery: 0.03 },
+      bear:     { bull: 0.05, bear: 0.45, crash: 0.20, recovery: 0.30 },
+      crash:    { bull: 0.00, bear: 0.15, crash: 0.35, recovery: 0.50 }, // Extended crash
+      recovery: { bull: 0.45, bear: 0.08, crash: 0.02, recovery: 0.45 },
+    },
+    survivorshipBias: 0.020, // 2.0%
+    baseParams: {
+      bull: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0,
+        volMultiplier: 0.75,
+        correlationSpike: 0.0,
+      },
+      bear: {
+        meanMultiplier: 0.25,
+        meanAdjustment: -0.12, // -12%
+        volMultiplier: 1.80,
+        correlationSpike: 0.40,
+      },
+      crash: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.35, // -35%
+        volMultiplier: 3.00,
+        correlationSpike: 0.70,
+      },
+      recovery: {
+        meanMultiplier: 0.70,
+        meanAdjustment: 0.08, // +8%
+        volMultiplier: 1.40,
+        correlationSpike: 0.25,
+      },
+    },
+    bearMarketOverrides: {
+      commodity: {
+        meanMultiplier: 0.85,
+        meanAdjustment: 0.03, // +3%
+        volMultiplier: 1.40,
+        correlationSpike: 0.10,
+      },
+      bond: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0.04, // +4%
+        volMultiplier: 1.30,
+        correlationSpike: -0.15,
+      },
+      equity_index: {
+        meanMultiplier: 0.25,
+        meanAdjustment: -0.12,
+        volMultiplier: 1.80,
+        correlationSpike: 0.40,
+      },
+      equity_stock: {
+        meanMultiplier: 0.20,
+        meanAdjustment: -0.14, // -14%
+        volMultiplier: 2.00,
+        correlationSpike: 0.50,
+      },
+    },
+    crashMarketOverrides: {
+      commodity: {
+        meanMultiplier: 0.70,
+        meanAdjustment: 0.10, // +10% (strong safe-haven)
+        volMultiplier: 2.00,
+        correlationSpike: 0.05,
+      },
+      bond: {
+        meanMultiplier: 1.0,
+        meanAdjustment: 0.08, // +8%
+        volMultiplier: 1.80,
+        correlationSpike: -0.30,
+      },
+      equity_index: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.35,
+        volMultiplier: 3.00,
+        correlationSpike: 0.70,
+      },
+      equity_stock: {
+        meanMultiplier: 0.0,
+        meanAdjustment: -0.42, // -42%
+        volMultiplier: 3.50,
+        correlationSpike: 0.80,
+      },
+    },
+  },
+};
+
+/**
+ * Get regime multipliers for a specific regime and asset class
+ *
+ * @param regime Current market regime
+ * @param assetClass Asset class
+ * @param mode Calibration mode
+ * @returns Regime multipliers to apply
+ */
+export function getRegimeMultipliers(
+  regime: MarketRegime,
+  assetClass: AssetClass,
+  mode: RegimeCalibrationMode
+): RegimeMultipliers {
+  const config = REGIME_CONFIG[mode];
+
+  // Check for asset class overrides in bear/crash regimes
+  if (regime === 'bear' && config.bearMarketOverrides[assetClass]) {
+    return config.bearMarketOverrides[assetClass]!;
+  }
+  if (regime === 'crash' && config.crashMarketOverrides[assetClass]) {
+    return config.crashMarketOverrides[assetClass]!;
+  }
+
+  // Return base params for this regime
+  return config.baseParams[regime];
+}

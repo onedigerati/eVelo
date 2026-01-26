@@ -24,29 +24,33 @@ import type { SBLOCConfig, SBLOCState, LiquidationEvent } from './types';
 import { stepSBLOC, type SBLOCYearResult } from './engine';
 
 /**
- * Convert annual return to 12 equal monthly returns that compound to the same total
+ * Convert annual return to monthly return
  *
  * Uses the compound interest formula in reverse:
  * If annual return is R, then monthly return r satisfies: (1 + r)^12 = 1 + R
  * Therefore: r = (1 + R)^(1/12) - 1
  *
  * @param annualReturn - Annual return as decimal (e.g., 0.10 for 10%)
- * @returns Array of 12 identical monthly returns that compound to the annual return
+ * @returns Monthly return that compounds to the annual return
  *
  * @example
  * ```typescript
- * const monthly = annualToMonthlyReturns(0.10);  // 10% annual
- * // monthly[0] = 0.00797... (~0.797% per month)
+ * const monthly = annualToMonthlyReturn(0.10);  // 10% annual
+ * // monthly = 0.00797... (~0.797% per month)
  * // Verification: (1 + 0.00797)^12 ≈ 1.10
- *
- * const negative = annualToMonthlyReturns(-0.30);  // -30% annual
- * // negative[0] = -0.02924... (~-2.92% per month)
- * // Verification: (1 - 0.02924)^12 ≈ 0.70
  * ```
  */
-export function annualToMonthlyReturns(annualReturn: number): number[] {
+export function annualToMonthlyReturn(annualReturn: number): number {
   // Formula: monthlyReturn = (1 + annualReturn)^(1/12) - 1
-  const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1;
+  return Math.pow(1 + annualReturn, 1 / 12) - 1;
+}
+
+/**
+ * Convert annual return to 12 equal monthly returns that compound to the same total
+ * @deprecated Use annualToMonthlyReturn for better performance
+ */
+export function annualToMonthlyReturns(annualReturn: number): number[] {
+  const monthlyReturn = annualToMonthlyReturn(annualReturn);
   return Array(12).fill(monthlyReturn);
 }
 
@@ -197,8 +201,8 @@ export function stepSBLOCYear(
   // 4. Total withdrawal amount is identical ($50k/year = 12 x $4,166.67)
   // =========================================================================
 
-  // Convert annual return to 12 monthly returns
-  const monthlyReturns = annualToMonthlyReturns(portfolioReturn);
+  // Convert annual return to monthly return (single value, not array)
+  const monthlyReturn = annualToMonthlyReturn(portfolioReturn);
 
   // Initialize aggregation variables
   let currentState = { ...state };
@@ -214,7 +218,7 @@ export function stepSBLOCYear(
     const monthResult = stepSBLOCMonth(
       currentState,
       config,
-      monthlyReturns[month],
+      monthlyReturn,
       currentYear,
       month
     );

@@ -443,7 +443,7 @@ export class AppRoot extends BaseComponent {
 
         <div class="dashboard">
           <welcome-screen id="welcome"></welcome-screen>
-
+<!-- Hide inline BBD help when welcome screen is visible 
           <help-section class="bbd-inline-help" title="What is Buy-Borrow-Die?">
             The Buy-Borrow-Die strategy is a wealth preservation technique where you:
             <ol>
@@ -453,7 +453,7 @@ export class AppRoot extends BaseComponent {
             </ol>
             This simulator models the risks and outcomes of this strategy.
           </help-section>
-
+-->
           <comparison-dashboard id="results"></comparison-dashboard>
         </div>
       </main-layout>

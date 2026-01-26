@@ -19,11 +19,15 @@ import type {
   TransitionMatrix,
   RegimeParamsMap,
   RegimeCalibrationMode,
+  AssetHistoricalStats,
+  AssetClass,
 } from './types';
 import {
   DEFAULT_TRANSITION_MATRIX,
   DEFAULT_REGIME_PARAMS,
   SURVIVORSHIP_BIAS,
+  REGIME_CONFIG,
+  getRegimeMultipliers,
 } from './types';
 
 /**
@@ -186,18 +190,23 @@ export interface CorrelatedRegimeReturnsResult {
 /**
  * Generate correlated returns across multiple assets using regime model
  *
- * All assets share the same regime sequence but each asset can have
- * its own regime parameters (mean/stddev per regime).
+ * All assets share the same regime sequence. Returns are generated using the
+ * multiplier-based approach (aligned with reference methodology):
+ *
+ * For each year:
+ *   adjustedMean = (historicalMean * multiplier.meanMultiplier) + multiplier.meanAdjustment - survivorshipBias
+ *   adjustedStddev = historicalStddev * multiplier.volMultiplier
  *
  * @param years Number of years to generate
  * @param numAssets Number of assets in portfolio
  * @param correlationMatrix Asset correlation matrix (from historical data)
  * @param rng Random number generator
  * @param initialRegime Starting regime
- * @param matrix Transition matrix
- * @param params Shared regime parameters (used if assetRegimeParams not provided)
- * @param assetRegimeParams Optional per-asset regime parameters
- * @param calibrationMode Mode for survivorship bias adjustment (default: 'historical')
+ * @param matrix Transition matrix (if not provided, uses REGIME_CONFIG based on calibrationMode)
+ * @param params Shared regime parameters (legacy, used if assetHistoricalStats not provided)
+ * @param assetRegimeParams Legacy per-asset regime params (ignored if assetHistoricalStats provided)
+ * @param calibrationMode Mode for regime multipliers and survivorship bias (default: 'historical')
+ * @param assetHistoricalStats Per-asset historical statistics for multiplier approach
  * @returns Object with 2D returns array [asset][year] and regime sequence
  */
 export function generateCorrelatedRegimeReturns(
@@ -209,13 +218,18 @@ export function generateCorrelatedRegimeReturns(
   matrix?: TransitionMatrix,
   params?: RegimeParamsMap,
   assetRegimeParams?: RegimeParamsMap[],
-  calibrationMode: RegimeCalibrationMode = 'historical'
+  calibrationMode: RegimeCalibrationMode = 'historical',
+  assetHistoricalStats?: AssetHistoricalStats[]
 ): CorrelatedRegimeReturnsResult {
-  const effectiveMatrix = matrix ?? DEFAULT_TRANSITION_MATRIX;
+  // Get regime config for this calibration mode
+  const regimeConfig = REGIME_CONFIG[calibrationMode];
+
+  // Use transition matrix from config if not explicitly provided
+  const effectiveMatrix = matrix ?? regimeConfig.transitions;
   const effectiveParams = params ?? DEFAULT_REGIME_PARAMS;
 
-  // Get survivorship bias adjustment for this calibration mode
-  const survivorshipBias = SURVIVORSHIP_BIAS[calibrationMode];
+  // Get survivorship bias from config
+  const survivorshipBias = regimeConfig.survivorshipBias;
 
   // Generate regime sequence first
   const regimes: MarketRegime[] = [];
@@ -236,38 +250,51 @@ export function generateCorrelatedRegimeReturns(
   for (let year = 0; year < years; year++) {
     const regime = regimes[year];
 
-    if (assetRegimeParams && assetRegimeParams.length === numAssets) {
-      // Asset-specific parameters: generate individual returns, then correlate
-      // First generate uncorrelated returns for each asset
-      const uncorrelated = assetRegimeParams.map(assetParams => {
-        const { mean, stddev } = assetParams[regime];
-        return normalRandom(mean, stddev, rng);
-      });
-
-      // Apply correlation using Cholesky decomposition
-      // Note: For simplicity, we scale by target stddev after correlation
-      // This is an approximation that preserves correlation structure
+    if (assetHistoricalStats && assetHistoricalStats.length === numAssets) {
+      // NEW: Multiplier-based approach (aligned with reference methodology)
+      // Generate correlated standard normal samples
       const correlated = correlatedSamples(
         numAssets,
         correlationMatrix,
         rng,
-        0, // mean=0 for correlation transform
-        1  // stddev=1 for correlation transform
+        0, // mean=0 for standard normal
+        1  // stddev=1 for standard normal
       );
 
-      // Combine: use correlated structure but scale by asset-specific params
+      // Apply regime multipliers to each asset's historical statistics
       for (let asset = 0; asset < numAssets; asset++) {
-        const { mean, stddev } = assetRegimeParams[asset][regime];
-        // Apply survivorship bias adjustment to mean
-        const adjustedMean = mean - survivorshipBias;
-        const rawReturn = adjustedMean + stddev * correlated[asset];
+        const stats = assetHistoricalStats[asset];
+        const multipliers = getRegimeMultipliers(regime, stats.assetClass, calibrationMode);
+
+        // Formula: adjustedMean = (historicalMean * meanMultiplier) + meanAdjustment - survivorshipBias
+        const adjustedMean = (stats.mean * multipliers.meanMultiplier) + multipliers.meanAdjustment - survivorshipBias;
+        const adjustedStddev = stats.stddev * multipliers.volMultiplier;
+
+        // Generate return: mean + stddev * z
+        const rawReturn = adjustedMean + adjustedStddev * correlated[asset];
+
         // Clamp return between -99% and +500%
         returns[asset][year] = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, rawReturn));
       }
+    } else if (assetRegimeParams && assetRegimeParams.length === numAssets) {
+      // LEGACY: Asset-specific calibrated parameters (deprecated, kept for backward compatibility)
+      const correlated = correlatedSamples(
+        numAssets,
+        correlationMatrix,
+        rng,
+        0,
+        1
+      );
+
+      for (let asset = 0; asset < numAssets; asset++) {
+        const { mean, stddev } = assetRegimeParams[asset][regime];
+        const adjustedMean = mean - survivorshipBias;
+        const rawReturn = adjustedMean + stddev * correlated[asset];
+        returns[asset][year] = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, rawReturn));
+      }
     } else {
-      // Shared parameters (original behavior)
+      // Shared parameters (fallback)
       const { mean, stddev } = effectiveParams[regime];
-      // Apply survivorship bias adjustment to mean
       const adjustedMean = mean - survivorshipBias;
       const yearReturns = correlatedSamples(
         numAssets,
@@ -277,7 +304,6 @@ export function generateCorrelatedRegimeReturns(
         stddev
       );
 
-      // Assign to each asset (clamp between -99% and +500%)
       for (let asset = 0; asset < numAssets; asset++) {
         returns[asset][year] = Math.max(MIN_RETURN_CLAMP, Math.min(MAX_RETURN_CLAMP, yearReturns[asset]));
       }
