@@ -45,6 +45,12 @@
   --sidebar-width: 400px;
   --sidebar-collapsed-width: 48px;
 
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(26, 36, 36, 0.06);
+  --shadow-md: 0 4px 12px rgba(26, 36, 36, 0.08);
+  --shadow-lg: 0 8px 32px rgba(26, 36, 36, 0.12);
+  --shadow-hover: 0 12px 40px rgba(26, 36, 36, 0.15);
+
   /* Modal */
   --modal-backdrop: rgba(0, 0, 0, 0.3);
   --modal-backdrop-blur: 4px;
@@ -75,6 +81,13 @@
 
   /* Borders */
   --border-color: #334155;
+
+  /* Shadows - more dramatic for dark theme */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 16px rgba(77, 184, 160, 0.15);
 
   /* Modal - same as light theme for now */
   --modal-backdrop: rgba(0, 0, 0, 0.5);
