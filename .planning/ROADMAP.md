@@ -36,6 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 21: Header Redesign** - Elegant, branded header with improved aesthetics, eVelo identity, and responsive mobile experience
 - [ ] **Phase 22: Mobile Sidebar UX Redesign** - Vertical collapse/expand on mobile, auto-collapse on simulation, "eVelo Parameters" label replacing hamburger icon
 - [x] **Phase 23: Reference Methodology Alignment** - Align Monte Carlo simulation with reference application methodology (bootstrap correlation, 4-regime system, fat-tail model, dividend tax modeling)
+- [ ] **Phase 24: Mobile Dashboard Optimization** - Fix mobile layout issues (charts/cards chopped off, tables not scrollable) with responsive stacked layout
 
 ## Phase Details
 
@@ -717,10 +718,48 @@ Key constants from reference:
 
 See: .planning/phases/23-reference-methodology-alignment/23-REFERENCE-METHODOLOGY.md
 
+### Phase 24: Mobile Dashboard Optimization
+**Goal**: Fix mobile layout issues in results dashboard - charts/cards chopped off, tables not horizontally scrollable
+**Depends on**: Phase 23
+**Requirements**: UI-04 (mobile layout), VIZ-01 through VIZ-07
+**Success Criteria** (what must be TRUE):
+  1. Charts display fully on mobile without horizontal clipping
+  2. Summary cards display fully on mobile without horizontal clipping
+  3. Tables are horizontally scrollable on mobile
+  4. All dashboard components use responsive stacked layout on mobile
+  5. Touch interactions work reliably (horizontal scroll, pinch-zoom if needed)
+  6. No horizontal page overflow on mobile viewports
+  7. Chart aspect ratios appropriate for mobile (may need portrait orientation)
+  8. Consistent mobile breakpoint usage across all dashboard components
+**Research**: Complete (see 24-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 24-01-PLAN.md -- Fix viewport overflow in charts, cards, and banners (Wave 1)
+- [ ] 24-02-PLAN.md -- Add scroll indicators to tables (Wave 1)
+- [ ] 24-03-PLAN.md -- Fix remaining components and human verification (Wave 2)
+
+**Details:**
+Issues identified from mobile screenshots (references/screenshots-ui/Mobile/):
+1. **Charts clipped**: Chart containers extend beyond viewport, right portion invisible
+2. **Summary cards clipped**: Key metrics cards extend beyond viewport
+3. **Tables not scrollable**: Data tables should allow horizontal scroll but don't respond to touch
+
+Implementation approach based on research:
+- Add max-width: 100% and overflow-x: hidden to all section containers
+- Use min-width: 0 on flex children to prevent overflow (from CLAUDE.md)
+- Add gradient scroll indicators to tables showing more content exists
+- Ensure -webkit-overflow-scrolling: touch for smooth iOS scrolling
+- Apply overscroll-behavior-x: contain to prevent page bounce
+
+Wave Structure:
+- Wave 1 (parallel): 24-01, 24-02 (independent fixes)
+- Wave 2: 24-03 (depends on 24-01, 24-02; includes human verification)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -748,6 +787,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 21. Header Redesign | 0/2 | Planned | - |
 | 22. Mobile Sidebar UX Redesign | 2/2 | Complete | 2026-01-25 |
 | 23. Reference Methodology Alignment | 9/9 | Complete | 2026-01-25 |
+| 24. Mobile Dashboard Optimization | 0/3 | Planned | - |
 
-**Total Plans**: 105
+**Total Plans**: 108
 **Completed Plans**: 100
