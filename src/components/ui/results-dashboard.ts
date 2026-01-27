@@ -452,6 +452,8 @@ export class ResultsDashboard extends BaseComponent {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: var(--spacing-lg, 24px);
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       .full-width {
@@ -487,6 +489,8 @@ export class ResultsDashboard extends BaseComponent {
       .chart-container {
         height: 400px;
         position: relative;
+        min-width: 0;  /* Prevents flex child overflow */
+        max-width: 100%;
       }
 
       .chart-container.square {
@@ -622,6 +626,7 @@ export class ResultsDashboard extends BaseComponent {
       /* BBD comparison chart container (shorter height for bar chart) */
       .bbd-container {
         height: 300px;
+        max-width: 100%;
       }
 
       /* Debt spectrum section styling */
@@ -717,6 +722,7 @@ export class ResultsDashboard extends BaseComponent {
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--radius-lg, 8px);
         padding: var(--spacing-lg, 24px);
+        max-width: 100%;
         transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
                     box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
                     border-color 0.3s ease;
@@ -775,8 +781,10 @@ export class ResultsDashboard extends BaseComponent {
       }
 
       .comparison-chart-container {
-        height: 350px;
         position: relative;
+        height: 350px;
+        min-width: 0;  /* Flex child overflow prevention */
+        max-width: 100%;
       }
 
       .comparison-chart-container.short {
@@ -822,8 +830,47 @@ export class ResultsDashboard extends BaseComponent {
         }
 
         .chart-section,
+        .stats-section,
+        .banner-section,
+        .param-section,
+        .spectrum-section,
+        .strategy-section,
+        .visual-comparison-section,
+        .recommendations-section,
+        .table-section,
+        .salary-section {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .chart-section,
         .stats-section {
           padding: var(--spacing-md, 16px);
+        }
+
+        .full-width {
+          max-width: 100%;
+        }
+
+        .comparison-wrapper {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .comparison-chart-card {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .comparison-chart-container comparison-line-chart,
+        .comparison-chart-container cumulative-costs-chart,
+        .comparison-chart-container terminal-comparison-chart,
+        .comparison-chart-container sbloc-utilization-chart {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
         }
 
         .chart-section h3,
@@ -918,6 +965,17 @@ export class ResultsDashboard extends BaseComponent {
         .debt-explanation p,
         .debt-explanation ul {
           font-size: 0.75rem;
+        }
+      }
+
+      /* Extra small mobile devices */
+      @media (max-width: 480px) {
+        .comparison-chart-container {
+          height: 200px;
+        }
+
+        .comparison-chart-container.short {
+          height: 180px;
         }
       }
 
