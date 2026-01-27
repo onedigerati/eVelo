@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 24 of 24 (Mobile Dashboard Optimization)
-Plan: 01 of 03
+Plan: 02 of 03
 Status: In progress
-Last activity: 2026-01-27 — Completed 24-01-PLAN.md (Mobile Viewport Overflow Fix)
+Last activity: 2026-01-27 — Completed 24-02-PLAN.md (Mobile Table Scroll Indicators)
 
-Progress: █████████████████████████████████████████ 96% (101/105 plans complete)
+Progress: █████████████████████████████████████████ 97% (102/105 plans complete)
 
 **Current Phase:**
 Phase 24 IN PROGRESS: Mobile Dashboard Optimization - Fixing mobile viewport overflow and touch interaction issues
@@ -22,9 +22,9 @@ Phase 24 IN PROGRESS: Mobile Dashboard Optimization - Fixing mobile viewport ove
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 101
+- Total plans completed: 102
 - Average duration: 3.9 min
-- Total execution time: 394.75 min
+- Total execution time: 400.75 min
 
 **By Phase:**
 
@@ -72,6 +72,7 @@ Recent decisions affecting current work:
 - Vite + vite-plugin-singlefile for build (from research)
 - Comlink for Web Worker ergonomics (from research)
 - Dexie.js for IndexedDB wrapper (from research)
+- Gradient fade indicators over arrow icons for mobile scroll hints (24-02)
 - simple-statistics for statistical functions (from research)
 
 **From 13-RESEARCH (E2E Testing):**
@@ -973,10 +974,18 @@ Commit: 752a7e4
 - Applied to 10+ dashboard section types in results-dashboard.ts
 - Banner containers, parameter sections, spectrum containers all constrained at mobile breakpoint
 
+**From 24-02:**
+- Gradient fade scroll indicators over arrow icons (subtle, no visual clutter)
+- 20px indicator width balances visibility with data preservation
+- Independent scroll-container per table for multi-table components
+- Mobile-only indicators (@media max-width: 768px) keeps desktop clean
+- Complete touch scroll stack: webkit-overflow-scrolling + scroll-behavior + overscroll-behavior-x + touch-action
+- Passive scroll event listeners prevent jank
+
 ## Session Continuity
 
-Last session: 2026-01-27T03:27:07Z
-Stopped at: Completed 24-01-PLAN.md (Mobile Viewport Overflow Fix)
+Last session: 2026-01-27T03:29:14Z
+Stopped at: Completed 24-02-PLAN.md (Mobile Table Scroll Indicators)
 Resume file: None
 
 **To resume:**
