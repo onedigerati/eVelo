@@ -375,6 +375,7 @@ export class SellYearlyAnalysisTable extends BaseComponent {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
           overscroll-behavior-x: contain;
+          touch-action: pan-x pan-y;
         }
 
         .analysis-table th,
