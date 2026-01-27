@@ -145,6 +145,7 @@ export class RecommendationsSection extends BaseComponent {
         border-radius: var(--radius-lg, 8px);
         overflow: hidden;
         transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        max-width: 100%;
       }
 
       .recommendations-wrapper:hover {
@@ -384,6 +385,11 @@ export class RecommendationsSection extends BaseComponent {
 
       /* Mobile Responsive */
       @media (max-width: 768px) {
+        .recommendations-wrapper {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
         .recommendations-header {
           padding: var(--spacing-md, 16px);
           padding-bottom: 0;
@@ -396,6 +402,11 @@ export class RecommendationsSection extends BaseComponent {
         .insights-section,
         .considerations-section {
           padding: var(--spacing-md, 16px);
+          max-width: 100%;
+        }
+
+        .insights-list {
+          max-width: 100%;
         }
 
         .section-header h4,
@@ -412,6 +423,7 @@ export class RecommendationsSection extends BaseComponent {
         .insight-card {
           padding: var(--spacing-sm, 8px);
           gap: var(--spacing-sm, 8px);
+          max-width: 100%;
         }
 
         .insight-title {
@@ -429,6 +441,11 @@ export class RecommendationsSection extends BaseComponent {
 
         .consideration-item {
           padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+          max-width: 100%;
+        }
+
+        .considerations-list {
+          max-width: 100%;
         }
 
         .consideration-title {

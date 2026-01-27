@@ -174,12 +174,15 @@ export class CorrelationHeatmap extends BaseComponent {
         flex: 1;
         overflow-x: auto;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
       }
 
       .correlation-table {
         width: 100%;
         border-collapse: collapse;
         font-size: var(--font-size-sm, 0.875rem);
+        min-width: 400px;
       }
 
       .correlation-table th,
