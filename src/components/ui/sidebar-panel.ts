@@ -184,7 +184,16 @@ export class SidebarPanel extends BaseComponent {
         padding: var(--spacing-sm, 8px);
       }
 
-      /* Custom scrollbar styling - 30% thinner */
+      /* Custom scrollbar styling - subtle by default, prominent on hover */
+      .sidebar-content {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+
+      .sidebar-content:hover {
+        scrollbar-color: #b4bcc5 transparent;
+      }
+
       .sidebar-content::-webkit-scrollbar {
         width: 8px;
       }
@@ -194,11 +203,16 @@ export class SidebarPanel extends BaseComponent {
       }
 
       .sidebar-content::-webkit-scrollbar-thumb {
-        background: #b4bcc5;
+        background: transparent;
         border-radius: 4px;
       }
 
-      .sidebar-content::-webkit-scrollbar-thumb:hover {
+      /* Show scrollbar on hover */
+      .sidebar-content:hover::-webkit-scrollbar-thumb {
+        background: #b4bcc5;
+      }
+
+      .sidebar-content:hover::-webkit-scrollbar-thumb:hover {
         background: #8b96a6;
       }
 

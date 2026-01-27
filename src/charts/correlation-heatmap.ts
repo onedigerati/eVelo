@@ -198,7 +198,7 @@ export class CorrelationHeatmap extends BaseComponent {
       }
 
       .correlation-table th.stats-header {
-        background: #0d9488;
+        background: #4A90D9;
         color: white;
         border-left: 2px solid var(--border-color, #e2e8f0);
         min-width: 90px;

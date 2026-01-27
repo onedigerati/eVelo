@@ -2395,7 +2395,7 @@
   },
   "GLD": {
     "symbol": "GLD",
-    "name": "Gold (GLD)",
+    "name": "Gold",
     "assetClass": "commodity",
     "startDate": "1995-01-01",
     "endDate": "2025-12-31",

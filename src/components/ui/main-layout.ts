@@ -95,30 +95,40 @@ export class MainLayout extends BaseComponent {
 
       .sidebar-area {
         grid-area: sidebar;
-        overflow-y: auto;
+        overflow: hidden;
         background: var(--surface-secondary, #f8fafc);
         border-right: 1px solid var(--border-color, #e2e8f0);
       }
 
-      /* Custom scrollbar styling - 30% thinner */
-      .sidebar-area::-webkit-scrollbar,
+      /* Custom scrollbar styling - hidden by default, show on hover */
+      .main-content {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+
+      .main-content:hover {
+        scrollbar-color: #b4bcc5 transparent;
+      }
+
       .main-content::-webkit-scrollbar {
         width: 8px;
       }
 
-      .sidebar-area::-webkit-scrollbar-track,
       .main-content::-webkit-scrollbar-track {
         background: transparent;
       }
 
-      .sidebar-area::-webkit-scrollbar-thumb,
       .main-content::-webkit-scrollbar-thumb {
-        background: #b4bcc5;
+        background: transparent;
         border-radius: 4px;
       }
 
-      .sidebar-area::-webkit-scrollbar-thumb:hover,
-      .main-content::-webkit-scrollbar-thumb:hover {
+      /* Show scrollbar on hover */
+      .main-content:hover::-webkit-scrollbar-thumb {
+        background: #b4bcc5;
+      }
+
+      .main-content:hover::-webkit-scrollbar-thumb:hover {
         background: #8b96a6;
       }
 
@@ -232,7 +242,7 @@ export class MainLayout extends BaseComponent {
           position: relative;
           width: 100%;
           max-height: none;
-          overflow-y: auto;
+          overflow: hidden;
           transition: opacity 0.3s ease;
           border-right: none;
           border-bottom: 1px solid var(--border-color, #e2e8f0);

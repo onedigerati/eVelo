@@ -5,6 +5,8 @@ import './ui';
 import { runSimulation, SimulationConfig, PortfolioConfig, SimulationOutput, AssetConfig } from '../simulation';
 // Import preset service for historical returns
 import { getPresetData } from '../data/services/preset-service';
+// Import correlation calculation
+import { correlationMatrix as calcCorrelationMatrix } from '../math/correlation';
 // Import portfolio composition types
 import type { PortfolioComposition } from './ui/portfolio-composition';
 // Import portfolio types
@@ -1094,14 +1096,21 @@ export class AppRoot extends BaseComponent {
     const weights: Record<string, number> = portfolioComp?.getWeights() ?? { SPY: 60, BND: 30, GLD: 10 };
     const assets: AssetConfig[] = [];
 
+    // Collect returns with year information for correlation calculation
+    const assetReturnsByYear: Map<string, Map<string, number>> = new Map();
+
     for (const [symbol, weightPercent] of Object.entries(weights)) {
       // Get historical returns from preset data
       const preset = getPresetData(symbol);
       let historicalReturns: number[];
+      const returnsByYear: Map<string, number> = new Map();
 
       if (preset) {
-        // Extract return values from preset data
+        // Extract return values from preset data, keeping year information
         historicalReturns = preset.returns.map((r) => r.return);
+        for (const r of preset.returns) {
+          returnsByYear.set(r.date, r.return);
+        }
       } else {
         // Fallback: use placeholder returns with warning
         console.warn(`No preset data for ${symbol}, using placeholder returns`);
@@ -1109,7 +1118,13 @@ export class AppRoot extends BaseComponent {
         historicalReturns = Array.from({ length: 20 }, () =>
           0.08 + (Math.random() - 0.5) * 0.30
         );
+        // Create synthetic year labels for placeholders
+        for (let i = 0; i < historicalReturns.length; i++) {
+          returnsByYear.set(String(2005 + i), historicalReturns[i]);
+        }
       }
+
+      assetReturnsByYear.set(symbol, returnsByYear);
 
       assets.push({
         id: symbol,
@@ -1118,12 +1133,45 @@ export class AppRoot extends BaseComponent {
       });
     }
 
-    // Build identity correlation matrix (diagonal = 1, off-diagonal = 0)
-    // Phase 9 can refine this with actual correlations
+    // Calculate correlation matrix from year-aligned returns
     const n = assets.length;
-    const correlationMatrix: number[][] = Array.from({ length: n }, (_, i) =>
-      Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
-    );
+    let correlationMatrix: number[][];
+
+    if (n > 1) {
+      // Find common years across all assets
+      const allYears = new Set<string>();
+      for (const returnsByYear of assetReturnsByYear.values()) {
+        for (const year of returnsByYear.keys()) {
+          allYears.add(year);
+        }
+      }
+
+      // Filter to years where ALL assets have data
+      const commonYears = Array.from(allYears).filter((year) =>
+        Array.from(assetReturnsByYear.values()).every((returnsByYear) => returnsByYear.has(year))
+      ).sort();
+
+      if (commonYears.length >= 2) {
+        // Build aligned return arrays for correlation calculation
+        const assetSymbols = Object.keys(weights);
+        const alignedReturns: number[][] = assetSymbols.map((symbol) => {
+          const returnsByYear = assetReturnsByYear.get(symbol)!;
+          return commonYears.map((year) => returnsByYear.get(year)!);
+        });
+
+        // Calculate actual correlation matrix
+        correlationMatrix = calcCorrelationMatrix(alignedReturns);
+      } else {
+        // Not enough common years - fall back to identity matrix
+        console.warn('Insufficient common years for correlation calculation, using identity matrix');
+        correlationMatrix = Array.from({ length: n }, (_, i) =>
+          Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
+        );
+      }
+    } else {
+      // Single asset - correlation is 1 with itself
+      correlationMatrix = [[1]];
+    }
 
     const portfolio: PortfolioConfig = {
       assets,
