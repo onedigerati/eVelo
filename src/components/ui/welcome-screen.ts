@@ -13,6 +13,7 @@
  */
 
 import { BaseComponent } from '../base-component';
+import { logoUrl } from '../../assets/logo';
 
 /**
  * Welcome screen component for first-time users.
@@ -41,7 +42,7 @@ export class WelcomeScreen extends BaseComponent {
       <div class="welcome-container">
         <!-- Hero Section -->
         <header class="hero-section">
-          <img src="/logo.png" alt="eVelo logo" class="hero-logo" />
+          <img src="${logoUrl}" alt="eVelo logo" class="hero-logo" />
           <h1 class="hero-title">Welcome to eVelo Portfolio Simulator</h1>
           <p class="hero-subtitle">
             Explore the Buy-Borrow-Die wealth strategy through Monte Carlo simulation.

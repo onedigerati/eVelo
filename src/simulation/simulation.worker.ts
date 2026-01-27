@@ -64,3 +64,6 @@ export function cancel(): void {
 export function healthCheck(): string {
   return 'Worker ready';
 }
+
+// Expose for both Comlink and raw worker contexts
+Comlink.expose({ simulate, cancel, healthCheck });

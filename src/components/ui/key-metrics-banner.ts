@@ -9,6 +9,7 @@
  * - Leverage Safety: Margin call probability, utilization metrics
  */
 import { BaseComponent } from '../base-component';
+import { logoUrl } from '../../assets/logo';
 
 /**
  * Data structure for the key metrics banner.
@@ -83,9 +84,9 @@ export class KeyMetricsBanner extends BaseComponent {
     return `
       <!-- Hero Header Banner -->
       <div class="hero-banner" id="hero-banner">
-        <img src="/logo.png" alt="" class="hero-watermark" aria-hidden="true" />
+        <img src="${logoUrl}" alt="" class="hero-watermark" aria-hidden="true" />
         <div class="hero-icon" id="hero-icon">
-          <img src="/logo.png" alt="" class="hero-logo" id="hero-logo" />
+          <img src="${logoUrl}" alt="" class="hero-logo" id="hero-logo" />
           <span class="hero-emoji" id="hero-emoji" style="display: none;">💪</span>
         </div>
         <span class="hero-title" id="hero-title">Analyzing...</span>

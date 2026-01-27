@@ -9,6 +9,7 @@
  */
 
 import * as Comlink from 'comlink';
+import { getWorker, clearWorker } from './worker-loader';
 import type { SimulationConfig, PortfolioConfig, SimulationOutput } from './types';
 
 // Re-export all types
@@ -27,25 +28,6 @@ export {
   generateFatTailReturn,
   generateCorrelatedFatTailReturns
 } from './fat-tail';
-
-/**
- * Lazy-initialized worker instance
- * Created on first simulation call
- */
-let worker: Comlink.Remote<typeof import('./simulation.worker')> | null = null;
-
-/**
- * Get or create the simulation worker
- */
-function getWorker(): Comlink.Remote<typeof import('./simulation.worker')> {
-  if (!worker) {
-    worker = new ComlinkWorker<typeof import('./simulation.worker')>(
-      new URL('./simulation.worker', import.meta.url),
-      { type: 'module' }
-    );
-  }
-  return worker;
-}
 
 /**
  * Run Monte Carlo simulation
@@ -74,7 +56,7 @@ export async function runSimulation(
   portfolio: PortfolioConfig,
   onProgress?: (percent: number) => void
 ): Promise<SimulationOutput> {
-  const w = getWorker();
+  const w = await getWorker();
 
   // Verify worker is ready
   await w.healthCheck();
@@ -91,8 +73,8 @@ export async function runSimulation(
  * Signals the worker to abort the current simulation.
  * The runSimulation promise will reject with AbortError.
  */
-export function cancelSimulation(): void {
-  const w = getWorker();
+export async function cancelSimulation(): Promise<void> {
+  const w = await getWorker();
   w.cancel();
 }
 
@@ -103,9 +85,5 @@ export function cancelSimulation(): void {
  * Next simulation will create a fresh worker.
  */
 export function terminateWorker(): void {
-  if (worker) {
-    // Workers have terminate method, but Comlink remote doesn't expose it
-    // Just null out the reference; browser will GC when no references remain
-    worker = null;
-  }
+  clearWorker();
 }

@@ -49,7 +49,7 @@ export class AppRoot extends BaseComponent {
   private _isRunning = false;
 
   /** Track regime calibration mode */
-  private _regimeCalibration: RegimeCalibrationMode = 'historical';
+  private _regimeCalibration: RegimeCalibrationMode = 'conservative';
 
   protected template(): string {
     const currentYear = new Date().getFullYear();
@@ -246,18 +246,18 @@ export class AppRoot extends BaseComponent {
               <label>Return Distribution Model</label>
               <select-input
                 id="return-model"
-                value="bootstrap"
+                value="regime"
                 options='[{"value":"bootstrap","label":"Bootstrap Resampling"},{"value":"regime","label":"Regime-Switching (Bull/Bear)"}]'
               ></select-input>
               <span class="help-text">How to model market returns and volatility</span>
             </div>
-            <div class="param-group regime-calibration-group" id="regime-calibration-group">
+            <div class="param-group regime-calibration-group visible" id="regime-calibration-group">
               <label>Regime Calibration</label>
               <div class="toggle-group">
-                <button type="button" class="toggle-btn active" id="regime-historical">Historical</button>
-                <button type="button" class="toggle-btn" id="regime-conservative">Conservative</button>
+                <button type="button" class="toggle-btn" id="regime-historical">Historical</button>
+                <button type="button" class="toggle-btn active" id="regime-conservative">Conservative</button>
               </div>
-              <span class="help-text" id="regime-help-text">Calibrated to historical S&P 500 data (1950-2024)</span>
+              <span class="help-text" id="regime-help-text">Stress-testing with extended crash durations</span>
             </div>
           </param-section>
 

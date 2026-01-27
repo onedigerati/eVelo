@@ -1,4 +1,5 @@
 import { BaseComponent } from '../base-component';
+import { logoUrl } from '../../assets/logo';
 
 /**
  * Application header component with branding and action buttons.
@@ -19,10 +20,10 @@ export class AppHeader extends BaseComponent {
   protected template(): string {
     return `
       <header class="app-header">
-        <img src="/logo.png" alt="" class="header-watermark" aria-hidden="true" />
+        <img src="${logoUrl}" alt="" class="header-watermark" aria-hidden="true" />
         <div class="header-brand">
           <div class="brand-wordmark">
-            <img src="/logo.png" alt="eVelo logo" class="brand-logo" />
+            <img src="${logoUrl}" alt="eVelo logo" class="brand-logo" />
             <h1 class="brand-title">eVelo</h1>
           </div>
           <p class="brand-tagline">Escape Fincancial Gravity.</p>
