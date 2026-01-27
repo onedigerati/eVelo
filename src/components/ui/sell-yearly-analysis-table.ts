@@ -98,30 +98,34 @@ export class SellYearlyAnalysisTable extends BaseComponent {
           <span class="table-icon">&#x1F4B0;</span>
           <h3>Sell Strategy Year-by-Year Analysis</h3>
         </div>
-        <div class="table-wrapper">
-          <table class="analysis-table" id="analysis-table">
-            <thead>
-              <tr>
-                <th rowspan="2" class="sticky-col">Year</th>
-                <th colspan="2" class="withdrawal-header">Withdrawals</th>
-                <th class="tax-header">Taxes</th>
-                <th colspan="5" class="percentile-header">Portfolio Value by Percentile</th>
-              </tr>
-              <tr>
-                <th>Annual</th>
-                <th>Cumulative</th>
-                <th class="tax-col-header">Cumulative</th>
-                <th class="p10">10th %ile</th>
-                <th class="p25">25th %ile</th>
-                <th class="p50">50th %ile</th>
-                <th class="p75">75th %ile</th>
-                <th class="p90">90th %ile</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-              <!-- Rows inserted dynamically -->
-            </tbody>
-          </table>
+        <div class="scroll-container">
+          <div class="scroll-indicator-left" aria-hidden="true"></div>
+          <div class="table-wrapper">
+            <table class="analysis-table" id="analysis-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="sticky-col">Year</th>
+                  <th colspan="2" class="withdrawal-header">Withdrawals</th>
+                  <th class="tax-header">Taxes</th>
+                  <th colspan="5" class="percentile-header">Portfolio Value by Percentile</th>
+                </tr>
+                <tr>
+                  <th>Annual</th>
+                  <th>Cumulative</th>
+                  <th class="tax-col-header">Cumulative</th>
+                  <th class="p10">10th %ile</th>
+                  <th class="p25">25th %ile</th>
+                  <th class="p50">50th %ile</th>
+                  <th class="p75">75th %ile</th>
+                  <th class="p90">90th %ile</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <!-- Rows inserted dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div class="scroll-indicator-right" aria-hidden="true"></div>
         </div>
       </div>
     `;
@@ -166,6 +170,15 @@ export class SellYearlyAnalysisTable extends BaseComponent {
         font-size: var(--font-size-lg, 1.125rem);
         font-weight: 600;
         color: var(--text-primary, #1e293b);
+      }
+
+      .scroll-container {
+        position: relative;
+      }
+
+      .scroll-indicator-left,
+      .scroll-indicator-right {
+        display: none;  /* Hidden by default */
       }
 
       .table-wrapper {
@@ -325,6 +338,45 @@ export class SellYearlyAnalysisTable extends BaseComponent {
           padding: var(--spacing-md, 16px);
         }
 
+        .scroll-indicator-left,
+        .scroll-indicator-right {
+          display: block;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 20px;
+          pointer-events: none;
+          z-index: 15;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .scroll-indicator-left {
+          left: 0;
+          background: linear-gradient(to right, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        .scroll-indicator-right {
+          right: 0;
+          background: linear-gradient(to left, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        /* Show indicators based on scroll position */
+        .scroll-container.can-scroll-left .scroll-indicator-left {
+          opacity: 1;
+        }
+
+        .scroll-container.can-scroll-right .scroll-indicator-right {
+          opacity: 1;
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          overscroll-behavior-x: contain;
+        }
+
         .analysis-table th,
         .analysis-table td {
           padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
@@ -336,6 +388,29 @@ export class SellYearlyAnalysisTable extends BaseComponent {
 
   protected override afterRender(): void {
     this.updateTable();
+    this.setupScrollIndicators();
+  }
+
+  /**
+   * Setup scroll indicators for mobile horizontal scrolling.
+   */
+  private setupScrollIndicators(): void {
+    const wrapper = this.$('.table-wrapper') as HTMLElement;
+    const container = this.$('.scroll-container') as HTMLElement;
+
+    if (!wrapper || !container) return;
+
+    const updateIndicators = () => {
+      const canScrollLeft = wrapper.scrollLeft > 0;
+      const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper.clientWidth - 1);
+
+      container.classList.toggle('can-scroll-left', canScrollLeft);
+      container.classList.toggle('can-scroll-right', canScrollRight);
+    };
+
+    wrapper.addEventListener('scroll', updateIndicators, { passive: true });
+    // Initial check
+    setTimeout(updateIndicators, 100);
   }
 
   /**

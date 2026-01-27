@@ -67,22 +67,26 @@ export class PerformanceTable extends BaseComponent {
     return `
       <div class="table-section">
         <h3><span class="icon">&#x1F4CA;</span> Performance Summary</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th class="metric-col">Metric</th>
-                <th class="percentile-col">10th<br>Percentile</th>
-                <th class="percentile-col">25th<br>Percentile</th>
-                <th class="percentile-col">50th<br>Percentile</th>
-                <th class="percentile-col">75th<br>Percentile</th>
-                <th class="percentile-col">90th<br>Percentile</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map((row, i) => this.renderRow(row, i)).join('')}
-            </tbody>
-          </table>
+        <div class="scroll-container">
+          <div class="scroll-indicator-left" aria-hidden="true"></div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th class="metric-col">Metric</th>
+                  <th class="percentile-col">10th<br>Percentile</th>
+                  <th class="percentile-col">25th<br>Percentile</th>
+                  <th class="percentile-col">50th<br>Percentile</th>
+                  <th class="percentile-col">75th<br>Percentile</th>
+                  <th class="percentile-col">90th<br>Percentile</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map((row, i) => this.renderRow(row, i)).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="scroll-indicator-right" aria-hidden="true"></div>
         </div>
         <p class="note">
           <strong>Note:</strong> Real values are adjusted for 2.5% annual inflation.
@@ -136,6 +140,32 @@ export class PerformanceTable extends BaseComponent {
     return '';
   }
 
+  protected override afterRender(): void {
+    this.setupScrollIndicators();
+  }
+
+  /**
+   * Setup scroll indicators for mobile horizontal scrolling.
+   */
+  private setupScrollIndicators(): void {
+    const wrapper = this.$('.table-container') as HTMLElement;
+    const container = this.$('.scroll-container') as HTMLElement;
+
+    if (!wrapper || !container) return;
+
+    const updateIndicators = () => {
+      const canScrollLeft = wrapper.scrollLeft > 0;
+      const canScrollRight = wrapper.scrollLeft < (wrapper.scrollWidth - wrapper.clientWidth - 1);
+
+      container.classList.toggle('can-scroll-left', canScrollLeft);
+      container.classList.toggle('can-scroll-right', canScrollRight);
+    };
+
+    wrapper.addEventListener('scroll', updateIndicators, { passive: true });
+    // Initial check
+    setTimeout(updateIndicators, 100);
+  }
+
   protected styles(): string {
     return `
       :host {
@@ -168,6 +198,15 @@ export class PerformanceTable extends BaseComponent {
 
       .icon {
         font-size: 1.25rem;
+      }
+
+      .scroll-container {
+        position: relative;
+      }
+
+      .scroll-indicator-left,
+      .scroll-indicator-right {
+        display: none;  /* Hidden by default */
       }
 
       .table-container {
@@ -271,6 +310,45 @@ export class PerformanceTable extends BaseComponent {
       @media (max-width: 768px) {
         .table-section {
           padding: var(--spacing-md, 16px);
+        }
+
+        .scroll-indicator-left,
+        .scroll-indicator-right {
+          display: block;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 20px;
+          pointer-events: none;
+          z-index: 15;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .scroll-indicator-left {
+          left: 0;
+          background: linear-gradient(to right, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        .scroll-indicator-right {
+          right: 0;
+          background: linear-gradient(to left, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        /* Show indicators based on scroll position */
+        .scroll-container.can-scroll-left .scroll-indicator-left {
+          opacity: 1;
+        }
+
+        .scroll-container.can-scroll-right .scroll-indicator-right {
+          opacity: 1;
+        }
+
+        .table-container {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          overscroll-behavior-x: contain;
         }
 
         th, td {

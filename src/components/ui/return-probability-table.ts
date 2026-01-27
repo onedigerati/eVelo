@@ -96,33 +96,37 @@ export class ReturnProbabilityTable extends BaseComponent {
     return `
       <div class="table-section">
         <h3><span class="icon">&#x1F4C8;</span> Expected Annual Return</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th class="label-col">Percentile</th>
-                ${timeHorizons.map((h) => `<th class="value-col">${h} Year${h > 1 ? 's' : ''}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${percentiles
-                .map(
-                  (pct, i) => `
-                <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
-                  <td class="label-cell">${pct} Percentile</td>
-                  ${values[i]
-                    .map(
-                      (v) => `
-                    <td class="value-cell ${this.getReturnClass(v)}">${this.formatPercent(v)}</td>
-                  `
-                    )
-                    .join('')}
+        <div class="scroll-container expected-returns-scroll">
+          <div class="scroll-indicator-left" aria-hidden="true"></div>
+          <div class="table-container expected-returns-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="label-col">Percentile</th>
+                  ${timeHorizons.map((h) => `<th class="value-col">${h} Year${h > 1 ? 's' : ''}</th>`).join('')}
                 </tr>
-              `
-                )
-                .join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${percentiles
+                  .map(
+                    (pct, i) => `
+                  <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+                    <td class="label-cell">${pct} Percentile</td>
+                    ${values[i]
+                      .map(
+                        (v) => `
+                      <td class="value-cell ${this.getReturnClass(v)}">${this.formatPercent(v)}</td>
+                    `
+                      )
+                      .join('')}
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="scroll-indicator-right" aria-hidden="true"></div>
         </div>
         <p class="note">
           <strong>Note:</strong> Expected annual returns represent the compound annual
@@ -144,33 +148,37 @@ export class ReturnProbabilityTable extends BaseComponent {
     return `
       <div class="table-section">
         <h3><span class="icon">&#x1F3AF;</span> Annual Return Probabilities</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th class="label-col">Return</th>
-                ${timeHorizons.map((h) => `<th class="value-col">${h} Year${h > 1 ? 's' : ''}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${thresholds
-                .map(
-                  (threshold, i) => `
-                <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
-                  <td class="label-cell">>= ${this.formatPercent(threshold)}</td>
-                  ${probabilities[i]
-                    .map(
-                      (p) => `
-                    <td class="value-cell probability ${this.getProbabilityClass(p)}">${p.toFixed(2)}%</td>
-                  `
-                    )
-                    .join('')}
+        <div class="scroll-container return-probabilities-scroll">
+          <div class="scroll-indicator-left" aria-hidden="true"></div>
+          <div class="table-container return-probabilities-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="label-col">Return</th>
+                  ${timeHorizons.map((h) => `<th class="value-col">${h} Year${h > 1 ? 's' : ''}</th>`).join('')}
                 </tr>
-              `
-                )
-                .join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${thresholds
+                  .map(
+                    (threshold, i) => `
+                  <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+                    <td class="label-cell">>= ${this.formatPercent(threshold)}</td>
+                    ${probabilities[i]
+                      .map(
+                        (p) => `
+                      <td class="value-cell probability ${this.getProbabilityClass(p)}">${p.toFixed(2)}%</td>
+                    `
+                      )
+                      .join('')}
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="scroll-indicator-right" aria-hidden="true"></div>
         </div>
         <p class="note">
           <strong>Note:</strong> Probabilities show the likelihood of achieving or
@@ -211,6 +219,50 @@ export class ReturnProbabilityTable extends BaseComponent {
     return 'prob-very-low';
   }
 
+  protected override afterRender(): void {
+    this.setupScrollIndicators();
+  }
+
+  /**
+   * Setup scroll indicators for mobile horizontal scrolling.
+   * Handles both expected returns and probabilities tables.
+   */
+  private setupScrollIndicators(): void {
+    // Setup for expected returns table
+    const expectedReturnsWrapper = this.$('.expected-returns-wrapper') as HTMLElement;
+    const expectedReturnsContainer = this.$('.expected-returns-scroll') as HTMLElement;
+
+    if (expectedReturnsWrapper && expectedReturnsContainer) {
+      const updateExpectedReturns = () => {
+        const canScrollLeft = expectedReturnsWrapper.scrollLeft > 0;
+        const canScrollRight = expectedReturnsWrapper.scrollLeft < (expectedReturnsWrapper.scrollWidth - expectedReturnsWrapper.clientWidth - 1);
+
+        expectedReturnsContainer.classList.toggle('can-scroll-left', canScrollLeft);
+        expectedReturnsContainer.classList.toggle('can-scroll-right', canScrollRight);
+      };
+
+      expectedReturnsWrapper.addEventListener('scroll', updateExpectedReturns, { passive: true });
+      setTimeout(updateExpectedReturns, 100);
+    }
+
+    // Setup for probabilities table
+    const probabilitiesWrapper = this.$('.return-probabilities-wrapper') as HTMLElement;
+    const probabilitiesContainer = this.$('.return-probabilities-scroll') as HTMLElement;
+
+    if (probabilitiesWrapper && probabilitiesContainer) {
+      const updateProbabilities = () => {
+        const canScrollLeft = probabilitiesWrapper.scrollLeft > 0;
+        const canScrollRight = probabilitiesWrapper.scrollLeft < (probabilitiesWrapper.scrollWidth - probabilitiesWrapper.clientWidth - 1);
+
+        probabilitiesContainer.classList.toggle('can-scroll-left', canScrollLeft);
+        probabilitiesContainer.classList.toggle('can-scroll-right', canScrollRight);
+      };
+
+      probabilitiesWrapper.addEventListener('scroll', updateProbabilities, { passive: true });
+      setTimeout(updateProbabilities, 100);
+    }
+  }
+
   protected styles(): string {
     return `
       :host {
@@ -249,6 +301,15 @@ export class ReturnProbabilityTable extends BaseComponent {
 
       .icon {
         font-size: 1.25rem;
+      }
+
+      .scroll-container {
+        position: relative;
+      }
+
+      .scroll-indicator-left,
+      .scroll-indicator-right {
+        display: none;  /* Hidden by default */
       }
 
       .table-container {
@@ -393,6 +454,46 @@ export class ReturnProbabilityTable extends BaseComponent {
       @media (max-width: 768px) {
         .table-section {
           padding: var(--spacing-md, 16px);
+        }
+
+        .scroll-indicator-left,
+        .scroll-indicator-right {
+          display: block;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 20px;
+          pointer-events: none;
+          z-index: 15;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .scroll-indicator-left {
+          left: 0;
+          background: linear-gradient(to right, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        .scroll-indicator-right {
+          right: 0;
+          background: linear-gradient(to left, var(--surface-primary, #ffffff) 0%, transparent 100%);
+        }
+
+        /* Show indicators based on scroll position */
+        .scroll-container.can-scroll-left .scroll-indicator-left {
+          opacity: 1;
+        }
+
+        .scroll-container.can-scroll-right .scroll-indicator-right {
+          opacity: 1;
+        }
+
+        .expected-returns-wrapper,
+        .return-probabilities-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          overscroll-behavior-x: contain;
         }
 
         th, td {
