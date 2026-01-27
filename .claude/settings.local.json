@@ -44,7 +44,17 @@
       "Bash(else echo \"ERROR: ROADMAP.md not found\")",
       "Bash(fi)",
       "Bash(xargs:*)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(for sym in SPY QQQ VTI AAPL MSFT GOOGL)",
+      "Bash(do echo -n \"$sym: \")",
+      "Bash(git checkout:*)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\ungac\\\\source\\\\repos\\\\BuyBorrowDie\\\\eVelo\\\\dist'' | Select-Object Name, Length | Format-Table -AutoSize\")",
+      "Bash(npm install:*)",
+      "Bash(npm run build:pwa:*)",
+      "Bash(npm run build:portable:*)",
+      "Bash(echo:*)"
     ]
   }
 }

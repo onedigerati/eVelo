@@ -148,23 +148,26 @@ export class MainLayout extends BaseComponent {
         align-items: center;
         justify-content: center;
         gap: var(--spacing-xs, 4px);
-        background: var(--color-primary, #0d9488);
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
         border: none;
+        border-bottom: 2px solid #0d9488;
         font-size: var(--font-size-sm, 0.875rem);
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
-        color: var(--text-inverse, #ffffff);
+        color: #065f56;
         border-radius: 0;
         width: 100%;
         min-height: 48px;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
         touch-action: manipulation;
-        transition: background 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2), 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
       }
 
       .mobile-menu-btn:hover {
-        background: var(--color-primary-dark, #0f766e);
+        background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25), 0 2px 4px rgba(0,0,0,0.12);
       }
 
       .mobile-menu-btn:focus-visible {
@@ -189,13 +192,23 @@ export class MainLayout extends BaseComponent {
         transform: rotate(180deg);
       }
 
+      .menu-icon {
+        color: #0d9488;
+      }
+
       /* Dark theme */
       :host-context([data-theme="dark"]) .mobile-menu-btn {
-        background: var(--color-primary, #0d9488);
+        background: linear-gradient(135deg, #134e4a 0%, #115e59 100%);
+        color: #ccfbf1;
+        border-bottom-color: #0d9488;
       }
 
       :host-context([data-theme="dark"]) .mobile-menu-btn:hover {
-        background: var(--color-primary-light, #14b8a6);
+        background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
+      }
+
+      :host-context([data-theme="dark"]) .menu-icon {
+        color: #5eead4;
       }
 
       .main-content {

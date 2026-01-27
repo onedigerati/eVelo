@@ -26,7 +26,7 @@ export class AppHeader extends BaseComponent {
             <img src="${logoUrl}" alt="eVelo logo" class="brand-logo" />
             <h1 class="brand-title">eVelo</h1>
           </div>
-          <p class="brand-tagline">Escape Fincancial Gravity.</p>
+          <p class="brand-tagline">Escape Financial Gravity.</p>
         </div>
         <div class="header-actions">
           <slot name="actions"></slot>
@@ -170,22 +170,25 @@ export class AppHeader extends BaseComponent {
         outline-offset: 2px;
       }
 
-      /* Mobile responsive: hide tagline and watermark */
+      /* Mobile responsive: hide tagline, scale watermark */
       @media (max-width: 768px) {
         .app-header {
           padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
         }
 
         .brand-tagline {
-          display: none;
+          font-size: 0.7rem;
         }
 
         .header-watermark {
-          display: none;
+          height: 100%;
+          right: -10px;
+          opacity: 0.06;
         }
 
         .header-actions {
           gap: var(--spacing-xs, 4px);
+          padding-right: 20px;
         }
 
         ::slotted(button),
