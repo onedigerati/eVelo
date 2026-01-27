@@ -387,6 +387,13 @@ export class ParamSummary extends BaseComponent {
 
       /* Mobile responsive */
       @media (max-width: 768px) {
+        .portfolio-section,
+        .portfolio-content,
+        .params-section {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
         .portfolio-section {
           padding: var(--spacing-md, 16px);
         }

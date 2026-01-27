@@ -596,6 +596,7 @@ export class KeyMetricsBanner extends BaseComponent {
         font-size: 2.5rem;
         font-weight: 700;
         color: var(--text-primary, #1e293b);
+        word-break: break-word;
         line-height: 1;
       }
 
@@ -788,6 +789,14 @@ export class KeyMetricsBanner extends BaseComponent {
       }
 
       @media (max-width: 768px) {
+        .banner-container,
+        .hero-banner,
+        .banner-grid,
+        .hero-card {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
         .banner-grid {
           gap: var(--spacing-sm, 8px);
         }

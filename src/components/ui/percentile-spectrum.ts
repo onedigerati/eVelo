@@ -289,6 +289,12 @@ export class PercentileSpectrum extends BaseComponent {
 
       /* Mobile responsive */
       @media (max-width: 768px) {
+        .spectrum-container,
+        .spectrum-bar-wrapper,
+        .spectrum-values {
+          max-width: 100%;
+        }
+
         .spectrum-container {
           padding: var(--spacing-md, 16px);
         }
