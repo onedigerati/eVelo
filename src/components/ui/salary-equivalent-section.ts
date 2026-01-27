@@ -226,6 +226,8 @@ export class SalaryEquivalentSection extends BaseComponent {
         .salary-banner {
           padding: var(--spacing-lg, 24px) var(--spacing-md, 16px);
           border-radius: var(--radius-md, 8px);
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         .banner-header {
@@ -234,14 +236,17 @@ export class SalaryEquivalentSection extends BaseComponent {
 
         .withdrawal-amount {
           margin-bottom: var(--spacing-sm, 8px);
+          word-break: break-word;
         }
 
         .equivalent-amount {
           margin-bottom: var(--spacing-md, 16px);
+          word-break: break-word;
         }
 
         .explanation {
           font-size: var(--font-size-xs, 0.75rem);
+          max-width: 100%;
         }
       }
 

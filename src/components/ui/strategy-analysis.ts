@@ -683,6 +683,8 @@ export class StrategyAnalysis extends BaseComponent {
       @media (max-width: 768px) {
         .strategy-analysis {
           padding: var(--spacing-md, 16px);
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         .analysis-header {
@@ -712,6 +714,8 @@ export class StrategyAnalysis extends BaseComponent {
           margin-bottom: var(--spacing-md, 16px);
           flex-direction: column;
           align-items: flex-start;
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         .verdict-icon {
@@ -742,10 +746,13 @@ export class StrategyAnalysis extends BaseComponent {
           grid-template-columns: 1fr;
           gap: var(--spacing-sm, 8px);
           margin-bottom: var(--spacing-md, 16px);
+          max-width: 100%;
         }
 
         .comparison-card {
           padding: var(--spacing-sm, 8px);
+          max-width: 100%;
+          width: 100%;
         }
 
         .card-title {
@@ -766,6 +773,11 @@ export class StrategyAnalysis extends BaseComponent {
           font-size: var(--font-size-xs, 0.75rem);
         }
 
+        /* Break long text in metrics */
+        .metric-value {
+          word-break: break-word;
+        }
+
         .differential-section {
           margin-bottom: var(--spacing-md, 16px);
         }
@@ -778,10 +790,12 @@ export class StrategyAnalysis extends BaseComponent {
         .differential-grid {
           grid-template-columns: 1fr;
           gap: var(--spacing-sm, 8px);
+          max-width: 100%;
         }
 
         .differential-card {
           padding: var(--spacing-sm, 8px);
+          max-width: 100%;
         }
 
         .diff-icon {
