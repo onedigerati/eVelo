@@ -6,6 +6,7 @@ import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
 import { BaseComponent } from '../components/base-component';
 import { getChartTheme } from './theme';
+import type { ChartTheme } from './types';
 
 // Register all Chart.js components (controllers, elements, scales, plugins)
 Chart.register(...registerables);
@@ -191,7 +192,19 @@ export abstract class BaseChart extends BaseComponent {
       options.plugins.legend.labels.color = theme.text;
     }
 
+    // Update dataset colors via subclass hook
+    this.updateDatasetColors(theme);
+
     // Update chart without animation
     this.chart.update('none');
   };
+
+  /**
+   * Override in subclasses to update dataset colors on theme change.
+   * Default implementation does nothing (for charts without theme-dependent datasets).
+   * @param theme - Current chart theme (light or dark)
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    // Default: no-op. Subclasses override for specific dataset color updates.
+  }
 }
