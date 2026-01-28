@@ -83,3 +83,6 @@ export { TradeOffSummary } from './trade-off-summary';
 // Welcome Components
 export { WelcomeScreen } from './welcome-screen';
 export { UserGuideModal } from './user-guide-modal';
+
+// Navigation Components
+export { FabNavigation } from './fab-navigation';
