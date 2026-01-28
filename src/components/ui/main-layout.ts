@@ -62,7 +62,8 @@ export class MainLayout extends BaseComponent {
     return `
       :host {
         display: block;
-        height: 100vh;
+        height: 100vh;      /* Fallback for older browsers */
+        height: 100dvh;     /* Dynamic viewport height (Chrome 108+, Safari 15.4+) */
       }
 
       .layout {
@@ -252,6 +253,8 @@ export class MainLayout extends BaseComponent {
             "main";
           grid-template-rows: auto auto 1fr auto;
           grid-template-columns: 1fr;
+          height: 100vh;
+          height: 100dvh;  /* Dynamic viewport height for mobile address bar */
         }
 
         /* When sidebar is collapsed, main content takes remaining space */
@@ -270,10 +273,19 @@ export class MainLayout extends BaseComponent {
           position: relative;
           width: 100%;
           min-height: 0; /* Critical: allows grid item to shrink and constrain content */
+          display: flex;
+          flex-direction: column;
           overflow: hidden;
           transition: opacity 0.3s ease;
           border-right: none;
           border-bottom: 1px solid var(--border-color, #e2e8f0);
+          overscroll-behavior-y: contain;  /* Prevent pull-to-refresh when scrolling */
+        }
+
+        /* Ensure slotted sidebar-panel fills and allows sticky positioning */
+        .sidebar-area ::slotted(*) {
+          height: 100%;
+          min-height: 0; /* Allow shrinking within flex parent */
         }
 
         /* Hide sidebar when collapsed */
