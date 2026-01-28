@@ -33,11 +33,7 @@ export class SidebarPanel extends BaseComponent {
     // Only update the icon and aria attributes, don't re-render
     if (name === 'collapsed') {
       const isCollapsed = newValue !== null;
-      const icon = this.$('.toggle-icon');
       const toggleBtn = this.$('.toggle-btn');
-      if (icon) {
-        icon.textContent = isCollapsed ? '\u25B8' : '\u25C2';
-      }
       if (toggleBtn) {
         toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
         toggleBtn.setAttribute('aria-label', `${isCollapsed ? 'Expand' : 'Collapse'} parameters sidebar`);
@@ -53,7 +49,7 @@ export class SidebarPanel extends BaseComponent {
                 aria-label="${isCollapsed ? 'Expand' : 'Collapse'} parameters sidebar"
                 aria-expanded="${!isCollapsed}">
           <span class="toggle-label">eVelo Parameters</span>
-          <span class="toggle-icon" aria-hidden="true">${isCollapsed ? '\u25B8' : '\u25C2'}</span>
+          <span class="toggle-icon" aria-hidden="true"></span>
         </button>
         <div class="sidebar-content">
           <slot></slot>
@@ -70,12 +66,14 @@ export class SidebarPanel extends BaseComponent {
       :host {
         display: block;
         height: 100%;
+        min-height: 0; /* Allow shrinking in flex/grid parent */
       }
 
       .sidebar {
         display: grid;
         grid-template-rows: auto 1fr auto;
         height: 100%;
+        min-height: 0; /* Allow grid to constrain content height */
         width: var(--sidebar-width, 320px);
         background: var(--surface-secondary, #f8fafc);
         border-right: 1px solid var(--border-color, #e2e8f0);
@@ -131,10 +129,15 @@ export class SidebarPanel extends BaseComponent {
       }
 
       .toggle-icon {
-        font-size: 0.875rem;
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-right: 2.5px solid #0d9488;
+        border-bottom: 2.5px solid #0d9488;
+        transform: rotate(135deg);
         transition: transform 0.3s ease;
         flex-shrink: 0;
-        color: #0d9488;
+        margin-right: 2px;
       }
 
       /* Desktop collapsed: vertical text using writing-mode */
@@ -153,8 +156,9 @@ export class SidebarPanel extends BaseComponent {
       }
 
       :host([collapsed]) .toggle-icon {
-        transform: rotate(90deg);
+        transform: rotate(-45deg);
         margin-top: var(--spacing-sm, 8px);
+        margin-right: 0;
       }
 
       /* Dark theme support */
@@ -169,7 +173,7 @@ export class SidebarPanel extends BaseComponent {
       }
 
       :host-context([data-theme="dark"]) .toggle-icon {
-        color: #5eead4;
+        border-color: #5eead4;
       }
 
       /* Mobile: Always horizontal label, hide icon */
@@ -177,11 +181,16 @@ export class SidebarPanel extends BaseComponent {
         .toggle-btn {
           display: none; /* Hide on mobile - main-layout handles mobile toggle */
         }
+
+        .sidebar {
+          width: 100%;
+        }
       }
 
       .sidebar-content {
         overflow-y: auto;
         padding: var(--spacing-sm, 8px);
+        min-height: 0;
       }
 
       /* Custom scrollbar styling - subtle by default, prominent on hover */

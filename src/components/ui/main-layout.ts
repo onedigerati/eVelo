@@ -42,7 +42,7 @@ export class MainLayout extends BaseComponent {
         <div class="mobile-toggle-row">
           <button class="mobile-menu-btn" aria-label="Toggle parameters sidebar">
             <span class="menu-label">eVelo Parameters</span>
-            <span class="menu-icon" aria-hidden="true">&#9662;</span>
+            <span class="menu-icon" aria-hidden="true"></span>
           </button>
         </div>
         <div class="sidebar-area">
@@ -98,6 +98,12 @@ export class MainLayout extends BaseComponent {
         overflow: hidden;
         background: var(--surface-secondary, #f8fafc);
         border-right: 1px solid var(--border-color, #e2e8f0);
+        min-height: 0; /* Allow grid item to shrink below content size */
+      }
+
+      /* Ensure slotted sidebar-panel fills the area and respects height constraints */
+      .sidebar-area ::slotted(*) {
+        height: 100%;
       }
 
       /* Custom scrollbar styling - hidden by default, show on hover */
@@ -147,7 +153,7 @@ export class MainLayout extends BaseComponent {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: var(--spacing-xs, 4px);
+        gap: var(--spacing-sm, 8px);
         background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
         border: none;
         border-bottom: 2px solid #0d9488;
@@ -184,16 +190,20 @@ export class MainLayout extends BaseComponent {
       }
 
       .menu-icon {
-        font-size: 0.75rem;
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid #0d9488;
+        border-bottom: 2px solid #0d9488;
+        transform: rotate(45deg);
         transition: transform 0.3s ease;
+        flex-shrink: 0;
+        margin-bottom: 3px;
       }
 
       :host([sidebar-collapsed]) .menu-icon {
-        transform: rotate(180deg);
-      }
-
-      .menu-icon {
-        color: #0d9488;
+        transform: rotate(-135deg);
+        margin-bottom: -2px;
       }
 
       /* Dark theme */
@@ -208,7 +218,7 @@ export class MainLayout extends BaseComponent {
       }
 
       :host-context([data-theme="dark"]) .menu-icon {
-        color: #5eead4;
+        border-color: #5eead4;
       }
 
       .main-content {
@@ -240,8 +250,13 @@ export class MainLayout extends BaseComponent {
             "toggle"
             "sidebar"
             "main";
-          grid-template-rows: auto auto auto 1fr;
+          grid-template-rows: auto auto 1fr auto;
           grid-template-columns: 1fr;
+        }
+
+        /* When sidebar is collapsed, main content takes remaining space */
+        :host([sidebar-collapsed]) .layout {
+          grid-template-rows: auto auto auto 1fr;
         }
 
         .mobile-toggle-row {
@@ -254,7 +269,7 @@ export class MainLayout extends BaseComponent {
           grid-area: sidebar;
           position: relative;
           width: 100%;
-          max-height: none;
+          min-height: 0; /* Critical: allows grid item to shrink and constrain content */
           overflow: hidden;
           transition: opacity 0.3s ease;
           border-right: none;
