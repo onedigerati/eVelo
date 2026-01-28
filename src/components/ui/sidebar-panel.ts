@@ -176,6 +176,12 @@ export class SidebarPanel extends BaseComponent {
         border-color: #5eead4;
       }
 
+      :host-context([data-theme="dark"]) .sidebar-footer {
+        background: var(--surface-secondary, #1e293b);
+        border-top-color: var(--border-color, #334155);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);  /* Darker shadow for dark theme */
+      }
+
       /* Mobile: Always horizontal label, hide icon */
       @media (max-width: 768px) {
         .toggle-btn {
