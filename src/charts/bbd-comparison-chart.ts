@@ -11,7 +11,8 @@
  */
 import { ChartConfiguration, Chart } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { DEFAULT_CHART_THEME } from './types';
+import { getChartTheme } from './theme';
+import { ChartTheme } from './types';
 
 /**
  * Data structure for BBD comparison chart.
@@ -33,13 +34,20 @@ export interface BBDComparisonChartData {
 }
 
 /**
- * Strategy colors for the comparison.
+ * Get strategy colors based on current theme.
  */
-const STRATEGY_COLORS = {
-  bbd: DEFAULT_CHART_THEME.primary,     // Blue for BBD
-  sell: '#6b7280',                       // Gray for Sell
-  advantage: DEFAULT_CHART_THEME.positive, // Green for advantage
-} as const;
+function getStrategyColors() {
+  const theme = getChartTheme();
+  return {
+    bbd: theme.primary,         // Blue for BBD
+    sell: '#6b7280',            // Gray for Sell (works on both themes)
+    advantage: theme.positive,  // Green for advantage
+    negative: theme.negative,   // Red for negative
+    text: theme.text,
+    secondary: theme.secondary,
+    grid: theme.grid,
+  };
+}
 
 /**
  * Format a number as currency with compact notation.
@@ -89,16 +97,32 @@ export class BBDComparisonChart extends BaseChart {
   /** Comparison data to display */
   public data: BBDComparisonChartData | null = null;
 
+  /**
+   * Update dataset colors when theme changes.
+   * BBD comparison uses theme.primary for BBD bar and theme.positive for advantage.
+   */
+  protected updateDatasetColors(theme: ChartTheme): void {
+    if (!this.chart) return;
+    const dataset = this.chart.data.datasets[0];
+    if (dataset) {
+      dataset.backgroundColor = [theme.primary, '#6b7280'];
+      dataset.borderColor = [theme.primary, '#6b7280'];
+    }
+  }
+
   protected getChartConfig(): ChartConfiguration {
     const data = this.data;
     const bbdValue = data?.bbdNetEstate ?? 0;
     const sellValue = data?.sellNetEstate ?? 0;
     const advantage = data?.bbdAdvantage ?? 0;
 
+    // Get theme-aware colors
+    const strategyColors = getStrategyColors();
+
     // Labels for the two bars
     const labels = ['BBD Strategy', 'Sell Strategy'];
     const values = [bbdValue, sellValue];
-    const colors = [STRATEGY_COLORS.bbd, STRATEGY_COLORS.sell];
+    const colors = [strategyColors.bbd, strategyColors.sell];
 
     // Store advantage for the plugin
     const advantageValue = advantage;
@@ -157,7 +181,7 @@ export class BBDComparisonChart extends BaseChart {
               display: false,
             },
             ticks: {
-              color: DEFAULT_CHART_THEME.text,
+              color: strategyColors.text,
               font: {
                 weight: 'bold',
               },
@@ -167,14 +191,14 @@ export class BBDComparisonChart extends BaseChart {
             title: {
               display: true,
               text: 'Net Estate Value',
-              color: DEFAULT_CHART_THEME.text,
+              color: strategyColors.text,
             },
             ticks: {
               callback: (value) => formatCurrency(value as number),
-              color: DEFAULT_CHART_THEME.text,
+              color: strategyColors.text,
             },
             grid: {
-              color: DEFAULT_CHART_THEME.grid,
+              color: strategyColors.grid,
             },
             beginAtZero: true,
           },
@@ -208,14 +232,17 @@ export class BBDComparisonChart extends BaseChart {
             const centerX = (bbdBar.x + sellBar.x) / 2;
             const annotationY = higherTop - 30;
 
+            // Get current theme colors for annotation
+            const annotationColors = getStrategyColors();
+
             // Draw advantage text
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 14px sans-serif';
             ctx.fillStyle =
               advantage >= 0
-                ? STRATEGY_COLORS.advantage
-                : DEFAULT_CHART_THEME.negative;
+                ? annotationColors.advantage
+                : annotationColors.negative;
 
             ctx.fillText(
               `${advantageSign}${advantageFormatted}`,
@@ -225,12 +252,12 @@ export class BBDComparisonChart extends BaseChart {
 
             // Draw label below the value
             ctx.font = '11px sans-serif';
-            ctx.fillStyle = DEFAULT_CHART_THEME.text;
+            ctx.fillStyle = annotationColors.text;
             ctx.fillText(advantageLabel, centerX, annotationY + 16);
 
             // Draw connecting line between bar tops
             ctx.beginPath();
-            ctx.strokeStyle = DEFAULT_CHART_THEME.secondary;
+            ctx.strokeStyle = annotationColors.secondary;
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 4]);
 

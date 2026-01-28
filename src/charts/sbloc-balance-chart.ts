@@ -9,7 +9,8 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { LineChartData, DEFAULT_CHART_THEME } from './types';
+import { getChartTheme } from './theme';
+import { LineChartData, ChartTheme } from './types';
 
 /**
  * Line styles for different data series.
@@ -128,10 +129,19 @@ export class SBLOCBalanceChart extends BaseChart {
   }
 
   /**
+   * Update dataset colors when theme changes.
+   * SBLOC balance chart uses fixed line colors that don't depend on theme.
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    // This chart uses fixed LINE_COLORS that are theme-independent
+    // No update needed as the colors are designed to work on both light and dark
+  }
+
+  /**
    * Returns Chart.js configuration for SBLOC balance line chart.
    */
   protected getChartConfig(): ChartConfiguration {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
     const emptyData = {
       labels: [],
       datasets: [],

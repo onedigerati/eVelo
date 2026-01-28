@@ -11,7 +11,8 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { HistogramData, HistogramBin, DEFAULT_CHART_THEME } from './types';
+import { getChartTheme } from './theme';
+import { HistogramData, HistogramBin, ChartTheme } from './types';
 
 /**
  * Creates histogram bins from an array of values.
@@ -193,12 +194,12 @@ export class HistogramChart extends BaseChart {
             title: {
               display: true,
               text: 'Terminal Net Worth',
-              color: DEFAULT_CHART_THEME.text,
+              color: getChartTheme().text,
             },
             ticks: {
               maxRotation: 45,
               minRotation: 45,
-              color: DEFAULT_CHART_THEME.text,
+              color: getChartTheme().text,
             },
             grid: {
               display: false,
@@ -208,20 +209,38 @@ export class HistogramChart extends BaseChart {
             title: {
               display: true,
               text: 'Iterations',
-              color: DEFAULT_CHART_THEME.text,
+              color: getChartTheme().text,
             },
             ticks: {
               stepSize: 1,
-              color: DEFAULT_CHART_THEME.text,
+              color: getChartTheme().text,
             },
             grid: {
-              color: DEFAULT_CHART_THEME.grid,
+              color: getChartTheme().grid,
             },
             beginAtZero: true,
           },
         },
       },
     };
+  }
+
+  /**
+   * Update dataset colors when theme changes.
+   * Histogram uses a gradient from red to green based on bin position,
+   * which is theme-independent, but we ensure consistency.
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    if (!this.chart || !this.data) return;
+    const binCount = this.data.bins.length;
+
+    // Regenerate colors - histogram uses position-based gradient
+    const colors = this.data.bins.map((_, index) => getHistogramBarColor(index, binCount));
+    const dataset = this.chart.data.datasets[0];
+    if (dataset) {
+      dataset.backgroundColor = colors;
+      dataset.borderColor = colors.map((c) => c.replace('rgb', 'rgba').replace(')', ', 0.8)'));
+    }
   }
 
   /**

@@ -12,7 +12,8 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { BarChartData, DEFAULT_CHART_THEME } from './types';
+import { getChartTheme } from './theme';
+import { BarChartData, ChartTheme } from './types';
 
 /**
  * Risk color thresholds for margin call probability.
@@ -102,16 +103,17 @@ export class MarginCallChart extends BaseChart {
     ];
 
     // Add cumulative line if data provided
+    const theme = getChartTheme();
     if (cumulative && cumulative.length > 0) {
       datasets.push({
         type: 'line' as const,
         label: 'Cumulative Probability',
         data: cumulative,
-        borderColor: DEFAULT_CHART_THEME.primary,
+        borderColor: theme.primary,
         backgroundColor: 'transparent',
         borderWidth: 2,
         pointRadius: 3,
-        pointBackgroundColor: DEFAULT_CHART_THEME.primary,
+        pointBackgroundColor: theme.primary,
         tension: 0.1, // Slight curve
         order: 1, // Line in front of bars
       });
@@ -159,10 +161,10 @@ export class MarginCallChart extends BaseChart {
             title: {
               display: true,
               text: 'Year',
-              color: DEFAULT_CHART_THEME.text,
+              color: theme.text,
             },
             ticks: {
-              color: DEFAULT_CHART_THEME.text,
+              color: theme.text,
             },
             grid: {
               display: false,
@@ -172,14 +174,14 @@ export class MarginCallChart extends BaseChart {
             title: {
               display: true,
               text: 'Probability (%)',
-              color: DEFAULT_CHART_THEME.text,
+              color: theme.text,
             },
             ticks: {
               callback: (value) => `${value}%`,
-              color: DEFAULT_CHART_THEME.text,
+              color: theme.text,
             },
             grid: {
-              color: DEFAULT_CHART_THEME.grid,
+              color: theme.grid,
             },
             beginAtZero: true,
             max: this.calculateYAxisMax(values, cumulative),
@@ -207,6 +209,24 @@ export class MarginCallChart extends BaseChart {
 
     // Otherwise let Chart.js auto-scale
     return undefined;
+  }
+
+  /**
+   * Update dataset colors when theme changes.
+   * Risk-based bar colors are theme-independent, but cumulative line uses theme.primary.
+   */
+  protected updateDatasetColors(theme: ChartTheme): void {
+    if (!this.chart) return;
+
+    // Update cumulative line color if present
+    const cumulativeDataset = this.chart.data.datasets.find(
+      (d) => d.label === 'Cumulative Probability'
+    );
+    if (cumulativeDataset) {
+      cumulativeDataset.borderColor = theme.primary;
+      // Cast to access line-specific properties
+      (cumulativeDataset as { pointBackgroundColor?: string }).pointBackgroundColor = theme.primary;
+    }
   }
 
   /**

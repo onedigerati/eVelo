@@ -14,7 +14,8 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { DEFAULT_CHART_THEME } from './types';
+import { getChartTheme } from './theme';
+import { ChartTheme } from './types';
 
 /**
  * Data structure for terminal comparison chart
@@ -122,10 +123,19 @@ export class TerminalComparisonChart extends BaseChart {
   }
 
   /**
+   * Update dataset colors when theme changes.
+   * Terminal comparison uses fixed BBD (teal) and Sell (blue) colors.
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    // BBD (teal) and Sell (blue) colors are designed to work on both light and dark
+    // No update needed as these are theme-independent
+  }
+
+  /**
    * Returns Chart.js configuration for terminal comparison chart.
    */
   protected getChartConfig(): ChartConfiguration {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
     const emptyData = {
       labels: [],
       datasets: [],

@@ -14,7 +14,8 @@
  */
 import { ChartConfiguration, Plugin } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { DEFAULT_CHART_THEME, CHART_ALPHA } from './types';
+import { getChartTheme } from './theme';
+import { ChartTheme, CHART_ALPHA } from './types';
 
 /**
  * Data structure for SBLOC utilization chart
@@ -192,7 +193,7 @@ export class SBLOCUtilizationChart extends BaseChart {
    * Build plugin options including annotation line for max borrowing.
    */
   private buildPluginOptions(maxBorrowing: number) {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
 
     return {
       legend: {
@@ -255,10 +256,19 @@ export class SBLOCUtilizationChart extends BaseChart {
   }
 
   /**
+   * Update dataset colors when theme changes.
+   * SBLOC utilization uses risk-based gradient colors (green to red) that work on both themes.
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    // Risk gradient colors (green-to-red) are designed to work on both light and dark
+    // No update needed as these are theme-independent
+  }
+
+  /**
    * Returns Chart.js configuration for SBLOC utilization chart.
    */
   protected getChartConfig(): ChartConfiguration {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
     const emptyData = {
       labels: [],
       datasets: [],

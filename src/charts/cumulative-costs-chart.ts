@@ -14,7 +14,8 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
-import { DEFAULT_CHART_THEME, CHART_ALPHA } from './types';
+import { getChartTheme } from './theme';
+import { ChartTheme, CHART_ALPHA } from './types';
 
 /**
  * Data structure for cumulative costs chart
@@ -141,10 +142,19 @@ export class CumulativeCostsChart extends BaseChart {
   }
 
   /**
+   * Update dataset colors when theme changes.
+   * Cumulative costs chart uses fixed tax (red) and interest (teal) colors.
+   */
+  protected updateDatasetColors(_theme: ChartTheme): void {
+    // Tax (red) and Interest (teal) colors are designed to work on both light and dark
+    // No update needed as these are theme-independent
+  }
+
+  /**
    * Returns Chart.js configuration for cumulative costs chart.
    */
   protected getChartConfig(): ChartConfiguration {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
     const emptyData = {
       labels: [],
       datasets: [],

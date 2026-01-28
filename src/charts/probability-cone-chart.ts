@@ -13,9 +13,10 @@
  */
 import { ChartConfiguration } from 'chart.js';
 import { BaseChart } from './base-chart';
+import { getChartTheme } from './theme';
 import {
   ProbabilityConeData,
-  DEFAULT_CHART_THEME,
+  ChartTheme,
   CHART_ALPHA,
 } from './types';
 
@@ -73,6 +74,16 @@ export class ProbabilityConeChart extends BaseChart {
   }
 
   /**
+   * Helper to add alpha to hex color
+   */
+  private withAlpha(hex: string, a: number): string {
+    const alpha256 = Math.round(a * 255)
+      .toString(16)
+      .padStart(2, '0');
+    return hex + alpha256;
+  }
+
+  /**
    * Build Chart.js data structure from ProbabilityConeData.
    * Creates layered datasets for filled band visualization.
    */
@@ -80,15 +91,7 @@ export class ProbabilityConeChart extends BaseChart {
     const { years, bands } = coneData;
     const labels = years.map((y) => `Year ${y}`);
     const alpha = CHART_ALPHA.bandFill;
-    const theme = DEFAULT_CHART_THEME;
-
-    // Helper to add alpha to hex color
-    const withAlpha = (hex: string, a: number): string => {
-      const alpha256 = Math.round(a * 255)
-        .toString(16)
-        .padStart(2, '0');
-      return hex + alpha256;
-    };
+    const theme = getChartTheme();
 
     return {
       labels,
@@ -111,7 +114,7 @@ export class ProbabilityConeChart extends BaseChart {
           label: 'P75-P90 Range',
           data: bands.p75,
           borderColor: theme.percentiles.p75,
-          backgroundColor: withAlpha(theme.percentiles.p90, alpha),
+          backgroundColor: this.withAlpha(theme.percentiles.p90, alpha),
           borderWidth: 1,
           fill: '-1', // Fill to previous dataset (P90)
           tension: 0.1,
@@ -123,7 +126,7 @@ export class ProbabilityConeChart extends BaseChart {
           label: 'P50-P75 Range',
           data: bands.p50,
           borderColor: theme.percentiles.p50,
-          backgroundColor: withAlpha(theme.percentiles.p75, alpha),
+          backgroundColor: this.withAlpha(theme.percentiles.p75, alpha),
           borderWidth: 2,
           fill: '-1', // Fill to previous dataset (P75)
           tension: 0.1,
@@ -135,7 +138,7 @@ export class ProbabilityConeChart extends BaseChart {
           label: 'P25-P50 Range',
           data: bands.p25,
           borderColor: theme.percentiles.p25,
-          backgroundColor: withAlpha(theme.percentiles.p25, alpha),
+          backgroundColor: this.withAlpha(theme.percentiles.p25, alpha),
           borderWidth: 1,
           fill: '-1', // Fill to previous dataset (P50)
           tension: 0.1,
@@ -147,7 +150,7 @@ export class ProbabilityConeChart extends BaseChart {
           label: 'P10-P25 Range',
           data: bands.p10,
           borderColor: theme.percentiles.p10,
-          backgroundColor: withAlpha(theme.percentiles.p10, alpha),
+          backgroundColor: this.withAlpha(theme.percentiles.p10, alpha),
           borderWidth: 2,
           borderDash: [5, 5],
           fill: '-1', // Fill to previous dataset (P25)
@@ -160,10 +163,37 @@ export class ProbabilityConeChart extends BaseChart {
   }
 
   /**
+   * Update dataset colors when theme changes
+   */
+  protected updateDatasetColors(theme: ChartTheme): void {
+    if (!this.chart) return;
+    const alpha = CHART_ALPHA.bandFill;
+
+    this.chart.data.datasets.forEach((dataset) => {
+      const label = dataset.label || '';
+      if (label.includes('P90')) {
+        dataset.borderColor = theme.percentiles.p90;
+      } else if (label.includes('P75-P90')) {
+        dataset.borderColor = theme.percentiles.p75;
+        dataset.backgroundColor = this.withAlpha(theme.percentiles.p90, alpha);
+      } else if (label.includes('P50-P75')) {
+        dataset.borderColor = theme.percentiles.p50;
+        dataset.backgroundColor = this.withAlpha(theme.percentiles.p75, alpha);
+      } else if (label.includes('P25-P50')) {
+        dataset.borderColor = theme.percentiles.p25;
+        dataset.backgroundColor = this.withAlpha(theme.percentiles.p25, alpha);
+      } else if (label.includes('P10-P25')) {
+        dataset.borderColor = theme.percentiles.p10;
+        dataset.backgroundColor = this.withAlpha(theme.percentiles.p10, alpha);
+      }
+    });
+  }
+
+  /**
    * Returns Chart.js configuration for probability cone chart.
    */
   protected getChartConfig(): ChartConfiguration {
-    const theme = DEFAULT_CHART_THEME;
+    const theme = getChartTheme();
     const emptyData = {
       labels: [],
       datasets: [],
