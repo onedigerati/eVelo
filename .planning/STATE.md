@@ -9,15 +9,15 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 ## Current Position
 
-Phase: 24 of 24 (Mobile Dashboard Optimization)
-Plan: 02 of 03
+Phase: 25 of 25 (Mobile Parameters Panel Optimization)
+Plan: 01 of 02
 Status: In progress
-Last activity: 2026-01-27 — Completed 24-02-PLAN.md (Mobile Table Scroll Indicators)
+Last activity: 2026-01-28 — Completed 25-01-PLAN.md (Sticky Run Simulation Button)
 
-Progress: █████████████████████████████████████████ 97% (102/105 plans complete)
+Progress: █████████████████████████████████████████ 98% (103/107 plans complete)
 
 **Current Phase:**
-Phase 24 IN PROGRESS: Mobile Dashboard Optimization - Fixing mobile viewport overflow and touch interaction issues
+Phase 25 IN PROGRESS: Mobile Parameters Panel Optimization - Sticky Run Simulation button and mobile sidebar improvements
 
 ## Performance Metrics
 
@@ -53,11 +53,12 @@ Phase 24 IN PROGRESS: Mobile Dashboard Optimization - Fixing mobile viewport ove
 | 21-header-redesign | 1/1 | 4 min | 4.0 min |
 | 22-mobile-sidebar-ux-redesign | 2/2 | 7 min | 3.5 min |
 | 23-reference-methodology-alignment | 9/9 | 58.75 min | 6.53 min |
-| 24-mobile-dashboard-optimization | 1/3 | 5 min | 5.0 min |
+| 24-mobile-dashboard-optimization | 3/3 | 15 min | 5.0 min |
+| 25-mobile-parameters-panel-optimization | 1/2 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 23-07 (4 min), 23-08 (4 min), 23-09 (3 min), 24-01 (5 min)
-- Trend: Phase 24 in progress - mobile optimization work started
+- Last 5 plans: 23-09 (3 min), 24-01 (5 min), 24-02 (5 min), 24-03 (5 min), 25-01 (4 min)
+- Trend: Mobile optimization phases (24, 25) progressing well
 
 ## Accumulated Context
 
@@ -73,6 +74,7 @@ Recent decisions affecting current work:
 - Comlink for Web Worker ergonomics (from research)
 - Dexie.js for IndexedDB wrapper (from research)
 - Gradient fade indicators over arrow icons for mobile scroll hints (24-02)
+- CSS sticky positioning for Run Simulation button instead of fixed positioning (25-01)
 - simple-statistics for statistical functions (from research)
 
 **From 13-RESEARCH (E2E Testing):**
@@ -417,6 +419,12 @@ Recent decisions affecting current work:
   - Charts and summary cards clipped/chopped off on right side
   - Tables not horizontally scrollable on touch devices
   - Goal: Responsive stacked layout for all dashboard components on mobile
+
+- Phase 25 added: Mobile Parameters Panel Optimization
+  - User request: Optimize eVelo Parameters sidebar for mobile view
+  - Key requirement: Run Monte Carlo Simulation button must have fixed/sticky position
+  - Android Chrome compatibility: Handle dynamic viewport, address bar, keyboard
+  - Goal: Always-visible Run button + fully optimized mobile parameters experience
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -982,14 +990,22 @@ Commit: 752a7e4
 - Complete touch scroll stack: webkit-overflow-scrolling + scroll-behavior + overscroll-behavior-x + touch-action
 - Passive scroll event listeners prevent jank
 
+**From 25-01:**
+- CSS sticky positioning for Run Simulation footer (maintains layout flow vs fixed positioning)
+- padding-bottom: calc(68px + 24px) on .sidebar-content prevents content overlap
+- Mobile safe-area-inset-bottom support via env() for iOS home bar / Android gesture bar
+- -webkit-overflow-scrolling: touch for iOS momentum scrolling
+- Flex container (display: flex + flex-direction: column) on mobile .sidebar-area enables sticky
+- min-height: 0 on slotted content allows shrinking within flex parent
+
 ## Session Continuity
 
-Last session: 2026-01-27T03:29:14Z
-Stopped at: Completed 24-02-PLAN.md (Mobile Table Scroll Indicators)
+Last session: 2026-01-28
+Stopped at: Completed 25-01-PLAN.md (Sticky Run Simulation Button)
 Resume file: None
 
 **To resume:**
-- Phase 24 plan 01 complete (3 tasks executed, 2 commits)
-- Mobile viewport overflow fixed for charts, cards, and banners
-- Remaining in phase 24: plans 02-03 (table scrolling, touch interactions)
-- Next recommended: `/gsd:execute-phase 24-02` to continue mobile optimization
+- Phase 25 plan 01 complete (2 tasks executed, 2 commits)
+- Sticky footer with safe-area-insets for Run Simulation button
+- Remaining in phase 25: plan 02 (parameter grouping)
+- Next recommended: `/gsd:execute-phase 25-02` to continue mobile parameters optimization
