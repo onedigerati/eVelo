@@ -413,8 +413,14 @@ export class FabNavigation extends BaseComponent {
    */
   private scrollToSection(sectionId: string): void {
     // Navigate through Shadow DOM chain:
-    // document → main-layout → .main-content → dashboard → section
-    const mainLayout = document.querySelector('main-layout');
+    // document → app-root → main-layout → .main-content → dashboard → section
+    const appRoot = document.querySelector('app-root');
+    if (!appRoot?.shadowRoot) {
+      console.warn('[FAB] app-root not found');
+      return;
+    }
+
+    const mainLayout = appRoot.shadowRoot.querySelector('main-layout');
     if (!mainLayout?.shadowRoot) {
       console.warn('[FAB] main-layout not found');
       return;
