@@ -225,13 +225,13 @@ export class ParamSummary extends BaseComponent {
         display: block;
         font-weight: 600;
         font-size: var(--font-size-lg, 1.125rem);
-        color: var(--text-primary, #1e293b);
+        color: #1e293b; /* Force dark text on light accent background */
       }
 
       .header-subtitle {
         display: block;
         font-size: var(--font-size-sm, 0.875rem);
-        color: var(--text-secondary, #64748b);
+        color: #64748b; /* Force gray text on light accent background */
       }
 
       .portfolio-content {
@@ -260,7 +260,7 @@ export class ParamSummary extends BaseComponent {
         text-align: center;
         font-size: var(--font-size-lg, 1.125rem);
         font-weight: 700;
-        color: var(--color-primary, #0d9488);
+        color: #0d9488; /* Force teal on light accent background */
         line-height: 1.2;
         pointer-events: none;
       }
@@ -269,7 +269,7 @@ export class ParamSummary extends BaseComponent {
         display: block;
         font-size: var(--font-size-xs, 0.75rem);
         font-weight: 600;
-        color: var(--text-secondary, #64748b);
+        color: #64748b; /* Force gray text on light accent background */
         letter-spacing: 0.05em;
       }
 
@@ -318,7 +318,7 @@ export class ParamSummary extends BaseComponent {
         flex: 1;
         font-size: var(--font-size-sm, 0.875rem);
         font-weight: 500;
-        color: var(--text-primary, #1e293b);
+        color: #1e293b; /* Force dark text on light accent background */
         z-index: 1;
         white-space: nowrap;
         overflow: hidden;
@@ -328,7 +328,7 @@ export class ParamSummary extends BaseComponent {
       .asset-bar-percent {
         font-size: var(--font-size-sm, 0.875rem);
         font-weight: 600;
-        color: var(--color-primary, #0d9488);
+        color: #0d9488; /* Force teal on light accent background */
         z-index: 1;
         min-width: 50px;
         text-align: right;
