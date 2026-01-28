@@ -413,29 +413,18 @@ export class FabNavigation extends BaseComponent {
    */
   private scrollToSection(sectionId: string): void {
     // Navigate through Shadow DOM chain:
-    // document → app-root → main-layout → .main-content → dashboard → section
+    // document → app-root → dashboard (slotted into main-layout but lives in app-root's shadow)
     const appRoot = document.querySelector('app-root');
     if (!appRoot?.shadowRoot) {
       console.warn('[FAB] app-root not found');
       return;
     }
 
-    const mainLayout = appRoot.shadowRoot.querySelector('main-layout');
-    if (!mainLayout?.shadowRoot) {
-      console.warn('[FAB] main-layout not found');
-      return;
-    }
-
-    const mainContent = mainLayout.shadowRoot.querySelector('.main-content');
-    if (!mainContent) {
-      console.warn('[FAB] .main-content not found');
-      return;
-    }
-
-    // Dashboard could be either comparison-dashboard or results-dashboard
+    // Dashboard is in app-root's shadow DOM (slotted into main-layout)
+    // Could be either comparison-dashboard or results-dashboard
     const dashboard =
-      mainContent.querySelector('comparison-dashboard') ||
-      mainContent.querySelector('results-dashboard');
+      appRoot.shadowRoot.querySelector('comparison-dashboard') ||
+      appRoot.shadowRoot.querySelector('results-dashboard');
 
     if (!dashboard?.shadowRoot) {
       console.warn('[FAB] dashboard not found');
