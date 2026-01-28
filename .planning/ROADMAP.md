@@ -39,6 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 24: Mobile Dashboard Optimization** - Fix mobile layout issues (charts/cards chopped off, tables not scrollable) with responsive stacked layout
 - [ ] **Phase 25: Mobile Parameters Panel Optimization** - Sticky Run Simulation button and mobile sidebar improvements
 - [ ] **Phase 26: Theme Implementation Review** - Comprehensive light/dark theme audit for colors, contrast, readability, and toggle logic
+- [ ] **Phase 27: Dashboard FAB Navigation** - Floating action button with elegant section navigation menu for dashboard results
 
 ## Phase Details
 
@@ -847,10 +848,59 @@ Wave Structure:
 - Wave 1 (parallel): 26-01, 26-02 (independent improvements)
 - Wave 2: 26-03, 26-04 (depends on Wave 1 for contrast fixes; checkpoint for verification)
 
+### Phase 27: Dashboard FAB Navigation
+**Goal**: Add a floating action button (FAB) at the bottom-right of the dashboard results view that opens an elegant, intuitive section navigation menu styled to match eVelo's aesthetic in both light and dark themes
+**Depends on**: Phase 26
+**Requirements**: UI-01, UI-04, THEME-01
+**Success Criteria** (what must be TRUE):
+  1. FAB appears at bottom-right of dashboard only after simulation runs (not on welcome screen)
+  2. FAB click/tap opens a menu listing all main dashboard result sections
+  3. Menu items scroll to corresponding section when clicked
+  4. FAB and menu use custom eVelo-styled design (not generic Material icons)
+  5. Smooth transitions for menu open/close
+  6. Works correctly in both light and dark themes
+  7. Touch-friendly on mobile (48px minimum touch target)
+  8. Menu dismisses when clicking outside or pressing Escape
+  9. FAB position doesn't interfere with other UI elements
+  10. Accessible with keyboard navigation and ARIA attributes
+**Research**: Complete (see 27-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 27-01-PLAN.md -- Create FAB navigation component with menu and scroll navigation
+- [ ] 27-02-PLAN.md -- Dashboard integration and human verification
+
+**Details:**
+User-requested feature for dashboard navigation:
+1. **FAB Placement**: Bottom-right of results dashboard (visible after simulation)
+2. **Menu Contents**: Links to main dashboard sections (Key Metrics, Portfolio, Strategy Analysis, Charts, Tables, etc.)
+3. **Styling**: Custom eVelo aesthetic - NOT generic icons (Material, FontAwesome)
+4. **Theming**: Fully integrated with light/dark theme system
+5. **Interaction**: Click to open menu, click section to scroll, click outside to dismiss
+
+Design considerations:
+- Lightning bolt or chart-themed FAB icon matching eVelo brand
+- Menu items with subtle eVelo accent colors (teal primary)
+- Smooth scroll behavior to sections
+- z-index layering above dashboard content but below modals
+- Consider mobile: may need different positioning or behavior
+
+Based on research findings:
+- Extend BaseComponent with Shadow DOM encapsulation
+- W3C Menu Button ARIA pattern for accessibility
+- composedPath() for click-outside detection (required for Shadow DOM)
+- scrollIntoView({ behavior: 'smooth' }) for navigation
+- z-index 999 (below modals at 1000)
+- 8 main sections in menu: Key Metrics, Parameters, Portfolio Outlook, Strategy Analysis, Visual Comparison, Recommendations, Performance Tables, Yearly Analysis
+
+Wave Structure:
+- Wave 1: 27-01 (create component)
+- Wave 2: 27-02 (integration and verification checkpoint)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -881,6 +931,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 24. Mobile Dashboard Optimization | 0/3 | Planned | - |
 | 25. Mobile Parameters Panel Optimization | 0/3 | Planned | - |
 | 26. Theme Implementation Review | 0/4 | Planned | - |
+| 27. Dashboard FAB Navigation | 0/2 | Planned | - |
 
-**Total Plans**: 112
+**Total Plans**: 114
 **Completed Plans**: 100
