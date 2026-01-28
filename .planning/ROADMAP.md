@@ -756,10 +756,57 @@ Wave Structure:
 - Wave 1 (parallel): 24-01, 24-02 (independent fixes)
 - Wave 2: 24-03 (depends on 24-01, 24-02; includes human verification)
 
+### Phase 25: Mobile Parameters Panel Optimization
+**Goal**: Optimize the eVelo Parameters sidebar panel for mobile view with sticky Run Simulation button, optimized for Android Chrome
+**Depends on**: Phase 24
+**Requirements**: UI-04 (mobile layout), UI-01 (sidebar)
+**Success Criteria** (what must be TRUE):
+  1. Run Monte Carlo Simulation button has fixed/sticky position always visible on mobile
+  2. Parameters panel scrolls independently while button remains anchored
+  3. All parameter sections fully accessible via scroll on mobile
+  4. Touch interactions work reliably for all form inputs
+  5. No content hidden behind sticky button (proper padding/margin)
+  6. Smooth scroll behavior within parameters panel
+  7. Button position works in both expanded and collapsed sidebar states
+  8. Dark theme styling maintained for sticky button area
+  9. Works correctly in Android Chrome browser (address bar hide/show, viewport changes)
+  10. Handles Android Chrome's 100vh quirks (use dvh or JavaScript fallback)
+**Research**: Complete (see 25-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 25-01-PLAN.md -- Sticky footer button for mobile (position: sticky, padding-bottom, safe-area-insets)
+- [ ] 25-02-PLAN.md -- Touch optimization and dvh viewport (48px targets, touch-action, dvh units)
+- [ ] 25-03-PLAN.md -- Human verification of mobile optimizations (checkpoint)
+
+**Details:**
+Key requirements:
+1. **Sticky Run Button**: The "Run Monte Carlo Simulation" button must lock position so it is always visible when users are interacting with the input form on mobile
+2. **Panel Review**: Thoroughly review entire parameters panel for mobile optimization
+3. **Scroll Independence**: Parameters content scrolls while button stays fixed at bottom or top
+4. **Android Chrome Compatibility**: Ensure robust behavior with Chrome's dynamic viewport
+
+Implementation considerations:
+- CSS position: sticky or position: fixed for the button container
+- Proper z-index layering to ensure button appears above scrolling content
+- Bottom padding on scroll container to prevent content being hidden behind button
+- Touch-friendly sizing (min 48px touch targets)
+- Visual separation (shadow or border) between button and scrolling content
+
+Android Chrome specific:
+- Use `100dvh` (dynamic viewport height) instead of `100vh` to handle address bar
+- Fallback: `height: calc(100vh - env(safe-area-inset-bottom))` for older browsers
+- JavaScript resize listener as fallback: `window.visualViewport.height`
+- Test with Chrome's address bar both visible and hidden
+- Avoid `position: fixed` bottom elements jumping when keyboard appears
+- Use `overscroll-behavior: contain` to prevent pull-to-refresh interference
+- Consider `-webkit-tap-highlight-color: transparent` for cleaner touch feedback
+- Test touch scrolling momentum (`-webkit-overflow-scrolling: touch` deprecated but may help)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -788,6 +835,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 22. Mobile Sidebar UX Redesign | 2/2 | Complete | 2026-01-25 |
 | 23. Reference Methodology Alignment | 9/9 | Complete | 2026-01-25 |
 | 24. Mobile Dashboard Optimization | 0/3 | Planned | - |
+| 25. Mobile Parameters Panel Optimization | 0/3 | Planned | - |
 
-**Total Plans**: 108
+**Total Plans**: 108+
 **Completed Plans**: 100
