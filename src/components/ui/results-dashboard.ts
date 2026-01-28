@@ -64,6 +64,9 @@ import './return-probability-table';
 import './recommendations-section';
 // Import portfolio visualization card
 import './portfolio-viz-card';
+// Import FAB navigation
+import './fab-navigation';
+import type { FabNavigation } from './fab-navigation';
 
 /** Portfolio color palette for consistent asset colors */
 const PORTFOLIO_COLORS = [
@@ -432,6 +435,9 @@ export class ResultsDashboard extends BaseComponent {
           <pre id="debug-output"></pre>
         </div>
       </section>
+
+      <!-- FAB Navigation for quick section access -->
+      <fab-navigation id="fab-nav"></fab-navigation>
     `;
   }
 
@@ -1335,6 +1341,14 @@ export class ResultsDashboard extends BaseComponent {
 
     // Update debug panel with raw data
     this.updateDebugPanel();
+
+    // Show/hide FAB navigation based on data availability
+    const fab = this.$('#fab-nav') as FabNavigation | null;
+    if (this._data) {
+      fab?.show();
+    } else {
+      fab?.hide();
+    }
   }
 
   /**

@@ -13,6 +13,7 @@ import type { SimulationOutput, SimulationConfig } from '../../simulation/types'
 // Import results-dashboard and trade-off-summary to register them
 import './results-dashboard';
 import './trade-off-summary';
+// Note: fab-navigation is imported by results-dashboard, which this component wraps
 
 /**
  * Comparison Dashboard - shows side-by-side results or single dashboard
