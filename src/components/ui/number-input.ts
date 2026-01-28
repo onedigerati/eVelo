@@ -106,6 +106,29 @@ export class NumberInput extends BaseComponent {
       :host([suffix]) input[type="number"] {
         padding-right: calc(var(--spacing-md, 16px) + 2em);
       }
+
+      /* Focus visible state */
+      input[type="number"]:focus-visible {
+        outline: 2px solid var(--color-primary, #0d9488);
+        outline-offset: 2px;
+      }
+
+      /* Disabled state */
+      input[type="number"]:disabled {
+        background: var(--surface-disabled, #f3f4f6);
+        color: var(--text-disabled, #9ca3af);
+        border-color: var(--border-disabled, #d1d5db);
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      :host([disabled]) .label {
+        color: var(--text-disabled, #9ca3af);
+      }
+
+      :host([disabled]) .suffix {
+        color: var(--text-disabled, #9ca3af);
+      }
     `;
   }
 

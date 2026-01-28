@@ -55,7 +55,20 @@ export class CheckboxInput extends BaseComponent {
 
       .checkbox-wrapper.disabled {
         cursor: not-allowed;
-        opacity: 0.5;
+      }
+
+      .checkbox-wrapper.disabled .checkmark {
+        background: var(--surface-disabled, #f3f4f6);
+        border-color: var(--border-disabled, #d1d5db);
+      }
+
+      .checkbox-wrapper.disabled .label-text {
+        color: var(--text-disabled, #9ca3af);
+      }
+
+      .checkbox-wrapper.disabled input[type="checkbox"]:checked + .checkmark {
+        background: var(--border-disabled, #d1d5db);
+        border-color: var(--border-disabled, #d1d5db);
       }
 
       input[type="checkbox"] {

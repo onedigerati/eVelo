@@ -125,6 +125,29 @@ export class SelectInput extends BaseComponent {
         border-top: 5px solid var(--text-secondary, #64748b);
         pointer-events: none;
       }
+
+      /* Focus visible state */
+      select:focus-visible {
+        outline: 2px solid var(--color-primary, #0d9488);
+        outline-offset: 2px;
+      }
+
+      /* Disabled state */
+      select:disabled {
+        background: var(--surface-disabled, #f3f4f6);
+        color: var(--text-disabled, #9ca3af);
+        border-color: var(--border-disabled, #d1d5db);
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      select:disabled + .arrow {
+        border-top-color: var(--text-disabled, #9ca3af);
+      }
+
+      :host([disabled]) .label {
+        color: var(--text-disabled, #9ca3af);
+      }
     `;
   }
 

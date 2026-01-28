@@ -155,6 +155,40 @@ export class RangeSlider extends BaseComponent {
         color: var(--text-primary, #1e293b);
         font-variant-numeric: tabular-nums;
       }
+
+      /* Focus visible state */
+      input[type="range"]:focus-visible {
+        outline: 2px solid var(--color-primary, #0d9488);
+        outline-offset: 2px;
+      }
+
+      /* Disabled state */
+      input[type="range"]:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+        background: linear-gradient(
+          to right,
+          var(--border-disabled, #d1d5db) 0%,
+          var(--border-disabled, #d1d5db) var(--fill-percent, 0%),
+          var(--surface-disabled, #f3f4f6) var(--fill-percent, 0%),
+          var(--surface-disabled, #f3f4f6) 100%
+        );
+      }
+
+      input[type="range"]:disabled::-webkit-slider-thumb {
+        background: var(--border-disabled, #d1d5db);
+        cursor: not-allowed;
+      }
+
+      input[type="range"]:disabled::-moz-range-thumb {
+        background: var(--border-disabled, #d1d5db);
+        cursor: not-allowed;
+      }
+
+      :host([disabled]) .label,
+      :host([disabled]) .value-display {
+        color: var(--text-disabled, #9ca3af);
+      }
     `;
   }
 
