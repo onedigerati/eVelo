@@ -898,6 +898,45 @@ export class PortfolioComposition extends BaseComponent {
       .total-value.invalid {
         color: var(--color-error, #dc2626);
       }
+
+      /* Dark mode styles for portfolio visualization */
+      :host-context([data-theme="dark"]) .portfolio-visualization {
+        background: #132f2f;
+        border-color: #1f4a4a;
+      }
+
+      :host-context([data-theme="dark"]) .card-header {
+        border-bottom-color: #1f4a4a;
+      }
+
+      :host-context([data-theme="dark"]) .header-title {
+        color: var(--text-primary, #f1f5f9);
+      }
+
+      :host-context([data-theme="dark"]) .header-subtitle {
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      :host-context([data-theme="dark"]) .donut-center {
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-row {
+        background: #1a3838;
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-row:hover {
+        background: #1f4242;
+        box-shadow: 0 1px 3px rgba(20, 184, 166, 0.15);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-name {
+        color: var(--text-primary, #f1f5f9);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-percent {
+        color: var(--color-primary, #14b8a6);
+      }
     `;
   }
 

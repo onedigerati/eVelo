@@ -484,21 +484,61 @@ export class WelcomeScreen extends BaseComponent {
       }
 
       /* Dark theme adjustments */
-      [data-theme="dark"] .step-card {
-        background: rgba(13, 148, 136, 0.1);
+      :host-context([data-theme="dark"]) .step-card {
+        background: #132f2f;
+        border-color: #1f4a4a;
       }
 
-      [data-theme="dark"] .disclaimer-section {
-        background: rgba(245, 158, 11, 0.1);
+      :host-context([data-theme="dark"]) .step-card:hover {
+        border-color: var(--color-primary, #14b8a6);
       }
 
-      [data-theme="dark"] .disclaimer-content strong,
-      [data-theme="dark"] .disclaimer-content p {
+      :host-context([data-theme="dark"]) .step-description {
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      :host-context([data-theme="dark"]) .benefits-column,
+      :host-context([data-theme="dark"]) .risks-column {
+        background: #1a2e38;
+        border-color: #2a4555;
+      }
+
+      :host-context([data-theme="dark"]) .benefits-column:hover,
+      :host-context([data-theme="dark"]) .risks-column:hover {
+        border-color: var(--color-primary, #14b8a6);
+      }
+
+      :host-context([data-theme="dark"]) .benefits-title {
+        color: #34d399;
+      }
+
+      :host-context([data-theme="dark"]) .risks-title {
+        color: #fbbf24;
+      }
+
+      :host-context([data-theme="dark"]) .feature-icon {
+        color: #34d399;
+      }
+
+      :host-context([data-theme="dark"]) .feature-icon.warning {
+        color: #fbbf24;
+      }
+
+      :host-context([data-theme="dark"]) .disclaimer-section {
+        background: #2d2a1a;
+        border-left-color: #fbbf24;
+      }
+
+      :host-context([data-theme="dark"]) .disclaimer-content strong {
         color: #fcd34d;
       }
 
-      [data-theme="dark"] .cta-button.secondary:hover {
-        background: rgba(13, 148, 136, 0.1);
+      :host-context([data-theme="dark"]) .disclaimer-content p {
+        color: #d4a853;
+      }
+
+      :host-context([data-theme="dark"]) .cta-button.secondary:hover {
+        background: rgba(20, 184, 166, 0.15);
       }
     `;
   }

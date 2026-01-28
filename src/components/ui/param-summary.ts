@@ -504,6 +504,49 @@ export class ParamSummary extends BaseComponent {
           break-inside: avoid;
         }
       }
+
+      /* Dark mode styles */
+      :host-context([data-theme="dark"]) .summary-card {
+        background: var(--surface-secondary, #1e293b);
+        border-color: #1f4a4a;
+      }
+
+      :host-context([data-theme="dark"]) .portfolio-section {
+        background: #132f2f;
+      }
+
+      :host-context([data-theme="dark"]) .header-title {
+        color: var(--text-primary, #f1f5f9);
+      }
+
+      :host-context([data-theme="dark"]) .header-subtitle {
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      :host-context([data-theme="dark"]) .donut-center {
+        color: var(--color-primary, #14b8a6);
+      }
+
+      :host-context([data-theme="dark"]) .donut-center span {
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-row {
+        background: #1a3838;
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-name {
+        color: var(--text-primary, #f1f5f9);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-percent {
+        color: var(--color-primary, #14b8a6);
+      }
+
+      :host-context([data-theme="dark"]) .param-section {
+        background: var(--surface-secondary, #1e293b);
+        border-top-color: #1f4a4a;
+      }
     `;
   }
 
