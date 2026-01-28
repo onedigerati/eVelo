@@ -185,8 +185,8 @@ export class StrategyAnalysis extends BaseComponent {
             <svg viewBox="0 0 100 100" class="dial-svg">
               <circle class="dial-bg" cx="50" cy="50" r="45"/>
               <circle class="dial-progress" cx="50" cy="50" r="45" id="dial-progress"/>
-              <text class="dial-text" x="50" y="50" id="dial-text">87%</text>
-              <text class="dial-label" x="50" y="65">Success</text>
+              <text class="dial-text" x="44" y="50" transform="rotate(90 44 50)" id="dial-text">87%</text>
+              <text class="dial-label" x="70" y="50" transform="rotate(90 70 50)">Success</text>
             </svg>
           </div>
         </div>
@@ -473,17 +473,14 @@ export class StrategyAnalysis extends BaseComponent {
         font-weight: 700;
         text-anchor: middle;
         dominant-baseline: middle;
-        transform: rotate(90deg);
-        transform-origin: 50px 50px;
       }
 
       .dial-label {
         fill: #475569; /* Force gray text on light accent banner */
         font-size: 0.6rem;
+        font-weight: 600;
         text-anchor: middle;
         dominant-baseline: middle;
-        transform: rotate(90deg);
-        transform-origin: 50px 65px;
       }
 
       /* Comparison Grid */
