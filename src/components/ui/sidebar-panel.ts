@@ -190,7 +190,9 @@ export class SidebarPanel extends BaseComponent {
       .sidebar-content {
         overflow-y: auto;
         padding: var(--spacing-sm, 8px);
+        padding-bottom: calc(68px + 24px); /* Footer height + spacing buffer */
         min-height: 0;
+        -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
       }
 
       /* Custom scrollbar styling - subtle by default, prominent on hover */
@@ -226,9 +228,24 @@ export class SidebarPanel extends BaseComponent {
       }
 
       .sidebar-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
         padding: var(--spacing-md, 16px);
         border-top: 1px solid var(--border-color, #e2e8f0);
         background: var(--surface-secondary, #f8fafc);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Mobile: enhanced sticky footer with safe-area-insets */
+      @media (max-width: 768px) {
+        .sidebar-content {
+          padding-bottom: calc(68px + 32px + env(safe-area-inset-bottom, 0px)); /* Footer + larger mobile spacing + safe area */
+        }
+
+        .sidebar-footer {
+          padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        }
       }
     `;
   }
