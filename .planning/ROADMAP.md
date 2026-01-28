@@ -37,6 +37,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 22: Mobile Sidebar UX Redesign** - Vertical collapse/expand on mobile, auto-collapse on simulation, "eVelo Parameters" label replacing hamburger icon
 - [x] **Phase 23: Reference Methodology Alignment** - Align Monte Carlo simulation with reference application methodology (bootstrap correlation, 4-regime system, fat-tail model, dividend tax modeling)
 - [ ] **Phase 24: Mobile Dashboard Optimization** - Fix mobile layout issues (charts/cards chopped off, tables not scrollable) with responsive stacked layout
+- [ ] **Phase 25: Mobile Parameters Panel Optimization** - Sticky Run Simulation button and mobile sidebar improvements
+- [ ] **Phase 26: Theme Implementation Review** - Comprehensive light/dark theme audit for colors, contrast, readability, and toggle logic
 
 ## Phase Details
 
@@ -803,10 +805,52 @@ Android Chrome specific:
 - Consider `-webkit-tap-highlight-color: transparent` for cleaner touch feedback
 - Test touch scrolling momentum (`-webkit-overflow-scrolling: touch` deprecated but may help)
 
+### Phase 26: Theme Implementation Review
+**Goal**: Comprehensive review and improvement of light/dark theme implementation ensuring proper colors, styles, contrast, readability, and toggle logic across desktop and mobile views
+**Depends on**: Phase 25
+**Requirements**: THEME-01, THEME-02, UI-04
+**Success Criteria** (what must be TRUE):
+  1. Color contrast meets WCAG 2.1 AA standards (4.5:1 for normal text, 3:1 for large text)
+  2. All UI components render correctly in both light and dark themes
+  3. Theme toggle works reliably with smooth transitions
+  4. No readability issues in either theme (text, charts, forms, tables)
+  5. Theme preference persists correctly across sessions
+  6. System preference detection works (prefers-color-scheme)
+  7. Charts and visualizations adapt colors appropriately for each theme
+  8. Mobile and desktop views have consistent theme behavior
+  9. Focus states, hover effects visible in both themes
+  10. No FOUC (Flash of Unstyled Content) on page load
+**Research**: Complete (see 26-RESEARCH.md)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 26-01-PLAN.md -- Fix chart dataset color updates on theme change
+- [ ] 26-02-PLAN.md -- WCAG contrast ratio audit and token fixes
+- [ ] 26-03-PLAN.md -- Disabled states and focus indicator verification
+- [ ] 26-04-PLAN.md -- Human verification of theme implementation (checkpoint)
+
+**Details:**
+Key issues identified from research:
+1. **Chart Dataset Colors Don't Update**: BaseChart.handleThemeChange() only updates scales/grid/legend, not dataset colors (percentile bands, bars, lines)
+2. **WCAG Contrast Audit Needed**: Systematic verification of all color combinations against 4.5:1 and 3:1 standards
+3. **Disabled States**: May be missing theme token coverage in form input components
+4. **Focus Indicators**: Need verification in both themes
+
+Based on research findings:
+- Add updateDatasetColors() hook to BaseChart for subclass override
+- Probability cone, histogram, and other charts implement theme-aware dataset updates
+- Audit --color-warning and --color-error for WCAG compliance
+- Add --text-disabled, --surface-disabled, --border-disabled tokens
+- Human verification for visual accuracy across desktop and mobile
+
+Wave Structure:
+- Wave 1 (parallel): 26-01, 26-02 (independent improvements)
+- Wave 2: 26-03, 26-04 (depends on Wave 1 for contrast fixes; checkpoint for verification)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -836,6 +880,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 23. Reference Methodology Alignment | 9/9 | Complete | 2026-01-25 |
 | 24. Mobile Dashboard Optimization | 0/3 | Planned | - |
 | 25. Mobile Parameters Panel Optimization | 0/3 | Planned | - |
+| 26. Theme Implementation Review | 0/4 | Planned | - |
 
-**Total Plans**: 108+
+**Total Plans**: 112
 **Completed Plans**: 100
