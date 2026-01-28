@@ -50,6 +50,11 @@
   /* Borders */
   --border-color: #e2e8f0;
   --border-radius-sm: 4px;
+
+  /* Disabled states */
+  --text-disabled: #9ca3af;          /* gray-400 - reduced contrast for disabled */
+  --surface-disabled: #f3f4f6;       /* gray-100 - slightly grayed background */
+  --border-disabled: #d1d5db;        /* gray-300 - muted border */
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
 
@@ -106,6 +111,11 @@
 
   /* Borders */
   --border-color: #334155;
+
+  /* Disabled states */
+  --text-disabled: #6b7280;          /* gray-500 - reduced contrast on dark */
+  --surface-disabled: #1f2937;       /* gray-800 - slightly lighter than surface-primary */
+  --border-disabled: #4b5563;        /* gray-600 - muted border on dark */
 
   /* Shadows - more dramatic for dark theme */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
