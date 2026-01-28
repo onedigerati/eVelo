@@ -554,6 +554,18 @@ export class AppRoot extends BaseComponent {
         cursor: pointer;
         transition: background 0.2s, transform 0.1s;
         width: 100%;
+        /* Touch optimization */
+        min-height: 48px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(13, 148, 136, 0.2);
+      }
+
+      /* Mobile touch target enhancement */
+      @media (max-width: 768px) {
+        .btn-primary {
+          min-height: 52px;
+          font-size: var(--font-size-base, 1rem);
+        }
       }
 
       .btn-primary:hover {
