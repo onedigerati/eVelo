@@ -217,7 +217,7 @@ export class CorrelationHeatmap extends BaseComponent {
 
       .correlation-table td.row-label {
         font-weight: 500;
-        color: var(--text-primary, #1e293b);
+        color: #1e293b; /* Force dark text on light row backgrounds */
         text-align: left;
         padding-left: var(--spacing-md, 16px);
       }
@@ -244,7 +244,7 @@ export class CorrelationHeatmap extends BaseComponent {
       }
 
       .correlation-table td.volatility-cell {
-        color: var(--text-secondary, #475569);
+        color: #475569; /* Force gray text on light row backgrounds */
         font-weight: 500;
       }
 
