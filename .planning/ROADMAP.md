@@ -40,6 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 25: Mobile Parameters Panel Optimization** - Sticky Run Simulation button and mobile sidebar improvements
 - [ ] **Phase 26: Theme Implementation Review** - Comprehensive light/dark theme audit for colors, contrast, readability, and toggle logic
 - [x] **Phase 27: Dashboard FAB Navigation** - Floating action button with elegant section navigation menu for dashboard results
+- [ ] **Phase 28: First-Time Simulation Experience** - Improve "Run Your First Simulation" button for users without a portfolio
 
 ## Phase Details
 
@@ -867,8 +868,8 @@ Wave Structure:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 27-01-PLAN.md -- Create FAB navigation component with menu and scroll navigation
-- [ ] 27-02-PLAN.md -- Dashboard integration and human verification
+- [x] 27-01-PLAN.md -- Create FAB navigation component with menu and scroll navigation
+- [x] 27-02-PLAN.md -- Dashboard integration and human verification
 
 **Details:**
 User-requested feature for dashboard navigation:
@@ -897,10 +898,48 @@ Wave Structure:
 - Wave 1: 27-01 (create component)
 - Wave 2: 27-02 (integration and verification checkpoint)
 
+### Phase 28: First-Time Simulation Experience
+**Goal**: Improve the "Run Your First Simulation" button experience for first-time users who haven't created a portfolio yet, providing intuitive options and guidance
+**Depends on**: Phase 27
+**Requirements**: UI-01, UI-07
+**Success Criteria** (what must be TRUE):
+  1. First-time users understand what happens when clicking "Run Your First Simulation"
+  2. Users are guided through initial portfolio setup before first simulation
+  3. Option to run a demo simulation with pre-configured sample portfolio
+  4. Option to create their own portfolio before running
+  5. Clear explanation of what a simulation requires (portfolio assets + parameters)
+  6. Smooth transition from onboarding to actual simulation results
+  7. Works correctly in both light and dark themes
+  8. Mobile-friendly interaction patterns
+  9. Accessible with keyboard navigation
+  10. Returns gracefully to welcome screen if user cancels
+**Research**: Complete (see 28-RESEARCH.md)
+**Plans**: 1 plan
+
+Plans:
+- [ ] 28-01-PLAN.md -- Choice modal flow for first-time simulation experience
+
+**Details:**
+Based on research findings:
+- Choice-based modal dialog appears when "Run Your First Simulation" is clicked
+- Two paths: "Run Demo (60/40)" for instant results, "Create My Portfolio" for custom setup
+- Demo mode uses pre-configured 60% SPY / 40% AGG portfolio (classic stocks/bonds allocation)
+- "Create My Portfolio" hides welcome screen and highlights portfolio section in sidebar
+- Cancel returns to welcome screen with no side effects
+- Progressive disclosure over multi-step wizards (12% vs 35% drop-off)
+- All infrastructure exists: modal-dialog.ts (choice type), portfolio-composition.ts, welcome-screen.ts
+
+Implementation approach:
+- Modify quick-start event handler in app-root.ts to show choice modal
+- Add setWeights() public method to portfolio-composition.ts for programmatic setup
+- Add loadDemoPortfolio() and highlightPortfolioSection() helper methods
+- Toast notifications explain what's happening at each step
+- CSS highlight-pulse animation for portfolio section guidance
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -932,6 +971,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 25. Mobile Parameters Panel Optimization | 0/3 | Planned | - |
 | 26. Theme Implementation Review | 0/4 | Planned | - |
 | 27. Dashboard FAB Navigation | 2/2 | Complete | 2026-01-28 |
+| 28. First-Time Simulation Experience | 0/1 | Planned | - |
 
-**Total Plans**: 114
+**Total Plans**: 115
 **Completed Plans**: 109
