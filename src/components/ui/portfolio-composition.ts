@@ -1846,16 +1846,64 @@ export class PortfolioComposition extends BaseComponent {
   }
 
   private async loadPreset(): Promise<void> {
-    // Refresh and show the dropdown with all portfolios
+    // Refresh the dropdown to get latest portfolios
     await this.refreshPresetDropdown();
 
-    // Focus the select to prompt user selection
     const select = this.$('.preset-select') as HTMLSelectElement;
-    if (select) {
-      select.focus();
-      // Optionally open the dropdown (browser-dependent)
-      select.click();
+    if (!select) return;
+
+    const selectedId = parseInt(select.value);
+
+    // If a valid portfolio is already selected, load it directly
+    if (!isNaN(selectedId)) {
+      try {
+        const portfolios = await loadAllPortfolios();
+        const portfolio = portfolios.find(p => p.id === selectedId);
+        if (portfolio) {
+          // Check for unsaved changes before loading
+          if (this._isDirty && this._currentPortfolioId !== undefined && this._currentPortfolioId !== selectedId) {
+            const choice = await this.showModal({
+              title: 'Unsaved Changes',
+              subtitle: `You have unsaved changes to "${this._currentPortfolioName}". What would you like to do?`,
+              type: 'choice',
+              confirmText: 'Discard Changes',
+              cancelText: 'Cancel',
+              alternateText: 'Save Changes',
+            });
+
+            if (choice === 'cancel') {
+              return;
+            }
+
+            if (choice === 'alternate') {
+              await this.saveCurrentPortfolio();
+            }
+          }
+
+          this.populateFromPortfolio(portfolio);
+
+          // Dispatch preset-loaded event
+          this.dispatchEvent(new CustomEvent('preset-loaded', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              presetName: portfolio.name,
+              pendingComparisonMode: false,
+            }
+          }));
+
+          this.showToast(`Loaded portfolio: ${portfolio.name}`, 'info');
+          return;
+        }
+      } catch (error) {
+        this.showToast('Failed to load portfolio', 'error');
+        return;
+      }
     }
+
+    // No valid selection - focus the dropdown to prompt user selection
+    select.focus();
+    select.click();
   }
 
   private importPreset(): void {
