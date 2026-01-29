@@ -11,6 +11,16 @@ import { correlationMatrix as calcCorrelationMatrix } from '../math/correlation'
 import type { PortfolioComposition } from './ui/portfolio-composition';
 // Import portfolio types
 import type { AssetRecord, PortfolioRecord } from '../data/schemas/portfolio';
+// Import debug functions for portfolio service
+import {
+  setPortfolioDebugMode,
+  isPortfolioDebugMode,
+  getPortfolioDebugLogs,
+  clearPortfolioDebugLogs,
+  isUsingLocalStorageFallback,
+} from '../data/services/portfolio-service';
+// Import theme service for header toggle
+import { getResolvedTheme, setTheme, onThemeChange } from '../services/theme-service';
 // Import comparison dashboard
 import type { ComparisonDashboard } from './ui/comparison-dashboard';
 
@@ -409,6 +419,16 @@ export class AppRoot extends BaseComponent {
             </div>
           </param-section>
 
+          <details class="debug-panel" id="debug-panel">
+            <summary class="debug-toggle">Debug Log</summary>
+            <div class="debug-controls">
+              <button class="debug-btn debug-enable-btn" type="button">Enable Logging</button>
+              <button class="debug-btn debug-refresh-btn" type="button">Refresh</button>
+              <button class="debug-btn debug-clear-btn" type="button">Clear</button>
+            </div>
+            <pre class="debug-output"></pre>
+          </details>
+
           <div slot="footer" class="simulation-controls">
             <button class="btn-primary" id="run-sim">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
@@ -432,6 +452,24 @@ export class AppRoot extends BaseComponent {
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </button>
+            <button id="btn-theme" class="header-btn" aria-label="Toggle theme" title="Toggle theme">
+              <!-- Sun icon (shown in dark mode, click to go light) -->
+              <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <!-- Moon icon (shown in light mode, click to go dark) -->
+              <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
               </svg>
             </button>
             <button id="btn-settings" class="header-btn" aria-label="Settings" title="Settings">
@@ -471,6 +509,7 @@ export class AppRoot extends BaseComponent {
       <toast-container position="bottom-right"></toast-container>
       <settings-panel id="settings-panel"></settings-panel>
       <user-guide-modal id="user-guide"></user-guide-modal>
+      <modal-dialog id="app-modal"></modal-dialog>
     `;
   }
 
@@ -626,6 +665,20 @@ export class AppRoot extends BaseComponent {
         gap: var(--spacing-sm, 8px);
       }
 
+      /* Theme toggle button icons */
+      #btn-theme .icon-sun {
+        display: none;
+      }
+      #btn-theme .icon-moon {
+        display: block;
+      }
+      #btn-theme.dark-mode .icon-sun {
+        display: block;
+      }
+      #btn-theme.dark-mode .icon-moon {
+        display: none;
+      }
+
       /* Welcome screen visibility */
       welcome-screen {
         display: block;
@@ -746,6 +799,104 @@ export class AppRoot extends BaseComponent {
       .tax-rates-group.hidden {
         display: none;
       }
+
+      /* Debug Panel Styles */
+      .debug-panel {
+        margin: var(--spacing-lg, 24px) var(--spacing-md, 16px);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--border-radius-md, 8px);
+        background: var(--surface-secondary, #f8fafc);
+        font-size: var(--font-size-sm, 0.875rem);
+      }
+
+      .debug-toggle {
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        user-select: none;
+      }
+
+      .debug-toggle:hover {
+        color: var(--text-primary, #1e293b);
+      }
+
+      .debug-controls {
+        display: flex;
+        gap: var(--spacing-xs, 4px);
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+      }
+
+      .debug-btn {
+        padding: 4px 12px;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: var(--border-radius-sm, 4px);
+        background: var(--surface-primary, #ffffff);
+        color: var(--text-secondary, #64748b);
+        font-size: var(--font-size-xs, 0.75rem);
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .debug-btn:hover {
+        background: var(--color-primary, #0d9488);
+        border-color: var(--color-primary, #0d9488);
+        color: white;
+      }
+
+      .debug-btn.active {
+        background: var(--color-success, #059669);
+        border-color: var(--color-success, #059669);
+        color: white;
+      }
+
+      .debug-output {
+        margin: 0;
+        padding: var(--spacing-md, 16px);
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 11px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: var(--text-primary, #1e293b);
+        background: var(--surface-primary, #ffffff);
+        border-radius: 0 0 var(--border-radius-md, 8px) var(--border-radius-md, 8px);
+      }
+
+      :host([data-theme="dark"]) .debug-panel {
+        background: var(--surface-secondary, #1e293b);
+      }
+
+      :host([data-theme="dark"]) .debug-output {
+        background: var(--surface-tertiary, #0f172a);
+      }
+
+      /* Highlight pulse animation for portfolio section guidance */
+      @keyframes highlight-pulse {
+        0%, 100% {
+          box-shadow: none;
+        }
+        50% {
+          box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.4);
+        }
+      }
+
+      portfolio-composition.highlight-pulse {
+        animation: highlight-pulse 1s ease-in-out 2;
+        border-radius: var(--border-radius-md, 8px);
+      }
+
+      /* Respect reduced motion preference */
+      @media (prefers-reduced-motion: reduce) {
+        portfolio-composition.highlight-pulse {
+          animation: none;
+          box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.4);
+        }
+      }
     `;
   }
 
@@ -782,6 +933,28 @@ export class AppRoot extends BaseComponent {
   private getCheckboxValue(id: string, fallback: boolean): boolean {
     const el = this.$(`#${id}`) as (CheckboxInput & { checked: boolean }) | null;
     return el?.checked ?? fallback;
+  }
+
+  /**
+   * Refresh the debug panel output with current logs
+   */
+  private refreshDebugOutput(): void {
+    const output = this.$('.debug-output') as HTMLPreElement;
+    if (!output) return;
+
+    const logs = getPortfolioDebugLogs();
+    const usingFallback = isUsingLocalStorageFallback();
+
+    let header = '';
+    if (usingFallback) {
+      header = '*** Using localStorage fallback (IndexedDB unavailable) ***\n\n';
+    }
+
+    if (logs.length === 0) {
+      output.textContent = header + 'No logs yet. Enable logging and perform save/load operations.';
+    } else {
+      output.textContent = header + logs.join('\n');
+    }
   }
 
   /**
@@ -998,6 +1171,57 @@ export class AppRoot extends BaseComponent {
   }
 
   /**
+   * Load demo portfolio: 60% SPY, 40% AGG
+   */
+  private loadDemoPortfolio(): void {
+    const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & {
+      setWeights(weights: Record<string, number>): void;
+    }) | null;
+
+    if (portfolioComp) {
+      portfolioComp.setWeights({
+        SPY: 60,
+        AGG: 40
+      });
+    }
+
+    // Show toast explaining what was loaded
+    const toastContainer = this.$('toast-container') as any;
+    toastContainer?.show(
+      'Running demo with 60/40 portfolio (S&P 500 / US Bonds)',
+      'info'
+    );
+  }
+
+  /**
+   * Highlight portfolio section for custom setup
+   */
+  private highlightPortfolioSection(): void {
+    // Small delay to allow welcome screen to hide
+    setTimeout(() => {
+      const portfolioComp = this.$('#portfolio-composition') as HTMLElement | null;
+
+      if (portfolioComp) {
+        // Scroll to portfolio section (in sidebar on desktop, or visible area on mobile)
+        portfolioComp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Add temporary highlight animation
+        portfolioComp.classList.add('highlight-pulse');
+        setTimeout(() => {
+          portfolioComp.classList.remove('highlight-pulse');
+        }, 2000);
+      }
+
+      // Show toast with guidance
+      const toastContainer = this.$('toast-container') as any;
+      toastContainer?.show(
+        'Add assets to build your portfolio, then run simulation',
+        'info'
+      );
+    }, 100);
+  }
+
+  /**
    * Collect simulation parameters from UI components
    */
   private collectSimulationParams(): { config: SimulationConfig; portfolio: PortfolioConfig } {
@@ -1206,6 +1430,20 @@ export class AppRoot extends BaseComponent {
       }
     }) as EventListener);
 
+    // Listen for show-modal events from child components (for modals that need to be outside overflow containers)
+    const appModal = this.$('#app-modal') as any;
+    this.shadowRoot?.addEventListener('show-modal', ((e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (appModal && typeof appModal.show === 'function') {
+        const { options, callback } = customEvent.detail;
+        appModal.show(options).then((result: string | boolean | null) => {
+          if (typeof callback === 'function') {
+            callback(result);
+          }
+        });
+      }
+    }) as EventListener);
+
     // Settings button handler
     const settingsBtn = this.$('#btn-settings');
     const settingsPanel = this.$('#settings-panel') as any;
@@ -1213,6 +1451,52 @@ export class AppRoot extends BaseComponent {
     settingsBtn?.addEventListener('click', () => {
       settingsPanel?.toggle();
     });
+
+    // Theme toggle button handler
+    const themeBtn = this.$('#btn-theme');
+    const updateThemeIcon = () => {
+      const isDark = getResolvedTheme() === 'dark';
+      themeBtn?.classList.toggle('dark-mode', isDark);
+    };
+    updateThemeIcon(); // Initial state
+
+    themeBtn?.addEventListener('click', () => {
+      const currentTheme = getResolvedTheme();
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+    });
+
+    // Listen for external theme changes (e.g., from settings panel)
+    onThemeChange(() => {
+      updateThemeIcon();
+    });
+
+    // =========================================================================
+    // Debug panel handlers
+    // =========================================================================
+    this.$('.debug-enable-btn')?.addEventListener('click', () => {
+      const newState = !isPortfolioDebugMode();
+      setPortfolioDebugMode(newState);
+      const btn = this.$('.debug-enable-btn') as HTMLButtonElement;
+      if (btn) {
+        btn.textContent = newState ? 'Disable Logging' : 'Enable Logging';
+        btn.classList.toggle('active', newState);
+      }
+      this.refreshDebugOutput();
+      toastContainer?.show(newState ? 'Debug logging enabled' : 'Debug logging disabled', 'info');
+    });
+
+    this.$('.debug-refresh-btn')?.addEventListener('click', () => {
+      this.refreshDebugOutput();
+    });
+
+    this.$('.debug-clear-btn')?.addEventListener('click', () => {
+      clearPortfolioDebugLogs();
+      this.refreshDebugOutput();
+    });
+
+    // Initialize debug output
+    this.refreshDebugOutput();
 
     // =========================================================================
     // User guide button handler
@@ -1238,11 +1522,31 @@ export class AppRoot extends BaseComponent {
       welcome?.classList.remove('hidden');
     }
 
-    // Quick-start: trigger simulation with current/default parameters
-    this.addEventListener('quick-start', () => {
-      welcome?.classList.add('hidden');
-      // Trigger simulation
-      runBtn?.click();
+    // Quick-start: show choice modal for first-time users
+    this.addEventListener('quick-start', async () => {
+      const modal = this.$('#app-modal') as any;
+
+      const result = await modal.show({
+        title: 'Run Your First Simulation',
+        subtitle: 'Choose how to get started with the Buy-Borrow-Die strategy simulator:',
+        type: 'choice',
+        confirmText: 'Create My Portfolio',
+        alternateText: 'Run Demo (60/40)',
+        cancelText: 'Cancel'
+      });
+
+      if (result === 'alternate') {
+        // Run demo with 60/40 SPY/AGG portfolio
+        this.loadDemoPortfolio();
+        // Hide welcome and trigger simulation
+        welcome?.classList.add('hidden');
+        runBtn?.click();
+      } else if (result === 'confirm') {
+        // Open custom portfolio setup
+        welcome?.classList.add('hidden');
+        this.highlightPortfolioSection();
+      }
+      // result === 'cancel' - stay on welcome screen (do nothing)
     });
 
     // Show guide: open user guide modal
