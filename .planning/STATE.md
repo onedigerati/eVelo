@@ -9,22 +9,22 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 
 ## Current Position
 
-Phase: 27 of 27 (Dashboard FAB Navigation)
-Plan: 02 of 02
+Phase: 28 of 28 (First-Time Simulation Experience)
+Plan: 01 of 01
 Status: Complete
-Last activity: 2026-01-28 — Completed Phase 27 (Dashboard FAB Navigation)
+Last activity: 2026-01-28 — Completed 28-01-PLAN.md (choice modal for first-time users)
 
-Progress: ██████████████████████████████████████████ 100% (109/109 plans complete)
+Progress: ██████████████████████████████████████████ 100% (110/110 plans complete)
 
 **Current Phase:**
-Phase 27 COMPLETE: Dashboard FAB Navigation - All phases executed, milestone complete
+Phase 28 COMPLETE: First-Time Simulation Experience - Choice modal for first-time users
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 109
+- Total plans completed: 110
 - Average duration: 3.9 min
-- Total execution time: 426.75 min
+- Total execution time: 430.75 min
 
 **By Phase:**
 
@@ -57,9 +57,10 @@ Phase 27 COMPLETE: Dashboard FAB Navigation - All phases executed, milestone com
 | 25-mobile-parameters-panel-optimization | 2/2 | 8 min | 4.0 min |
 | 26-theme-implementation-review | 4/4 | 16 min | 4.0 min |
 | 27-dashboard-fab-navigation | 2/2 | 12 min | 6.0 min |
+| 28-first-time-simulation-experience | 1/1 | 4 min | 4.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 26-02 (6 min), 26-03 (2 min), 27-01 (4 min), 27-02 (8 min)
+- Last 5 plans: 26-03 (2 min), 27-01 (4 min), 27-02 (8 min), 28-01 (4 min)
 - Trend: All phases complete - milestone finished
 
 ## Accumulated Context
@@ -439,6 +440,12 @@ Recent decisions affecting current work:
   - Goals: Elegant FAB at bottom-right, opens styled menu to navigate dashboard sections
   - Key requirements: Custom eVelo styling (not generic icons), light/dark theme support
   - Interaction: Click FAB → menu appears → click section → smooth scroll to section
+
+- Phase 28 added: First-Time Simulation Experience
+  - User request: "Run Your First Simulation" button confusing when no portfolio exists
+  - Goals: Provide intuitive options for first-time users without a portfolio
+  - Potential approaches: Demo mode, guided setup modal, smart redirect, two-button split
+  - Key consideration: First-time experience sets tone for user engagement
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
