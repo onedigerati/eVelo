@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 28 of 28 (First-Time Simulation Experience)
 Plan: 01 of 01
 Status: Complete
-Last activity: 2026-01-29 — Completed quick task 015: Disable auto-run simulation for sliders on mobile
+Last activity: 2026-01-29 — Completed quick task 016: Fix Load button for already-selected preset
 
 Progress: ██████████████████████████████████████████ 100% (110/110 plans complete)
 
@@ -697,6 +697,13 @@ None
 | 013 | Sell Strategy yearly analysis table | 2026-01-24 | e4d9ef7 | [013-sell-strategy-yearly-analysis-table](./quick/013-sell-strategy-yearly-analysis-table/) |
 | 014 | Dashboard hover effects with lift animations | 2026-01-26 | 01b7677 | [014-dashboard-hover-effects](./quick/014-dashboard-hover-effects/) |
 | 015 | Disable auto-run simulation for sliders on mobile | 2026-01-29 | 266a421 | [015-disable-mobile-slider-auto-simulation](./quick/015-disable-mobile-slider-auto-simulation/) |
+| 016 | Fix Load button for already-selected preset | 2026-01-29 | b4c7c70 | [016-fix-load-button-for-already-selected-pre](./quick/016-fix-load-button-for-already-selected-pre/) |
+
+**From quick-016:**
+- Load button now directly loads the currently selected portfolio preset
+- Handles unsaved changes prompts before loading
+- Shows success toast notification on load
+- Falls back to dropdown focus only when no preset is selected
 
 **From quick-015:**
 - Mobile viewport detection using window.matchMedia('(max-width: 768px)')
