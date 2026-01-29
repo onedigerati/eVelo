@@ -2,10 +2,140 @@
  * Portfolio service for IndexedDB CRUD operations
  *
  * Provides save/load/export/import operations for user portfolios.
+ * Automatically falls back to localStorage when IndexedDB is unavailable
+ * (e.g., when running from content:// URLs on Android).
  */
 
 import { db } from '../db';
 import type { PortfolioRecord, AssetRecord } from '../schemas/portfolio';
+
+// =============================================================================
+// Debug Logging
+// =============================================================================
+
+/** Debug mode flag - set to true to enable verbose logging */
+let debugMode = false;
+const debugLogs: string[] = [];
+const MAX_DEBUG_LOGS = 100;
+
+/**
+ * Enable/disable debug mode for portfolio operations
+ */
+export function setPortfolioDebugMode(enabled: boolean): void {
+  debugMode = enabled;
+  if (enabled) {
+    debugLog('Portfolio debug mode ENABLED');
+  }
+}
+
+/**
+ * Get current debug mode state
+ */
+export function isPortfolioDebugMode(): boolean {
+  return debugMode;
+}
+
+/**
+ * Log a debug message (console + stored for retrieval)
+ */
+function debugLog(message: string, data?: unknown): void {
+  const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
+  const logEntry = `[${timestamp}] ${message}`;
+
+  console.log(`[Portfolio Debug] ${message}`, data !== undefined ? data : '');
+
+  debugLogs.push(data !== undefined ? `${logEntry}: ${JSON.stringify(data)}` : logEntry);
+  if (debugLogs.length > MAX_DEBUG_LOGS) {
+    debugLogs.shift();
+  }
+}
+
+/**
+ * Get all debug logs
+ */
+export function getPortfolioDebugLogs(): string[] {
+  return [...debugLogs];
+}
+
+/**
+ * Clear debug logs
+ */
+export function clearPortfolioDebugLogs(): void {
+  debugLogs.length = 0;
+}
+
+// =============================================================================
+// Storage Backend Abstraction (IndexedDB with localStorage fallback)
+// =============================================================================
+
+const LOCALSTORAGE_KEY = 'evelo_portfolios';
+const LOCALSTORAGE_NEXT_ID_KEY = 'evelo_portfolios_next_id';
+
+/** Track if we're using the localStorage fallback */
+let usingLocalStorageFallback = false;
+let fallbackChecked = false;
+
+/**
+ * Check if we're using the localStorage fallback
+ */
+export function isUsingLocalStorageFallback(): boolean {
+  return usingLocalStorageFallback;
+}
+
+/**
+ * Test if IndexedDB is working and switch to fallback if not
+ */
+async function ensureStorageBackend(): Promise<void> {
+  if (fallbackChecked) return;
+
+  debugLog('Checking IndexedDB availability...');
+
+  try {
+    // Try to open/access the database
+    await db.portfolios.count();
+    debugLog('IndexedDB is available and working');
+    fallbackChecked = true;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    debugLog('IndexedDB failed, switching to localStorage fallback', { error: errorMsg });
+    usingLocalStorageFallback = true;
+    fallbackChecked = true;
+
+    // Initialize localStorage if empty
+    if (!localStorage.getItem(LOCALSTORAGE_KEY)) {
+      localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(LOCALSTORAGE_NEXT_ID_KEY, '1');
+    }
+  }
+}
+
+/**
+ * Get all portfolios from localStorage
+ */
+function getLocalStoragePortfolios(): PortfolioRecord[] {
+  try {
+    const data = localStorage.getItem(LOCALSTORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save all portfolios to localStorage
+ */
+function setLocalStoragePortfolios(portfolios: PortfolioRecord[]): void {
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(portfolios));
+}
+
+/**
+ * Get next ID for localStorage
+ */
+function getNextLocalStorageId(): number {
+  const nextId = parseInt(localStorage.getItem(LOCALSTORAGE_NEXT_ID_KEY) || '1', 10);
+  localStorage.setItem(LOCALSTORAGE_NEXT_ID_KEY, String(nextId + 1));
+  return nextId;
+}
 
 // =============================================================================
 // Constants
@@ -19,40 +149,102 @@ export const TEMP_PORTFOLIO_KEY = '__temp_portfolio__';
 // =============================================================================
 
 /**
- * Save a portfolio to IndexedDB
+ * Save a portfolio to IndexedDB (or localStorage fallback)
  * Creates new if no id, updates existing if id present
  * @returns The portfolio id (new or existing)
  */
 export async function savePortfolio(
   portfolio: Omit<PortfolioRecord, 'id'> & { id?: number }
 ): Promise<number> {
+  debugLog('savePortfolio called', { name: portfolio.name, id: portfolio.id, assetCount: portfolio.assets?.length });
+
+  // Ensure storage backend is ready (checks IndexedDB, switches to fallback if needed)
+  await ensureStorageBackend();
+
   const now = new Date().toISOString();
 
-  // If id is provided, this is an update
-  if (portfolio.id !== undefined) {
+  // Use localStorage fallback if IndexedDB isn't working
+  if (usingLocalStorageFallback) {
+    debugLog('Using localStorage fallback for save');
+    return savePortfolioToLocalStorage(portfolio, now);
+  }
+
+  try {
+    // If id is provided, this is an update
+    if (portfolio.id !== undefined) {
+      debugLog('Updating existing portfolio', { id: portfolio.id });
+      const record: PortfolioRecord = {
+        ...portfolio,
+        id: portfolio.id,
+        modified: now
+      };
+      // put() always returns the key for auto-increment tables
+      const resultId = (await db.portfolios.put(record)) as number;
+      debugLog('Update successful', { resultId });
+      return resultId;
+    }
+
+    // New portfolio - set created timestamp
+    debugLog('Creating new portfolio');
     const record: PortfolioRecord = {
       ...portfolio,
-      id: portfolio.id,
+      created: now,
       modified: now
     };
     // put() always returns the key for auto-increment tables
-    return (await db.portfolios.put(record)) as number;
+    const resultId = (await db.portfolios.put(record)) as number;
+    debugLog('Create successful', { resultId });
+    return resultId;
+  } catch (error) {
+    debugLog('ERROR in savePortfolio', { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
+}
+
+/**
+ * Save portfolio to localStorage (fallback)
+ */
+function savePortfolioToLocalStorage(
+  portfolio: Omit<PortfolioRecord, 'id'> & { id?: number },
+  now: string
+): number {
+  const portfolios = getLocalStoragePortfolios();
+
+  if (portfolio.id !== undefined) {
+    // Update existing
+    const index = portfolios.findIndex(p => p.id === portfolio.id);
+    if (index !== -1) {
+      portfolios[index] = { ...portfolio, id: portfolio.id, modified: now } as PortfolioRecord;
+      setLocalStoragePortfolios(portfolios);
+      debugLog('localStorage update successful', { id: portfolio.id });
+      return portfolio.id;
+    }
   }
 
-  // New portfolio - set created timestamp
-  const record: PortfolioRecord = {
+  // Create new
+  const newId = getNextLocalStorageId();
+  const newRecord: PortfolioRecord = {
     ...portfolio,
+    id: newId,
     created: now,
     modified: now
   };
-  // put() always returns the key for auto-increment tables
-  return (await db.portfolios.put(record)) as number;
+  portfolios.push(newRecord);
+  setLocalStoragePortfolios(portfolios);
+  debugLog('localStorage create successful', { id: newId });
+  return newId;
 }
 
 /**
  * Load a single portfolio by id
  */
 export async function loadPortfolio(id: number): Promise<PortfolioRecord | undefined> {
+  await ensureStorageBackend();
+
+  if (usingLocalStorageFallback) {
+    return getLocalStoragePortfolios().find(p => p.id === id);
+  }
+
   return await db.portfolios.get(id);
 }
 
@@ -60,13 +252,43 @@ export async function loadPortfolio(id: number): Promise<PortfolioRecord | undef
  * Load all portfolios, ordered by most recently modified first
  */
 export async function loadAllPortfolios(): Promise<PortfolioRecord[]> {
-  return await db.portfolios.orderBy('modified').reverse().toArray();
+  debugLog('loadAllPortfolios called');
+
+  // Ensure storage backend is ready
+  await ensureStorageBackend();
+
+  // Use localStorage fallback if IndexedDB isn't working
+  if (usingLocalStorageFallback) {
+    debugLog('Using localStorage fallback for loadAll');
+    const portfolios = getLocalStoragePortfolios()
+      .sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));
+    debugLog('localStorage loadAll success', { count: portfolios.length, names: portfolios.map(p => p.name) });
+    return portfolios;
+  }
+
+  try {
+    const portfolios = await db.portfolios.orderBy('modified').reverse().toArray();
+    debugLog('loadAllPortfolios success', { count: portfolios.length, names: portfolios.map(p => p.name) });
+    return portfolios;
+  } catch (error) {
+    debugLog('ERROR in loadAllPortfolios', { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
 }
 
 /**
  * Delete a portfolio by id
  */
 export async function deletePortfolio(id: number): Promise<void> {
+  await ensureStorageBackend();
+
+  if (usingLocalStorageFallback) {
+    const portfolios = getLocalStoragePortfolios().filter(p => p.id !== id);
+    setLocalStoragePortfolios(portfolios);
+    debugLog('localStorage delete successful', { id });
+    return;
+  }
+
   await db.portfolios.delete(id);
 }
 
@@ -74,7 +296,21 @@ export async function deletePortfolio(id: number): Promise<void> {
  * Update just the name of a portfolio
  */
 export async function updatePortfolioName(id: number, name: string): Promise<void> {
+  await ensureStorageBackend();
+
   const now = new Date().toISOString();
+
+  if (usingLocalStorageFallback) {
+    const portfolios = getLocalStoragePortfolios();
+    const index = portfolios.findIndex(p => p.id === id);
+    if (index !== -1) {
+      portfolios[index].name = name;
+      portfolios[index].modified = now;
+      setLocalStoragePortfolios(portfolios);
+    }
+    return;
+  }
+
   await db.portfolios.update(id, { name, modified: now });
 }
 
@@ -287,6 +523,23 @@ export async function importFromFile(file: File): Promise<PortfolioRecord[]> {
  * @returns Array of new portfolio IDs
  */
 export async function bulkImportPortfolios(portfolios: PortfolioRecord[]): Promise<number[]> {
+  await ensureStorageBackend();
+
+  if (usingLocalStorageFallback) {
+    const existing = getLocalStoragePortfolios();
+    const newIds: number[] = [];
+
+    for (const portfolio of portfolios) {
+      const newId = getNextLocalStorageId();
+      const newRecord = { ...portfolio, id: newId };
+      existing.push(newRecord);
+      newIds.push(newId);
+    }
+
+    setLocalStoragePortfolios(existing);
+    return newIds;
+  }
+
   const ids = await db.portfolios.bulkAdd(portfolios, { allKeys: true });
   return ids as number[];
 }
@@ -303,7 +556,41 @@ export async function saveTempPortfolio(
   assets: AssetRecord[],
   params?: Partial<PortfolioRecord>
 ): Promise<number> {
+  await ensureStorageBackend();
+
   const now = new Date().toISOString();
+
+  if (usingLocalStorageFallback) {
+    const portfolios = getLocalStoragePortfolios();
+    const existingIndex = portfolios.findIndex(p => p.name === TEMP_PORTFOLIO_KEY);
+
+    if (existingIndex !== -1) {
+      // Update existing
+      portfolios[existingIndex] = {
+        ...portfolios[existingIndex],
+        assets,
+        modified: now,
+        ...(params || {}),
+      };
+      setLocalStoragePortfolios(portfolios);
+      return portfolios[existingIndex].id!;
+    }
+
+    // Create new
+    const newId = getNextLocalStorageId();
+    const newRecord: PortfolioRecord = {
+      id: newId,
+      name: TEMP_PORTFOLIO_KEY,
+      assets,
+      created: now,
+      modified: now,
+      version: 1,
+      ...(params || {}),
+    };
+    portfolios.push(newRecord);
+    setLocalStoragePortfolios(portfolios);
+    return newId;
+  }
 
   // Check if temp portfolio already exists
   const existing = await db.portfolios
@@ -338,6 +625,12 @@ export async function saveTempPortfolio(
  * Load the temp portfolio if it exists
  */
 export async function loadTempPortfolio(): Promise<PortfolioRecord | undefined> {
+  await ensureStorageBackend();
+
+  if (usingLocalStorageFallback) {
+    return getLocalStoragePortfolios().find(p => p.name === TEMP_PORTFOLIO_KEY);
+  }
+
   return await db.portfolios
     .where('name')
     .equals(TEMP_PORTFOLIO_KEY)
@@ -349,9 +642,19 @@ export async function loadTempPortfolio(): Promise<PortfolioRecord | undefined> 
  * First tries temp, then falls back to most recent named portfolio
  */
 export async function loadLastPortfolio(): Promise<PortfolioRecord | undefined> {
+  await ensureStorageBackend();
+
   // First check for temp portfolio
   const temp = await loadTempPortfolio();
   if (temp) return temp;
+
+  if (usingLocalStorageFallback) {
+    // Fall back to most recently modified named portfolio
+    const portfolios = getLocalStoragePortfolios()
+      .filter(p => p.name !== TEMP_PORTFOLIO_KEY)
+      .sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));
+    return portfolios[0];
+  }
 
   // Fall back to most recently modified named portfolio
   const portfolios = await db.portfolios
@@ -367,6 +670,14 @@ export async function loadLastPortfolio(): Promise<PortfolioRecord | undefined> 
  * Delete the temp portfolio
  */
 export async function deleteTempPortfolio(): Promise<void> {
+  await ensureStorageBackend();
+
+  if (usingLocalStorageFallback) {
+    const portfolios = getLocalStoragePortfolios().filter(p => p.name !== TEMP_PORTFOLIO_KEY);
+    setLocalStoragePortfolios(portfolios);
+    return;
+  }
+
   await db.portfolios
     .where('name')
     .equals(TEMP_PORTFOLIO_KEY)

@@ -197,21 +197,45 @@ export class AppHeader extends BaseComponent {
         }
       }
 
-      /* Dark theme adjustments */
+      /* Dark theme adjustments - Teal Accent with White Watermark */
       :host-context([data-theme="dark"]) .app-header {
-        background: var(--color-primary, #14b8a6);
+        background: linear-gradient(135deg, #1a2d3d 0%, #0f1922 100%);
+        color: #14b8a6;
+      }
+
+      :host-context([data-theme="dark"]) .brand-logo {
+        filter: brightness(0) saturate(100%) invert(58%) sepia(71%) saturate(457%) hue-rotate(127deg) brightness(95%) contrast(91%);
+      }
+
+      :host-context([data-theme="dark"]) .brand-logo:hover {
+        filter: brightness(0) saturate(100%) invert(58%) sepia(71%) saturate(457%) hue-rotate(127deg) brightness(95%) contrast(91%) drop-shadow(0 0 8px rgba(20, 184, 166, 0.5));
+      }
+
+      :host-context([data-theme="dark"]) .brand-title {
+        color: #14b8a6;
+      }
+
+      :host-context([data-theme="dark"]) .brand-tagline {
+        color: rgba(255, 255, 255, 0.6);
+        opacity: 1;
+      }
+
+      :host-context([data-theme="dark"]) .header-watermark {
+        filter: brightness(0) invert(1);
+        opacity: 0.04;
       }
 
       :host-context([data-theme="dark"]) ::slotted(button),
       :host-context([data-theme="dark"]) ::slotted([role="button"]) {
-        background: rgba(0, 0, 0, 0.2);
-        border-color: rgba(0, 0, 0, 0.3);
+        background: rgba(20, 184, 166, 0.1);
+        border-color: rgba(20, 184, 166, 0.3);
+        color: #14b8a6;
       }
 
       :host-context([data-theme="dark"]) ::slotted(button:hover),
       :host-context([data-theme="dark"]) ::slotted([role="button"]:hover) {
-        background: rgba(0, 0, 0, 0.3);
-        border-color: rgba(0, 0, 0, 0.4);
+        background: rgba(20, 184, 166, 0.2);
+        border-color: rgba(20, 184, 166, 0.4);
       }
     `;
   }

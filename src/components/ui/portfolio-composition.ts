@@ -515,6 +515,8 @@ export class PortfolioComposition extends BaseComponent {
         display: flex;
         gap: var(--spacing-lg, 24px);
         align-items: flex-start;
+        min-width: 0; /* Allow flex children to shrink */
+        overflow: hidden;
       }
 
       .donut-container {
@@ -557,6 +559,8 @@ export class PortfolioComposition extends BaseComponent {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-xs, 4px);
+        min-width: 0; /* Allow shrinking to prevent overflow */
+        overflow: hidden;
       }
 
       .asset-bar-row {
@@ -571,6 +575,7 @@ export class PortfolioComposition extends BaseComponent {
         overflow: hidden;
         transition: background-color 0.2s ease, box-shadow 0.2s ease;
         cursor: default;
+        min-width: 0; /* Allow flex children to shrink */
       }
 
       .asset-bar-row:hover {
@@ -632,12 +637,24 @@ export class PortfolioComposition extends BaseComponent {
         transform: scale(1.2);
       }
 
-      .asset-bar-name {
-        flex: 1;
+      .asset-bar-symbol {
         font-size: var(--font-size-sm, 0.875rem);
-        font-weight: 500;
+        font-weight: 600;
         color: #1e293b; /* Force dark text on light accent background */
         z-index: 1;
+        flex-shrink: 0;
+      }
+
+      .asset-bar-name {
+        flex: 1;
+        font-size: 11px;
+        font-weight: 400;
+        color: #64748b; /* Muted secondary text */
+        z-index: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0; /* Allow shrinking below content size */
       }
 
       .asset-bar-percent {
@@ -646,17 +663,18 @@ export class PortfolioComposition extends BaseComponent {
         color: #1e293b; /* Force dark text on light accent background */
         z-index: 1;
         transition: transform 0.2s ease;
+        flex-shrink: 0;
       }
 
       .asset-bar-row:hover .asset-bar-percent {
         transform: scale(1.05);
       }
 
-      /* Selected Assets - weight editing cards */
+      /* Selected Assets - weight editing cards (compact layout) */
       .selected-assets-list {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-sm, 8px);
+        gap: 6px;
         margin-top: var(--spacing-md, 16px);
       }
 
@@ -672,16 +690,16 @@ export class PortfolioComposition extends BaseComponent {
         }
       }
 
+      /* Option D: Badge on second row, full-width layout */
       .selected-asset-card {
         display: flex;
-        align-items: flex-start;
-        gap: var(--spacing-sm, 8px);
-        padding: var(--spacing-md, 16px);
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 12px;
         background: var(--surface-primary, #ffffff);
         border: 1px solid var(--border-color, #e2e8f0);
-        border-radius: var(--border-radius-lg, 12px);
+        border-radius: var(--border-radius-md, 8px);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        flex-wrap: nowrap;
         animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         transition: box-shadow 0.2s ease, transform 0.2s ease;
       }
@@ -702,12 +720,18 @@ export class PortfolioComposition extends BaseComponent {
       .selected-asset-card:nth-child(9) { animation-delay: 320ms; }
       .selected-asset-card:nth-child(10) { animation-delay: 360ms; }
 
+      .selected-asset-row1 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+
       .color-swatch {
         width: 16px;
         height: 16px;
         border-radius: var(--border-radius-sm, 4px);
         flex-shrink: 0;
-        margin-top: 4px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
@@ -716,30 +740,40 @@ export class PortfolioComposition extends BaseComponent {
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
 
-      .selected-asset-info {
+      .selected-asset-symbol {
+        font-weight: 700;
+        color: var(--text-primary, #1e293b);
+        font-size: 14px;
+        white-space: nowrap;
         flex: 1;
-        min-width: 80px;
-        overflow: hidden;
+      }
+
+      .selected-asset-row2 {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 26px; /* Align with symbol (16px swatch + 10px gap) */
       }
 
       .selected-asset-name {
-        font-weight: 600;
-        color: var(--text-primary, #1e293b);
-        font-size: var(--font-size-sm, 0.875rem);
-        text-transform: uppercase;
-        line-height: 1.3;
+        font-weight: 400;
+        color: var(--text-secondary, #64748b);
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .selected-asset-badge {
         display: inline-block;
-        margin-top: 4px;
-        padding: 2px 6px;
+        padding: 1px 5px;
         background: var(--surface-tertiary, #e2e8f0);
         border-radius: var(--border-radius-sm, 4px);
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 600;
         color: var(--text-secondary, #64748b);
         text-transform: uppercase;
+        flex-shrink: 0;
       }
 
       /* Selected asset type badge colors */
@@ -759,56 +793,60 @@ export class PortfolioComposition extends BaseComponent {
       }
 
       .selected-asset-stats {
-        font-size: var(--font-size-xs, 0.75rem);
+        font-size: 11px;
         color: var(--text-secondary, #64748b);
-        margin-top: 4px;
         white-space: nowrap;
       }
 
       .weight-input-group {
         display: flex;
         align-items: center;
-        gap: var(--spacing-xs, 4px);
+        gap: 4px;
         flex-shrink: 0;
       }
 
       .weight-input {
-        width: 60px;
-        padding: 6px 8px;
+        width: 52px;
+        padding: 5px 8px;
         border: 1px solid var(--border-color, #e2e8f0);
         border-radius: var(--border-radius-sm, 4px);
-        font-size: var(--font-size-sm, 0.875rem);
+        font-size: 13px;
         font-family: inherit;
-        text-align: right;
-        background: var(--surface-primary, #ffffff);
+        text-align: center;
+        background: var(--surface-secondary, #f8fafc);
         color: var(--text-primary, #1e293b);
       }
 
       .weight-input:focus {
         outline: none;
         border-color: var(--color-primary, #0d9488);
+        background: var(--surface-primary, #ffffff);
       }
 
       .weight-percent {
         color: var(--text-secondary, #64748b);
+        font-size: 14px;
       }
 
       .remove-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         border: none;
         background: transparent;
         color: var(--text-tertiary, #94a3b8);
         cursor: pointer;
-        font-size: 20px;
+        font-size: 18px;
         transition: color 0.15s ease;
+        opacity: 0.6;
+        padding: 0;
       }
 
       .remove-btn:hover {
         color: var(--color-error, #dc2626);
+        opacity: 1;
       }
 
       /* Weight Section */
@@ -929,8 +967,12 @@ export class PortfolioComposition extends BaseComponent {
         box-shadow: 0 1px 3px rgba(20, 184, 166, 0.15);
       }
 
-      :host-context([data-theme="dark"]) .asset-bar-name {
+      :host-context([data-theme="dark"]) .asset-bar-symbol {
         color: var(--text-primary, #f1f5f9);
+      }
+
+      :host-context([data-theme="dark"]) .asset-bar-name {
+        color: var(--text-secondary, #94a3b8);
       }
 
       :host-context([data-theme="dark"]) .asset-bar-percent {
@@ -1198,6 +1240,7 @@ export class PortfolioComposition extends BaseComponent {
         return `
         <div class="asset-bar-row" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
           <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
+          <span class="asset-bar-symbol">${asset.symbol}</span>
           <span class="asset-bar-name">${asset.name}</span>
           <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
         </div>
@@ -1208,29 +1251,30 @@ export class PortfolioComposition extends BaseComponent {
     // Update donut chart
     this.updateDonutChart();
 
-    // Render weight editing cards
+    // Render weight editing cards (Option D: Badge on second row, full width)
     list.innerHTML = this.selectedAssets.map((asset, index) => `
       <div class="selected-asset-card" data-symbol="${asset.symbol}">
-        <div class="color-swatch" style="background-color: ${asset.color}"></div>
-        <div class="selected-asset-info">
-          <div class="selected-asset-name">${asset.name}</div>
-          <div class="selected-asset-badge type-${asset.assetClass.toLowerCase()}">${asset.assetClass}</div>
-          <div class="selected-asset-stats">
-            Avg: ${asset.avgReturn.toFixed(1)}% | Vol: ${asset.volatility.toFixed(1)}%
+        <div class="selected-asset-row1">
+          <div class="color-swatch" style="background-color: ${asset.color}"></div>
+          <span class="selected-asset-symbol">${asset.symbol}</span>
+          <span class="selected-asset-stats">${asset.avgReturn.toFixed(1)}% | ${asset.volatility.toFixed(1)}%</span>
+          <div class="weight-input-group">
+            <input type="number"
+                   class="weight-input"
+                   value="${asset.weight.toFixed(1)}"
+                   min="0"
+                   max="100"
+                   step="0.1"
+                   data-index="${index}"
+                   aria-label="Weight for ${asset.symbol}" />
+            <span class="weight-percent">%</span>
           </div>
+          <button class="remove-btn" data-symbol="${asset.symbol}" aria-label="Remove ${asset.symbol}">&times;</button>
         </div>
-        <div class="weight-input-group">
-          <input type="number"
-                 class="weight-input"
-                 value="${asset.weight.toFixed(1)}"
-                 min="0"
-                 max="100"
-                 step="0.1"
-                 data-index="${index}"
-                 aria-label="Weight for ${asset.symbol}" />
-          <span class="weight-percent">%</span>
+        <div class="selected-asset-row2">
+          <span class="selected-asset-badge type-${asset.assetClass.toLowerCase()}">${asset.assetClass}</span>
+          <span class="selected-asset-name">${asset.name}</span>
         </div>
-        <button class="remove-btn" data-symbol="${asset.symbol}" aria-label="Remove ${asset.symbol}">&times;</button>
       </div>
     `).join('');
 
@@ -2041,6 +2085,7 @@ export class PortfolioComposition extends BaseComponent {
         return `
         <div class="asset-bar-row" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
           <div class="asset-bar-swatch" style="background-color: ${asset.color}"></div>
+          <span class="asset-bar-symbol">${asset.symbol}</span>
           <span class="asset-bar-name">${asset.name}</span>
           <span class="asset-bar-percent">${asset.weight.toFixed(1)}%</span>
         </div>
