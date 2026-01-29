@@ -1660,7 +1660,18 @@ export class AppRoot extends BaseComponent {
     };
 
     // Listen for 'commit' events from number-input and range-slider components
-    this.shadowRoot?.addEventListener('commit', triggerSimulation);
+    // On mobile (<=768px), disable auto-run for sliders - users adjust multiple params
+    this.shadowRoot?.addEventListener('commit', (e) => {
+      const target = e.target as HTMLElement;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+      // On mobile, skip auto-run for range sliders (too disruptive when adjusting multiple params)
+      if (isMobile && target.tagName === 'RANGE-SLIDER') {
+        return;
+      }
+
+      triggerSimulation();
+    });
 
     // Listen for changes on all input components
     this.shadowRoot?.addEventListener('input', (e) => {
