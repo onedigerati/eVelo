@@ -1,5 +1,5 @@
 import { BaseComponent } from '../base-component';
-import { ModalDialog } from './modal-dialog';
+// Modal dialogs are shown via app-root to avoid mobile overflow clipping issues
 import { getPresetData, getPresetSymbols, PresetData } from '../../data/services/preset-service';
 import {
   saveTempPortfolio,
@@ -11,7 +11,8 @@ import {
   importFromFile,
   exportAndDownload,
   findPortfolioByName,
-  TEMP_PORTFOLIO_KEY
+  TEMP_PORTFOLIO_KEY,
+  isPortfolioDebugMode,
 } from '../../data/services/portfolio-service';
 import type { AssetRecord, PortfolioRecord } from '../../data/schemas/portfolio';
 import { Chart, DoughnutController, ArcElement } from 'chart.js/auto';
@@ -74,7 +75,6 @@ export class PortfolioComposition extends BaseComponent {
   private _currentPortfolioName = '';
   private _isDirty = false; // Track unsaved changes
   private _savedSnapshot = ''; // Snapshot of state at load/save time
-  private modal!: ModalDialog;
   private _pendingComparisonMode: boolean = false;
 
   protected template(): string {
@@ -198,7 +198,6 @@ export class PortfolioComposition extends BaseComponent {
           </div>
         </div>
       </div>
-      <modal-dialog id="portfolio-modal"></modal-dialog>
     `;
   }
 
@@ -1035,9 +1034,6 @@ export class PortfolioComposition extends BaseComponent {
     // Register Chart.js components
     Chart.register(DoughnutController, ArcElement);
 
-    // Get modal reference
-    this.modal = this.$('#portfolio-modal') as ModalDialog;
-
     this.renderAvailableAssets();
     this.attachEventListeners();
     this.initializeDonutChart();
@@ -1363,7 +1359,7 @@ export class PortfolioComposition extends BaseComponent {
     const hasExistingResults = comparisonState.getCurrentResult() !== null;
 
     if (hasExistingResults) {
-      const choice = await this.modal.show({
+      const choice = await this.showModal({
         title: 'Simulation Results Exist',
         subtitle: 'Would you like to compare with the new preset or replace the current results?',
         type: 'choice',
@@ -1387,7 +1383,7 @@ export class PortfolioComposition extends BaseComponent {
 
     // Check for unsaved changes before switching (after comparison prompt)
     if (this._isDirty && this._currentPortfolioId !== undefined) {
-      const choice = await this.modal.show({
+      const choice = await this.showModal({
         title: 'Unsaved Changes',
         subtitle: `You have unsaved changes to "${this._currentPortfolioName}". What would you like to do?`,
         type: 'choice',
@@ -1452,6 +1448,31 @@ export class PortfolioComposition extends BaseComponent {
       composed: true,
       detail: { message, type },
     }));
+  }
+
+  /**
+   * Show a modal dialog via app-root (outside overflow containers for mobile compatibility).
+   * Uses event dispatch to communicate with app-root's modal-dialog instance.
+   */
+  private showModal(options: {
+    title?: string;
+    subtitle?: string;
+    type?: 'prompt' | 'confirm' | 'choice';
+    defaultValue?: string;
+    confirmText?: string;
+    cancelText?: string;
+    alternateText?: string;
+  }): Promise<string | boolean | null> {
+    return new Promise((resolve) => {
+      this.dispatchEvent(new CustomEvent('show-modal', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          options,
+          callback: (result: string | boolean | null) => resolve(result),
+        },
+      }));
+    });
   }
 
   /**
@@ -1632,13 +1653,19 @@ export class PortfolioComposition extends BaseComponent {
   }
 
   private async savePreset(): Promise<void> {
+    this.debugLog('savePreset() called');
+
     if (this.selectedAssets.length === 0) {
+      this.debugLog('No assets selected - aborting');
       this.showToast('Add assets to portfolio before saving', 'error');
       return;
     }
 
+    this.debugLog(`Assets count: ${this.selectedAssets.length}`);
+
     // Step 1: Prompt for name
-    const name = await this.modal.show({
+    this.debugLog('Showing name prompt modal');
+    const name = await this.showModal({
       title: 'Save Portfolio',
       subtitle: this._currentPortfolioName
         ? `Overwrite "${this._currentPortfolioName}" or enter a new name:`
@@ -1647,16 +1674,26 @@ export class PortfolioComposition extends BaseComponent {
       defaultValue: this._currentPortfolioName || '',
       confirmText: 'Save',
     });
-    if (!name || typeof name !== 'string' || !name.trim()) return;
+
+    this.debugLog(`Modal result: ${JSON.stringify(name)}`);
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      this.debugLog('Name was empty or cancelled - aborting');
+      return;
+    }
 
     const trimmedName = name.trim();
+    this.debugLog(`Trimmed name: "${trimmedName}"`);
 
     // Step 2: Check for existing portfolio with same name (case-insensitive)
+    this.debugLog('Checking for existing portfolio with same name...');
     const existing = await findPortfolioByName(trimmedName);
+    this.debugLog(`findPortfolioByName result: ${existing ? `found id=${existing.id}` : 'not found'}`);
 
     // If exists and it's not the currently loaded portfolio, ask user what to do
     if (existing && existing.id !== this._currentPortfolioId) {
-      const choice = await this.modal.show({
+      this.debugLog('Name exists and differs from current - showing overwrite prompt');
+      const choice = await this.showModal({
         title: 'Name Already Exists',
         subtitle: `A portfolio named "${existing.name}" already exists. What would you like to do?`,
         type: 'confirm',
@@ -1664,15 +1701,21 @@ export class PortfolioComposition extends BaseComponent {
         cancelText: 'Change Name',
       });
 
+      this.debugLog(`Overwrite choice: ${choice}`);
+
       if (choice === false) {
         // User chose "Change Name" - restart the save process
+        this.debugLog('User chose to change name - restarting save');
         return this.savePreset();
       }
       // choice === true means "Overwrite" - continue with existing.id
     }
 
     try {
+      this.debugLog('Building asset records...');
       const assets = this.buildAssetRecords();
+      this.debugLog(`Built ${assets.length} asset records`);
+
       const now = new Date().toISOString();
 
       // Determine ID and created timestamp based on whether we're overwriting
@@ -1683,15 +1726,19 @@ export class PortfolioComposition extends BaseComponent {
         // Overwriting an existing portfolio - preserve its ID and created timestamp
         portfolioId = existing.id;
         createdTimestamp = existing.created;
+        this.debugLog(`Overwriting existing portfolio id=${portfolioId}`);
       } else if (trimmedName === this._currentPortfolioName) {
         // Same name as current - update current portfolio
         portfolioId = this._currentPortfolioId;
+        this.debugLog(`Updating current portfolio id=${portfolioId}`);
       } else {
         // New name, no existing match - create new portfolio
         portfolioId = undefined;
+        this.debugLog('Creating new portfolio (no existing id)');
       }
 
       // Capture simulation parameters from app-root
+      this.debugLog('Capturing simulation params...');
       let simulationParams: any = {};
       const paramsEvent = new CustomEvent('get-simulation-params', {
         bubbles: true,
@@ -1701,7 +1748,9 @@ export class PortfolioComposition extends BaseComponent {
         },
       });
       this.dispatchEvent(paramsEvent);
+      this.debugLog(`Simulation params: ${JSON.stringify(simulationParams)}`);
 
+      this.debugLog('Calling savePortfolio()...');
       const id = await savePortfolio({
         id: portfolioId,
         name: trimmedName,
@@ -1712,21 +1761,43 @@ export class PortfolioComposition extends BaseComponent {
         ...simulationParams, // Spread all simulation params
       });
 
+      this.debugLog(`savePortfolio() returned id=${id}`);
+
       this._currentPortfolioId = id;
       this._currentPortfolioName = trimmedName;
+      this.debugLog('Updated current portfolio tracking');
 
       // Delete temp portfolio after successful save
+      this.debugLog('Deleting temp portfolio...');
       await deleteTempPortfolio();
+      this.debugLog('Temp portfolio deleted');
 
       // Clear dirty state after successful save
       this.clearDirty();
+      this.debugLog('Cleared dirty state');
 
       // Refresh preset dropdown
+      this.debugLog('Refreshing preset dropdown...');
       await this.refreshPresetDropdown();
+      this.debugLog('Preset dropdown refreshed');
 
       this.showToast(`Saved portfolio: ${trimmedName}`, 'success');
+      this.debugLog('Save complete - success toast shown');
     } catch (error) {
-      this.showToast('Failed to save portfolio', 'error');
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.debugLog(`ERROR in savePreset: ${errorMsg}`);
+      this.debugLog(`Error stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+      this.showToast(`Failed to save portfolio: ${errorMsg}`, 'error');
+    }
+  }
+
+  /**
+   * Log a debug message (only if debug mode is enabled)
+   */
+  private debugLog(message: string): void {
+    if (isPortfolioDebugMode()) {
+      const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
+      console.log(`[Portfolio UI ${timestamp}] ${message}`);
     }
   }
 
@@ -1775,7 +1846,7 @@ export class PortfolioComposition extends BaseComponent {
       return;
     }
 
-    const confirmed = await this.modal.show({
+    const confirmed = await this.showModal({
       title: 'Delete Portfolio',
       subtitle: `Are you sure you want to delete "${this._currentPortfolioName}"? This cannot be undone.`,
       type: 'confirm',
@@ -1990,6 +2061,45 @@ export class PortfolioComposition extends BaseComponent {
       weights[a.symbol] = a.weight;
     });
     return weights;
+  }
+
+  /**
+   * Set portfolio weights programmatically
+   * @param weights - Record of symbol to weight (0-100 scale)
+   */
+  public setWeights(weights: Record<string, number>): void {
+    // Clear existing selection
+    this.selectedAssets = [];
+
+    // Add each asset with its weight
+    for (const [symbol, weight] of Object.entries(weights)) {
+      const asset = this.availableAssets.find(a => a.symbol === symbol);
+      if (!asset) {
+        console.warn(`Asset ${symbol} not found in available assets`);
+        continue;
+      }
+
+      // Assign color - find first unused color
+      const usedColors = new Set(this.selectedAssets.map(a => a.color));
+      let color = asset.color;
+      for (const c of ASSET_COLORS) {
+        if (!usedColors.has(c)) {
+          color = c;
+          break;
+        }
+      }
+
+      this.selectedAssets.push({
+        ...asset,
+        color,
+        weight,
+      });
+    }
+
+    this.renderAvailableAssets();
+    this.renderSelectedAssets();
+    this.markDirty();
+    this.dispatchPortfolioChange();
   }
 
   /**
