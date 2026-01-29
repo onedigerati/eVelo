@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 28 of 28 (First-Time Simulation Experience)
 Plan: 01 of 01
 Status: Complete
-Last activity: 2026-01-28 — Completed 28-01-PLAN.md (choice modal for first-time users)
+Last activity: 2026-01-29 — Completed quick task 015: Disable auto-run simulation for sliders on mobile
 
 Progress: ██████████████████████████████████████████ 100% (110/110 plans complete)
 
@@ -696,6 +696,13 @@ None
 | 012 | Save all params to portfolio presets | 2026-01-23 | 7626f22 | [012-save-all-params-to-portfolio-presets](./quick/012-save-all-params-to-portfolio-presets/) |
 | 013 | Sell Strategy yearly analysis table | 2026-01-24 | e4d9ef7 | [013-sell-strategy-yearly-analysis-table](./quick/013-sell-strategy-yearly-analysis-table/) |
 | 014 | Dashboard hover effects with lift animations | 2026-01-26 | 01b7677 | [014-dashboard-hover-effects](./quick/014-dashboard-hover-effects/) |
+| 015 | Disable auto-run simulation for sliders on mobile | 2026-01-29 | 266a421 | [015-disable-mobile-slider-auto-simulation](./quick/015-disable-mobile-slider-auto-simulation/) |
+
+**From quick-015:**
+- Mobile viewport detection using window.matchMedia('(max-width: 768px)')
+- Range slider commit events skip auto-simulation on mobile
+- Number input Enter key still triggers auto-run on mobile
+- Desktop behavior unchanged (all commit events trigger simulation)
 
 **From quick-014:**
 - Four-level shadow CSS token system (sm/md/lg/hover) for light and dark themes
