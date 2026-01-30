@@ -4,6 +4,9 @@
  * a high-fidelity print-ready HTML document matching the dashboard style.
  */
 
+// Import logo directly - works as data URL in portable builds, file path in PWA
+import { logoUrl } from '../assets/logo';
+
 /**
  * Chart images extracted from the dashboard.
  * Each property contains a base64 data URL or null if chart not found.
@@ -269,40 +272,20 @@ export function extractDashboardData(
   const keyMetricsBanner = dashboardShadowRoot.querySelector('#key-metrics-banner');
   const bannerShadow = keyMetricsBanner?.shadowRoot || null;
 
-  // Extract logo as base64 from hero banner
-  let logoBase64: string | null = null;
-  if (bannerShadow) {
-    const logoImg = bannerShadow.querySelector('#hero-logo') as HTMLImageElement;
-    if (logoImg && logoImg.src) {
-      // If it's already a data URL, use it directly
-      if (logoImg.src.startsWith('data:')) {
-        logoBase64 = logoImg.src;
-      } else {
-        // Try to extract from canvas
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = logoImg.naturalWidth || 100;
-          canvas.height = logoImg.naturalHeight || 100;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(logoImg, 0, 0);
-            logoBase64 = canvas.toDataURL('image/png');
-          }
-        } catch {
-          // Cross-origin restriction, use fallback
-          logoBase64 = null;
-        }
-      }
-    }
-  }
+  // Extract hero banner title first to determine success state
+  const heroTitle = extractText(bannerShadow, '#hero-title');
+  // Success state: title contains "Unlocked" or "Escape Velocity"
+  // Not ready state: title contains "Not ready" or similar
+  const isSuccess = heroTitle.toLowerCase().includes('unlocked') ||
+                    heroTitle.toLowerCase().includes('escape velocity');
 
-  // Extract hero banner
+  // Extract hero banner - use imported logoUrl directly (works in all builds)
   const heroBanner: HeroBannerData = {
-    title: extractText(bannerShadow, '#hero-title'),
-    isSuccess: hasClass(bannerShadow, '#hero-banner', 'success'),
+    title: heroTitle,
+    isSuccess,
     alertTitle: extractText(bannerShadow, '#alert-title'),
     alertDescription: extractText(bannerShadow, '#alert-description'),
-    logoBase64,
+    logoBase64: logoUrl, // Use imported logo directly
   };
 
   // Extract strategy card
