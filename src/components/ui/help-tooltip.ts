@@ -43,6 +43,10 @@ export class HelpTooltip extends BaseComponent {
   }
 
   protected styles(): string {
+    // Use teal brand color for tooltip background
+    const tooltipBg = '#0d9488';
+    const tooltipBgDark = '#14b8a6';
+
     return `
       :host {
         display: inline-flex;
@@ -54,49 +58,49 @@ export class HelpTooltip extends BaseComponent {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         padding: 0;
         border: none;
         background: transparent;
-        color: var(--text-secondary, #64748b);
+        color: var(--color-primary, #0d9488);
         cursor: help;
-        transition: color 0.15s ease;
+        transition: color 0.15s ease, transform 0.15s ease;
       }
 
       .help-trigger:hover {
-        color: var(--color-primary, #0d9488);
+        color: var(--color-primary-hover, #0f766e);
+        transform: scale(1.1);
       }
 
       .help-trigger:focus-visible {
         outline: 2px solid var(--color-primary, #0d9488);
         outline-offset: 2px;
-        border-radius: 2px;
+        border-radius: 50%;
       }
 
       .tooltip-content {
         position: absolute;
-        min-width: 180px;
-        max-width: 280px;
-        padding: 10px 14px;
-        background: var(--surface-tertiary, #1e293b);
-        color: var(--text-on-dark, #ffffff);
+        min-width: 200px;
+        max-width: 300px;
+        padding: 12px 16px;
+        background: ${tooltipBg};
+        color: #ffffff;
         font-size: 13px;
-        line-height: 1.5;
+        font-weight: 450;
+        line-height: 1.6;
         letter-spacing: 0.01em;
-        border-radius: 6px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 10000;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.15s ease, visibility 0.15s ease;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
         pointer-events: none;
         white-space: normal;
         overflow-wrap: break-word;
         word-wrap: break-word;
-        hyphens: auto;
-        -webkit-hyphens: auto;
-        -ms-hyphens: auto;
+        text-align: left;
       }
 
       .tooltip-content.visible {
@@ -105,88 +109,84 @@ export class HelpTooltip extends BaseComponent {
         pointer-events: auto;
       }
 
-      /* Position variants */
+      /* Position variants - use bottom as default to avoid clipping at sidebar edge */
       .tooltip-content.top {
-        bottom: calc(100% + 8px);
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: calc(100% + 10px);
+        left: 0;
       }
 
       .tooltip-content.bottom {
-        top: calc(100% + 8px);
-        left: 50%;
-        transform: translateX(-50%);
+        top: calc(100% + 10px);
+        left: 0;
       }
 
       .tooltip-content.left {
-        right: calc(100% + 8px);
+        right: calc(100% + 10px);
         top: 50%;
         transform: translateY(-50%);
       }
 
       .tooltip-content.right {
-        left: calc(100% + 8px);
+        left: calc(100% + 10px);
         top: 50%;
         transform: translateY(-50%);
       }
 
-      /* Tooltip arrow (optional visual enhancement) */
+      /* Tooltip arrow */
       .tooltip-content::before {
         content: '';
         position: absolute;
         width: 0;
         height: 0;
-        border: 6px solid transparent;
+        border: 8px solid transparent;
       }
 
       .tooltip-content.top::before {
         top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border-top-color: var(--surface-tertiary, #1e293b);
+        left: 16px;
+        border-top-color: ${tooltipBg};
       }
 
       .tooltip-content.bottom::before {
         bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border-bottom-color: var(--surface-tertiary, #1e293b);
+        left: 16px;
+        border-bottom-color: ${tooltipBg};
       }
 
       .tooltip-content.left::before {
         left: 100%;
         top: 50%;
         transform: translateY(-50%);
-        border-left-color: var(--surface-tertiary, #1e293b);
+        border-left-color: ${tooltipBg};
       }
 
       .tooltip-content.right::before {
         right: 100%;
         top: 50%;
         transform: translateY(-50%);
-        border-right-color: var(--surface-tertiary, #1e293b);
+        border-right-color: ${tooltipBg};
       }
 
-      /* Dark theme adjustments */
-      [data-theme="dark"] .tooltip-content {
-        background: var(--surface-secondary, #f8fafc);
-        color: var(--text-primary, #1e293b);
+      /* Dark theme - use :host-context to detect theme outside shadow DOM */
+      :host-context([data-theme="dark"]) .tooltip-content {
+        background: ${tooltipBgDark};
+        box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      [data-theme="dark"] .tooltip-content.top::before {
-        border-top-color: var(--surface-secondary, #f8fafc);
+      :host-context([data-theme="dark"]) .tooltip-content.top::before {
+        border-top-color: ${tooltipBgDark};
       }
 
-      [data-theme="dark"] .tooltip-content.bottom::before {
-        border-bottom-color: var(--surface-secondary, #f8fafc);
+      :host-context([data-theme="dark"]) .tooltip-content.bottom::before {
+        border-bottom-color: ${tooltipBgDark};
       }
 
-      [data-theme="dark"] .tooltip-content.left::before {
-        border-left-color: var(--surface-secondary, #f8fafc);
+      :host-context([data-theme="dark"]) .tooltip-content.left::before {
+        border-left-color: ${tooltipBgDark};
       }
 
-      [data-theme="dark"] .tooltip-content.right::before {
-        border-right-color: var(--surface-secondary, #f8fafc);
+      :host-context([data-theme="dark"]) .tooltip-content.right::before {
+        border-right-color: ${tooltipBgDark};
       }
     `;
   }

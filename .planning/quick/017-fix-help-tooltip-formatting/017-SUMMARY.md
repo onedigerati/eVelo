@@ -2,50 +2,58 @@
 
 ## Completed
 
-### 1. Improved tooltip CSS for better readability
+### 1. Complete tooltip styling overhaul
 
 **File:** `src/components/ui/help-tooltip.ts`
 
-Changes made:
-- Increased `max-width` from 250px to 280px for more breathing room
-- Added `min-width: 180px` to prevent overly narrow tooltips
-- Increased `padding` from 8px/12px to 10px/14px for better spacing
-- Increased `font-size` from 12px to 13px for readability
-- Improved `line-height` from 1.4 to 1.5 for better text flow
-- Added `letter-spacing: 0.01em` for improved legibility
-- Added proper word-break handling:
-  - `overflow-wrap: break-word`
-  - `word-wrap: break-word`
-  - `hyphens: auto` with vendor prefixes
-- Increased `border-radius` from 4px to 6px for softer appearance
+**Visual improvements:**
+- **Background:** Changed from dark slate (#1e293b) to brand teal (#0d9488)
+- **Text:** White (#ffffff) on teal for excellent contrast
+- **Shadow:** Teal-tinted shadow (rgba(13, 148, 136, 0.3)) for visual lift
+- **Sizing:** Increased to min-width 200px, max-width 300px
+- **Padding:** 12px 16px for comfortable reading
+- **Font:** 13px, weight 450, line-height 1.6
+- **Border radius:** 8px for modern rounded appearance
+- **Arrow:** Larger 8px arrows pointing to trigger
+
+**Position fix:**
+- Changed from `position="left"` to `position="bottom"`
+- Tooltips now appear BELOW the help icon, avoiding viewport edge clipping
+- Arrow positioned at left edge (16px) to point at the trigger
+
+**Dark theme:**
+- Fixed selector from `[data-theme="dark"]` to `:host-context([data-theme="dark"])`
+- `:host-context()` can see outside Shadow DOM boundaries
+- Uses lighter teal (#14b8a6) in dark mode
+
+**Trigger button:**
+- Larger touch target (16x16px)
+- Now uses teal color to match app branding
+- Hover effect with scale(1.1) transform
 
 ### 2. Improved all 8 tooltip content strings
 
 **File:** `src/components/app-root.ts`
 
-All tooltips condensed to be concise and scannable:
+All tooltips condensed and all use `position="bottom"`:
 
-| Parameter | Before | After |
-|-----------|--------|-------|
-| Annual Cash Need | "Tax-free income from borrowing against your portfolio. Unlike selling, this doesn't trigger capital gains taxes." | "Tax-free income via SBLOC borrowing. Unlike selling, no capital gains taxes triggered." |
-| Period (Years) | "Investment period in years. Longer horizons typically show more benefit from the Buy-Borrow-Die strategy." | "Simulation timeframe. Longer periods typically favor Buy-Borrow-Die." |
-| Annual Interest Rate | "Annual interest rate charged on your securities-backed line of credit. Typically SOFR + 1-3%." | "Interest rate on your SBLOC. Typically SOFR + 1-3% spread." |
-| Max LTV | "Loan-to-Value ratio. Maximum percentage of your portfolio value you can borrow. Lower LTV = more conservative." | "Maximum loan-to-value ratio. Portfolio liquidated if exceeded. Lower = safer." |
-| Warning Zone LTV | "LTV threshold that triggers a margin call. If your loan exceeds this ratio of portfolio value, you must repay or liquidate." | "Margin call trigger. Exceeding this ratio requires action to avoid forced liquidation." |
-| Simulation Iterations | "Number of Monte Carlo scenarios to simulate. More iterations = more accurate results but slower computation." | "Number of Monte Carlo scenarios. More = accurate but slower." |
-| Cost Basis Ratio | "What fraction of your portfolio is original cost (basis) vs gains. 40% means 60% embedded gains. Affects capital gains taxes when selling." | "Portion of portfolio that is original cost. 40% basis = 60% unrealized gains subject to tax." |
-| Dividend Yield | "Annual dividend yield of your portfolio. S&P 500 averages 1.5-2%. Growth portfolios may be lower, income portfolios higher." | "Portfolio dividend yield for Sell strategy comparison. S&P 500: ~1.5-2%." |
-
-### 3. Added `position="left"` to all tooltips
-
-All 8 tooltips now use `position="left"` which displays the tooltip to the left of the help icon. This prevents viewport edge clipping since the parameters panel is on the left side of the screen.
+| Parameter | Content |
+|-----------|---------|
+| Annual Cash Need | "Tax-free income via SBLOC borrowing. Unlike selling, no capital gains taxes triggered." |
+| Period (Years) | "Simulation timeframe. Longer periods typically favor Buy-Borrow-Die." |
+| Annual Interest Rate | "Interest rate on your SBLOC. Typically SOFR + 1-3% spread." |
+| Max LTV | "Maximum loan-to-value ratio. Portfolio liquidated if exceeded. Lower = safer." |
+| Warning Zone LTV | "Margin call trigger. Exceeding this ratio requires action to avoid forced liquidation." |
+| Simulation Iterations | "Number of Monte Carlo scenarios. More = accurate but slower." |
+| Cost Basis Ratio | "Portion of portfolio that is original cost. 40% basis = 60% unrealized gains subject to tax." |
+| Dividend Yield | "Portfolio dividend yield for Sell strategy comparison. S&P 500: ~1.5-2%." |
 
 ## Result
 
-- Tooltips now display with proper word wrapping (no mid-word breaks like "securities-")
-- Text is more readable with improved spacing and font size
-- Content is concise and scannable
-- No viewport edge clipping issues
+- **Readable:** White text on teal background with excellent contrast
+- **Styled:** Matches app's teal color branding
+- **No clipping:** Bottom position stays within viewport
+- **Dark mode works:** `:host-context()` properly detects theme
 
 ## Build Status
 
