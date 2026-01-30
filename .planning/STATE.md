@@ -17,7 +17,7 @@ Last activity: 2026-01-30 — Completed 29-01-PLAN.md (print infrastructure)
 Progress: ██████████████████████████████████████████ 100% (111/112 plans complete)
 
 **Current Phase:**
-Phase 29 IN PROGRESS: Print-Optimized Dashboard - Plan 01 complete, Plan 02 pending
+Phase 30 COMPLETE: React Migration Research - Decision: DO NOT MIGRATE (research complete, execution skipped)
 
 ## Performance Metrics
 
@@ -71,7 +71,8 @@ Phase 29 IN PROGRESS: Print-Optimized Dashboard - Plan 01 complete, Plan 02 pend
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- TypeScript + Web Components over React/Vue (framework-free for single-file bundling)
+- TypeScript + Web Components over React/Vue (framework-free for single-file bundling) — **reaffirmed in Phase 30 research**
+- DO NOT MIGRATE to React (Phase 30 research complete: 51 components, 8-12 week effort, no compelling business need)
 - Chart.js over TradingView (need donut/histogram support)
 - IndexedDB over LocalStorage (larger storage for historical data)
 - Vite + vite-plugin-singlefile for build (from research)
@@ -453,6 +454,12 @@ Recent decisions affecting current work:
   - Goals: Conditional print icon in header, opens print-friendly window with results
   - Key features: Icon only visible with results, new window approach, print button
   - Considerations: Chart rendering in new window, light theme for print, page breaks
+
+- Phase 30 added: React Migration Research
+  - User request: Research safe and reliable migration from Web Components to React
+  - Goals: Comprehensive feasibility study with component inventory, state management analysis, risk assessment
+  - Key areas: 40+ Web Components catalog, Shadow DOM strategy, Chart.js integration, Web Worker compatibility
+  - Output: Recommendation (migrate vs stay) with effort estimate and phased migration plan
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
