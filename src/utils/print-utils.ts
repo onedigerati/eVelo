@@ -812,50 +812,53 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
       position: relative;
       background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
       color: white;
-      padding: 20px 24px;
+      padding: 24px 32px;
       border-radius: 12px;
-      text-align: center;
       margin-bottom: 16px;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
     .hero-banner.warning {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     }
     .hero-watermark {
       position: absolute;
-      right: -30px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      width: 120px;
-      height: 120px;
-      opacity: 0.15;
+      width: 100px;
+      height: 100px;
+      opacity: 0.2;
       pointer-events: none;
     }
     .hero-icon {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
-      background: rgba(255, 255, 255, 0.2);
+      width: 56px;
+      height: 56px;
+      border: 3px solid rgba(255, 255, 255, 0.9);
       border-radius: 50%;
-      margin-bottom: 8px;
+      flex-shrink: 0;
     }
     .hero-icon img {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
     }
     .hero-icon .emoji {
-      font-size: 28px;
+      font-size: 32px;
     }
     .hero-banner .hero-title {
-      font-size: 18pt;
+      font-size: 22pt;
       font-weight: 700;
+      font-style: italic;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .hero-banner .hero-subtitle {
-      font-size: 10pt;
-      opacity: 0.9;
-      margin-top: 4px;
+    .hero-banner .hero-title .brand {
+      font-weight: 400;
+      font-style: italic;
     }
 
     /* Alert Card */
@@ -1319,8 +1322,9 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
         ? `<img src="${data.heroBanner.logoBase64}" alt="eVelo" />`
         : `<span class="emoji">💪</span>`}
     </div>
-    <div class="hero-title">${data.heroBanner.title || 'Simulation Complete'}</div>
-    <div class="hero-subtitle">Buy-Borrow-Die Strategy Analysis</div>
+    <div class="hero-title">${data.heroBanner.isSuccess
+      ? `<span class="brand">eVelo</span>city Unlocked!`
+      : data.heroBanner.title || 'Not ready yet, but keep it going!'}</div>
   </div>
 
   <!-- Alert Card -->
