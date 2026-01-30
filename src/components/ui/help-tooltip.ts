@@ -109,62 +109,30 @@ export class HelpTooltip extends BaseComponent {
         pointer-events: auto;
       }
 
-      /* Position variants - use bottom as default to avoid clipping at sidebar edge */
-      .tooltip-content.top {
-        bottom: calc(100% + 10px);
-        left: 0;
+      /* Dynamic positioning - set via JavaScript */
+      .tooltip-content {
+        /* Position will be set dynamically */
       }
 
-      .tooltip-content.bottom {
-        top: calc(100% + 10px);
-        left: 0;
-      }
-
-      .tooltip-content.left {
-        right: calc(100% + 10px);
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      .tooltip-content.right {
-        left: calc(100% + 10px);
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      /* Tooltip arrow */
+      /* Tooltip arrow - positioned dynamically via --arrow-left */
       .tooltip-content::before {
         content: '';
         position: absolute;
         width: 0;
         height: 0;
         border: 8px solid transparent;
+        left: var(--arrow-left, 16px);
       }
 
-      .tooltip-content.top::before {
+      /* Arrow position for top/bottom placement */
+      .tooltip-content.pos-top::before {
         top: 100%;
-        left: 16px;
         border-top-color: ${tooltipBg};
       }
 
-      .tooltip-content.bottom::before {
+      .tooltip-content.pos-bottom::before {
         bottom: 100%;
-        left: 16px;
         border-bottom-color: ${tooltipBg};
-      }
-
-      .tooltip-content.left::before {
-        left: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        border-left-color: ${tooltipBg};
-      }
-
-      .tooltip-content.right::before {
-        right: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        border-right-color: ${tooltipBg};
       }
 
       /* Dark theme - use :host-context to detect theme outside shadow DOM */
@@ -173,29 +141,73 @@ export class HelpTooltip extends BaseComponent {
         box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      :host-context([data-theme="dark"]) .tooltip-content.top::before {
+      :host-context([data-theme="dark"]) .tooltip-content.pos-top::before {
         border-top-color: ${tooltipBgDark};
       }
 
-      :host-context([data-theme="dark"]) .tooltip-content.bottom::before {
+      :host-context([data-theme="dark"]) .tooltip-content.pos-bottom::before {
         border-bottom-color: ${tooltipBgDark};
-      }
-
-      :host-context([data-theme="dark"]) .tooltip-content.left::before {
-        border-left-color: ${tooltipBgDark};
-      }
-
-      :host-context([data-theme="dark"]) .tooltip-content.right::before {
-        border-right-color: ${tooltipBgDark};
       }
     `;
   }
 
   protected override afterRender(): void {
-    const trigger = this.$('.help-trigger');
-    const tooltip = this.$('.tooltip-content');
+    const trigger = this.$('.help-trigger') as HTMLElement;
+    const tooltip = this.$('.tooltip-content') as HTMLElement;
 
     if (!trigger || !tooltip) return;
+
+    const PADDING = 12; // Viewport edge padding
+    const GAP = 10; // Gap between trigger and tooltip
+
+    // Position tooltip dynamically based on viewport boundaries
+    const positionTooltip = () => {
+      const triggerRect = trigger.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Reset any previous positioning
+      tooltip.style.top = '';
+      tooltip.style.bottom = '';
+      tooltip.style.left = '';
+      tooltip.style.right = '';
+      tooltip.classList.remove('pos-top', 'pos-bottom');
+
+      // Calculate available space
+      const spaceBelow = viewportHeight - triggerRect.bottom - GAP - PADDING;
+      const spaceAbove = triggerRect.top - GAP - PADDING;
+      const spaceRight = viewportWidth - triggerRect.left - PADDING;
+
+      // Determine vertical position (prefer bottom, use top if not enough space)
+      const tooltipHeight = tooltipRect.height || 80; // Estimate if not rendered
+      const showAbove = spaceBelow < tooltipHeight && spaceAbove > spaceBelow;
+
+      if (showAbove) {
+        tooltip.style.bottom = `calc(100% + ${GAP}px)`;
+        tooltip.classList.add('pos-top');
+      } else {
+        tooltip.style.top = `calc(100% + ${GAP}px)`;
+        tooltip.classList.add('pos-bottom');
+      }
+
+      // Determine horizontal position
+      const tooltipWidth = tooltipRect.width || 280; // Estimate if not rendered
+
+      if (spaceRight >= tooltipWidth) {
+        // Enough space on right - align left edge with trigger
+        tooltip.style.left = '0';
+        // Arrow at left
+        const arrow = tooltip.querySelector('::before') as HTMLElement;
+        tooltip.style.setProperty('--arrow-left', '16px');
+      } else {
+        // Not enough space - align right edge, but keep within viewport
+        const rightOffset = Math.max(0, tooltipWidth - spaceRight + PADDING);
+        tooltip.style.left = `-${rightOffset}px`;
+        // Move arrow to point at trigger
+        tooltip.style.setProperty('--arrow-left', `${rightOffset + 8}px`);
+      }
+    };
 
     // Show tooltip
     const show = () => {
@@ -205,6 +217,8 @@ export class HelpTooltip extends BaseComponent {
       }
       tooltip.classList.add('visible');
       tooltip.setAttribute('aria-hidden', 'false');
+      // Position after making visible so we can measure
+      requestAnimationFrame(() => positionTooltip());
     };
 
     // Hide tooltip immediately
@@ -232,7 +246,7 @@ export class HelpTooltip extends BaseComponent {
     trigger.addEventListener('keydown', (e: Event) => {
       if ((e as KeyboardEvent).key === 'Escape') {
         hide();
-        (trigger as HTMLElement).blur();
+        trigger.blur();
       }
     });
   }
