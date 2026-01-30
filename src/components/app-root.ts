@@ -24,7 +24,7 @@ import { getResolvedTheme, setTheme, onThemeChange } from '../services/theme-ser
 // Import comparison dashboard
 import type { ComparisonDashboard } from './ui/comparison-dashboard';
 // Import print utilities
-import { extractAllChartImages, generatePrintHtml, openPrintWindow, PrintableData } from '../utils/print-utils';
+import { extractDashboardData, generatePrintHtmlFromDashboard, openPrintWindow } from '../utils/print-utils';
 
 // UI component types for type casting
 type RangeSlider = import('./ui/range-slider').RangeSlider;
@@ -1570,41 +1570,14 @@ export class AppRoot extends BaseComponent {
         return;
       }
 
-      // Extract chart images from dashboard
-      const chartImages = extractAllChartImages(dashboardShadowRoot);
-
-      // Collect metrics from simulation result
-      const stats = this._simulationResult.statistics;
+      // Get simulation config
       const config = this._simulationConfig || this.collectSimulationParams().config;
 
-      // Build printable data
-      const annualWithdrawal = config.sbloc?.annualWithdrawal || 0;
-      const withdrawalRate = config.initialValue > 0
-        ? (annualWithdrawal / config.initialValue) * 100
-        : 0;
+      // Extract all dashboard data from rendered DOM
+      const dashboardData = extractDashboardData(dashboardShadowRoot, config);
 
-      const printData: PrintableData = {
-        keyMetrics: {
-          initialValue: config.initialValue,
-          terminalValue: stats.median,
-          successRate: stats.successRate, // Already a percentage (0-100)
-          cagr: this.calculateCAGRFromResult(),
-          annualWithdrawal,
-          withdrawalRate
-        },
-        paramSummary: {
-          timeHorizon: config.timeHorizon,
-          iterations: config.iterations,
-          inflationRate: config.inflationRate,
-          sblocRate: config.sbloc?.interestRate || 0,
-          maxLtv: config.sbloc?.targetLTV || 0
-        },
-        chartImages,
-        timestamp: new Date().toLocaleString()
-      };
-
-      // Generate and open print window
-      const htmlContent = generatePrintHtml(printData);
+      // Generate high-fidelity print HTML and open print window
+      const htmlContent = generatePrintHtmlFromDashboard(dashboardData);
       const printWindow = openPrintWindow(htmlContent);
 
       if (printWindow) {
