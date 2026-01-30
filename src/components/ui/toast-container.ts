@@ -50,7 +50,7 @@ export class ToastContainer extends BaseComponent {
   public show(
     message: string,
     type: ToastType = 'info',
-    duration = 5000
+    duration = 2000
   ): void {
     const container = this.$('#toast-container');
     if (!container) return;
