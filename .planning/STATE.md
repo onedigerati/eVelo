@@ -716,7 +716,7 @@ None
 
 **From quick-017:**
 - Complete tooltip restyling: teal background (#0d9488), white text, teal shadow
-- Position changed to "bottom" to prevent viewport edge clipping
+- Dynamic viewport-aware positioning prevents edge clipping
 - Fixed dark theme detection using :host-context() for Shadow DOM
 - Larger trigger (16px), hover scale effect, matches app branding
 - All 8 tooltips condensed to concise content

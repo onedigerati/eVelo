@@ -48,11 +48,28 @@ All tooltips condensed and all use `position="bottom"`:
 | Cost Basis Ratio | "Portion of portfolio that is original cost. 40% basis = 60% unrealized gains subject to tax." |
 | Dividend Yield | "Portfolio dividend yield for Sell strategy comparison. S&P 500: ~1.5-2%." |
 
+### 3. Dynamic viewport-aware positioning
+
+Added JavaScript logic to prevent tooltips from being clipped at viewport edges:
+
+**Logic:**
+1. On show, measure tooltip and trigger positions
+2. Calculate available space in each direction
+3. If not enough space below, flip to show above
+4. If not enough space on right, shift tooltip left
+5. Dynamically position arrow to point at trigger
+
+**Implementation:**
+- `positionTooltip()` function calculates optimal position
+- Uses `requestAnimationFrame` for accurate post-render measurements
+- CSS custom property `--arrow-left` controls arrow position
+- Removed static CSS positioning, all done in JavaScript
+
 ## Result
 
 - **Readable:** White text on teal background with excellent contrast
 - **Styled:** Matches app's teal color branding
-- **No clipping:** Bottom position stays within viewport
+- **No clipping:** Dynamic positioning keeps tooltip within viewport
 - **Dark mode works:** `:host-context()` properly detects theme
 
 ## Build Status
