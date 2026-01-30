@@ -795,46 +795,49 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
       position: relative;
       background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
       color: white;
-      padding: 24px 32px;
+      padding: 28px 40px;
       border-radius: 12px;
       margin-bottom: 16px;
       overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 16px;
+      justify-content: center;
+      gap: 20px;
     }
     .hero-banner.warning {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     }
     .hero-watermark {
       position: absolute;
-      right: 10px;
+      right: 20px;
       top: 50%;
       transform: translateY(-50%);
-      width: 100px;
-      height: 100px;
-      opacity: 0.2;
+      width: 140px;
+      height: 140px;
+      opacity: 0.15;
       pointer-events: none;
+      filter: brightness(0) invert(1);
     }
     .hero-icon {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 56px;
-      height: 56px;
+      width: 64px;
+      height: 64px;
       border: 3px solid rgba(255, 255, 255, 0.9);
       border-radius: 50%;
       flex-shrink: 0;
     }
     .hero-icon img {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
+      filter: brightness(0) invert(1);
     }
     .hero-icon .emoji {
-      font-size: 32px;
+      font-size: 36px;
     }
     .hero-banner .hero-title {
-      font-size: 22pt;
+      font-size: 26pt;
       font-weight: 700;
       font-style: italic;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
