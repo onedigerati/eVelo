@@ -23,6 +23,8 @@ import {
 import { getResolvedTheme, setTheme, onThemeChange } from '../services/theme-service';
 // Import comparison dashboard
 import type { ComparisonDashboard } from './ui/comparison-dashboard';
+// Import print utilities
+import { extractAllChartImages, generatePrintHtml, openPrintWindow, PrintableData } from '../utils/print-utils';
 
 // UI component types for type casting
 type RangeSlider = import('./ui/range-slider').RangeSlider;
@@ -54,6 +56,9 @@ function formatCurrency(value: number): string {
 export class AppRoot extends BaseComponent {
   /** Stored simulation result for charts */
   private _simulationResult: SimulationOutput | null = null;
+
+  /** Stored simulation config for print feature */
+  private _simulationConfig: SimulationConfig | null = null;
 
   /** Track if simulation is running */
   private _isRunning = false;
@@ -947,6 +952,22 @@ export class AppRoot extends BaseComponent {
   }
 
   /**
+   * Calculate CAGR from current simulation result
+   */
+  private calculateCAGRFromResult(): number {
+    if (!this._simulationResult) return 0;
+
+    const { config } = this.collectSimulationParams();
+    const initialValue = config.initialValue;
+    const terminalValue = this._simulationResult.statistics.median;
+    const years = config.timeHorizon;
+
+    if (initialValue <= 0 || terminalValue <= 0 || years <= 0) return 0;
+
+    return Math.pow(terminalValue / initialValue, 1 / years) - 1;
+  }
+
+  /**
    * Refresh the debug panel output with current logs
    */
   private refreshDebugOutput(): void {
@@ -1529,9 +1550,60 @@ export class AppRoot extends BaseComponent {
       printBtn?.classList.remove('hidden');
     });
 
-    // Placeholder click handler - will be wired in Plan 02
+    // Print button click handler
     printBtn?.addEventListener('click', () => {
-      console.log('Print button clicked - handler will be added in Plan 02');
+      // Get results dashboard element
+      const dashboard = this.$('#results') as any;
+      if (!dashboard || !this._simulationResult) {
+        toastContainer?.show('No simulation results to print', 'warning');
+        return;
+      }
+
+      // Access the inner results-dashboard through comparison-dashboard
+      // comparison-dashboard wraps results-dashboard internally
+      const resultsDashboard = dashboard.shadowRoot?.querySelector('results-dashboard');
+      const dashboardShadowRoot = resultsDashboard?.shadowRoot;
+
+      if (!dashboardShadowRoot) {
+        console.error('Could not access results dashboard shadow root');
+        toastContainer?.show('Could not access dashboard for printing', 'error');
+        return;
+      }
+
+      // Extract chart images from dashboard
+      const chartImages = extractAllChartImages(dashboardShadowRoot);
+
+      // Collect metrics from simulation result
+      const stats = this._simulationResult.statistics;
+      const config = this._simulationConfig || this.collectSimulationParams().config;
+
+      // Build printable data
+      const printData: PrintableData = {
+        keyMetrics: {
+          initialValue: config.initialValue,
+          terminalValue: stats.median,
+          successRate: stats.successRate,
+          cagr: this.calculateCAGRFromResult(),
+          withdrawalRate: config.sbloc?.annualWithdrawal || 0
+        },
+        paramSummary: {
+          timeHorizon: config.timeHorizon,
+          iterations: config.iterations,
+          inflationRate: config.inflationRate,
+          sblocRate: config.sbloc?.interestRate || 0,
+          maxLtv: config.sbloc?.targetLTV || 0
+        },
+        chartImages,
+        timestamp: new Date().toLocaleString()
+      };
+
+      // Generate and open print window
+      const htmlContent = generatePrintHtml(printData);
+      const printWindow = openPrintWindow(htmlContent);
+
+      if (printWindow) {
+        toastContainer?.show('Print preview opened in new window', 'info');
+      }
     });
 
     // =========================================================================
@@ -1756,6 +1828,9 @@ export class AppRoot extends BaseComponent {
 
         // Store result for charts
         this._simulationResult = result;
+
+        // Store config for print feature
+        this._simulationConfig = config;
 
         // Hide welcome screen after successful simulation
         welcome?.classList.add('hidden');
