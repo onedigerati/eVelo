@@ -76,13 +76,15 @@ export class HelpTooltip extends BaseComponent {
 
       .tooltip-content {
         position: absolute;
-        max-width: 250px;
-        padding: 8px 12px;
+        min-width: 180px;
+        max-width: 280px;
+        padding: 10px 14px;
         background: var(--surface-tertiary, #1e293b);
         color: var(--text-on-dark, #ffffff);
-        font-size: 12px;
-        line-height: 1.4;
-        border-radius: 4px;
+        font-size: 13px;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+        border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 1000;
         opacity: 0;
@@ -90,6 +92,11 @@ export class HelpTooltip extends BaseComponent {
         transition: opacity 0.15s ease, visibility 0.15s ease;
         pointer-events: none;
         white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+        -ms-hyphens: auto;
       }
 
       .tooltip-content.visible {

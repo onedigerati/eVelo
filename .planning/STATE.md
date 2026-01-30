@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 29 of 29 (Print-Optimized Dashboard)
 Plan: 01 of 02
 Status: In progress
-Last activity: 2026-01-30 — Completed 29-01-PLAN.md (print infrastructure)
+Last activity: 2026-01-30 — Completed quick-017 (fix help tooltip formatting)
 
 Progress: ██████████████████████████████████████████ 100% (111/112 plans complete)
 
@@ -712,6 +712,13 @@ None
 | 014 | Dashboard hover effects with lift animations | 2026-01-26 | 01b7677 | [014-dashboard-hover-effects](./quick/014-dashboard-hover-effects/) |
 | 015 | Disable auto-run simulation for sliders on mobile | 2026-01-29 | 266a421 | [015-disable-mobile-slider-auto-simulation](./quick/015-disable-mobile-slider-auto-simulation/) |
 | 016 | Fix Load button for already-selected preset | 2026-01-29 | b4c7c70 | [016-fix-load-button-for-already-selected-pre](./quick/016-fix-load-button-for-already-selected-pre/) |
+| 017 | Fix help tooltip formatting and readability | 2026-01-30 | fe31a33 | [017-fix-help-tooltip-formatting](./quick/017-fix-help-tooltip-formatting/) |
+
+**From quick-017:**
+- Tooltip CSS improvements: increased max-width (280px), min-width (180px), padding, font-size (13px)
+- Added proper word-break handling: overflow-wrap, word-wrap, hyphens: auto
+- All 8 parameter tooltips condensed to concise, scannable content
+- All tooltips use position="left" to prevent viewport edge clipping
 
 **From quick-016:**
 - Load button now directly loads the currently selected portfolio preset

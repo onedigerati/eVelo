@@ -84,25 +84,13 @@ export class AppRoot extends BaseComponent {
               ></number-input>
             </div>
             <portfolio-composition id="portfolio-composition"></portfolio-composition>
-            <div class="param-group">
-              <label>Initial LOC Balance</label>
-              <number-input
-                id="initial-loc-balance"
-                value="0"
-                min="0"
-                max="50000000"
-                step="1000"
-                suffix="$"
-              ></number-input>
-              <span class="help-text">Leave at 0 if starting fresh</span>
-            </div>
           </param-section>
 
           <param-section title="Your Spending Needs" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='6' width='20' height='12' rx='2'/><circle cx='12' cy='12' r='2'/><path d='M6 12h.01M18 12h.01'/></svg>" open>
             <div class="param-group">
               <label>
                 Annual Cash Need ($)
-                <help-tooltip content="Tax-free income from borrowing against your portfolio. Unlike selling, this doesn't trigger capital gains taxes."></help-tooltip>
+                <help-tooltip content="Tax-free income via SBLOC borrowing. Unlike selling, no capital gains taxes triggered." position="left"></help-tooltip>
               </label>
               <number-input
                 id="annual-withdrawal"
@@ -157,7 +145,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Period (Years)
-                <help-tooltip content="Investment period in years. Longer horizons typically show more benefit from the Buy-Borrow-Die strategy."></help-tooltip>
+                <help-tooltip content="Simulation timeframe. Longer periods typically favor Buy-Borrow-Die." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="time-horizon"
@@ -172,9 +160,21 @@ export class AppRoot extends BaseComponent {
 
           <param-section title="Line of Credit Terms" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10'/><path d='m9 12 2 2 4-4'/></svg>" open>
             <div class="param-group">
+              <label>Initial LOC Balance</label>
+              <number-input
+                id="initial-loc-balance"
+                value="0"
+                min="0"
+                max="50000000"
+                step="1000"
+                suffix="$"
+              ></number-input>
+              <span class="help-text">Leave at 0 if starting fresh</span>
+            </div>
+            <div class="param-group">
               <label>
                 Annual Interest Rate (%)
-                <help-tooltip content="Annual interest rate charged on your securities-backed line of credit. Typically SOFR + 1-3%."></help-tooltip>
+                <help-tooltip content="Interest rate on your SBLOC. Typically SOFR + 1-3% spread." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="sbloc-rate"
@@ -188,7 +188,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Max LTV / Hard Margin (%)
-                <help-tooltip content="Loan-to-Value ratio. Maximum percentage of your portfolio value you can borrow. Lower LTV = more conservative."></help-tooltip>
+                <help-tooltip content="Maximum loan-to-value ratio. Portfolio liquidated if exceeded. Lower = safer." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="max-borrowing"
@@ -203,7 +203,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Warning Zone LTV (%)
-                <help-tooltip content="LTV threshold that triggers a margin call. If your loan exceeds this ratio of portfolio value, you must repay or liquidate."></help-tooltip>
+                <help-tooltip content="Margin call trigger. Exceeding this ratio requires action to avoid forced liquidation." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="maintenance-margin"
@@ -237,7 +237,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Simulation Iterations
-                <help-tooltip content="Number of Monte Carlo scenarios to simulate. More iterations = more accurate results but slower computation."></help-tooltip>
+                <help-tooltip content="Number of Monte Carlo scenarios. More = accurate but slower." position="left"></help-tooltip>
               </label>
               <select-input
                 id="num-simulations"
@@ -395,7 +395,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Cost Basis Ratio (%)
-                <help-tooltip content="What fraction of your portfolio is original cost (basis) vs gains. 40% means 60% embedded gains. Affects capital gains taxes when selling."></help-tooltip>
+                <help-tooltip content="Portion of portfolio that is original cost. 40% basis = 60% unrealized gains subject to tax." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="sell-cost-basis-ratio"
@@ -410,7 +410,7 @@ export class AppRoot extends BaseComponent {
             <div class="param-group">
               <label>
                 Dividend Yield (%)
-                <help-tooltip content="Annual dividend yield of your portfolio. S&P 500 averages 1.5-2%. Growth portfolios may be lower, income portfolios higher."></help-tooltip>
+                <help-tooltip content="Portfolio dividend yield for Sell strategy comparison. S&P 500: ~1.5-2%." position="left"></help-tooltip>
               </label>
               <range-slider
                 id="sell-dividend-yield"
