@@ -55,6 +55,7 @@ export interface HeroBannerData {
   isSuccess: boolean;
   alertTitle: string;
   alertDescription: string;
+  logoBase64: string | null;
 }
 
 /**
@@ -119,6 +120,32 @@ export interface SpectrumData {
 }
 
 /**
+ * Portfolio asset data for print.
+ */
+export interface PortfolioAssetData {
+  name: string;
+  weight: string;
+  color: string;
+}
+
+/**
+ * Portfolio composition data from param-summary.
+ */
+export interface PortfolioCompositionData {
+  assetCount: string;
+  assets: PortfolioAssetData[];
+  donutChartImage: string | null;
+  startingPortfolio: string;
+  timeHorizon: string;
+  annualWithdrawal: string;
+  withdrawalGrowth: string;
+  sblocInterestRate: string;
+  maxBorrowing: string;
+  maintenanceMargin: string;
+  simulationsRun: string;
+}
+
+/**
  * Strategy analysis data.
  */
 export interface StrategyAnalysisData {
@@ -142,6 +169,7 @@ export interface ExtractedDashboardData {
   netWorthSpectrum: SpectrumData | null;
   debtSpectrum: SpectrumData | null;
   strategyAnalysis: StrategyAnalysisData | null;
+  portfolioComposition: PortfolioCompositionData | null;
   chartImages: ChartImages;
   paramSummary: ParamSummary;
   timestamp: string;
@@ -241,12 +269,40 @@ export function extractDashboardData(
   const keyMetricsBanner = dashboardShadowRoot.querySelector('#key-metrics-banner');
   const bannerShadow = keyMetricsBanner?.shadowRoot || null;
 
+  // Extract logo as base64 from hero banner
+  let logoBase64: string | null = null;
+  if (bannerShadow) {
+    const logoImg = bannerShadow.querySelector('#hero-logo') as HTMLImageElement;
+    if (logoImg && logoImg.src) {
+      // If it's already a data URL, use it directly
+      if (logoImg.src.startsWith('data:')) {
+        logoBase64 = logoImg.src;
+      } else {
+        // Try to extract from canvas
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = logoImg.naturalWidth || 100;
+          canvas.height = logoImg.naturalHeight || 100;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(logoImg, 0, 0);
+            logoBase64 = canvas.toDataURL('image/png');
+          }
+        } catch {
+          // Cross-origin restriction, use fallback
+          logoBase64 = null;
+        }
+      }
+    }
+  }
+
   // Extract hero banner
   const heroBanner: HeroBannerData = {
     title: extractText(bannerShadow, '#hero-title'),
     isSuccess: hasClass(bannerShadow, '#hero-banner', 'success'),
     alertTitle: extractText(bannerShadow, '#alert-title'),
     alertDescription: extractText(bannerShadow, '#alert-description'),
+    logoBase64,
   };
 
   // Extract strategy card
@@ -292,24 +348,24 @@ export function extractDashboardData(
     salaryEquiv: extractText(dashboardShadowRoot, '#stat-salary'),
   };
 
-  // Extract net worth spectrum
+  // Extract net worth spectrum - use correct selectors from percentile-spectrum component
   const netWorthSpectrumEl = dashboardShadowRoot.querySelector('#net-worth-spectrum');
   const netWorthShadow = netWorthSpectrumEl?.shadowRoot || null;
   const netWorthSpectrum: SpectrumData | null = netWorthShadow ? {
     title: 'Terminal Net Worth Distribution',
-    p10: extractText(netWorthShadow, '.pessimistic .value'),
-    p50: extractText(netWorthShadow, '.median .value'),
-    p90: extractText(netWorthShadow, '.optimistic .value'),
+    p10: extractText(netWorthShadow, '#p10-value'),
+    p50: extractText(netWorthShadow, '#p50-value'),
+    p90: extractText(netWorthShadow, '#p90-value'),
   } : null;
 
-  // Extract debt spectrum (SBLOC)
+  // Extract debt spectrum (SBLOC) - use correct selectors
   const debtSpectrumEl = dashboardShadowRoot.querySelector('#debt-spectrum');
   const debtShadow = debtSpectrumEl?.shadowRoot || null;
   const debtSpectrum: SpectrumData | null = debtShadow ? {
     title: 'LOC Balance Distribution',
-    p10: extractText(debtShadow, '.pessimistic .value'),
-    p50: extractText(debtShadow, '.median .value'),
-    p90: extractText(debtShadow, '.optimistic .value'),
+    p10: extractText(debtShadow, '#p10-value'),
+    p50: extractText(debtShadow, '#p50-value'),
+    p90: extractText(debtShadow, '#p90-value'),
   } : null;
 
   // Extract strategy analysis
@@ -331,6 +387,51 @@ export function extractDashboardData(
   // Extract chart images
   const chartImages = extractAllChartImages(dashboardShadowRoot);
 
+  // Extract portfolio composition from param-summary
+  const paramSummaryEl = dashboardShadowRoot.querySelector('#param-summary');
+  const paramSummaryShadow = paramSummaryEl?.shadowRoot || null;
+  let portfolioComposition: PortfolioCompositionData | null = null;
+
+  if (paramSummaryShadow) {
+    // Extract asset bars
+    const assetBars = paramSummaryShadow.querySelectorAll('.asset-bar-row');
+    const assets: PortfolioAssetData[] = [];
+    assetBars.forEach((bar) => {
+      const name = bar.querySelector('.asset-bar-name')?.textContent?.trim() || '';
+      const weight = bar.querySelector('.asset-bar-percent')?.textContent?.trim() || '';
+      const swatch = bar.querySelector('.asset-bar-swatch') as HTMLElement;
+      const color = swatch?.style.backgroundColor || '#0d9488';
+      if (name) {
+        assets.push({ name, weight, color });
+      }
+    });
+
+    // Extract donut chart as base64
+    let donutChartImage: string | null = null;
+    const paramSummaryComponent = paramSummaryEl as any;
+    if (paramSummaryComponent?.donutChart) {
+      try {
+        donutChartImage = paramSummaryComponent.donutChart.toBase64Image('image/png', 1.0);
+      } catch {
+        donutChartImage = null;
+      }
+    }
+
+    portfolioComposition = {
+      assetCount: extractText(paramSummaryShadow, '#asset-count'),
+      assets,
+      donutChartImage,
+      startingPortfolio: extractText(paramSummaryShadow, '#starting-portfolio'),
+      timeHorizon: extractText(paramSummaryShadow, '#time-horizon'),
+      annualWithdrawal: extractText(paramSummaryShadow, '#annual-withdrawal'),
+      withdrawalGrowth: extractText(paramSummaryShadow, '#withdrawal-growth'),
+      sblocInterestRate: extractText(paramSummaryShadow, '#sbloc-interest'),
+      maxBorrowing: extractText(paramSummaryShadow, '#max-borrowing'),
+      maintenanceMargin: extractText(paramSummaryShadow, '#maintenance-margin'),
+      simulationsRun: extractText(paramSummaryShadow, '#simulations-run'),
+    };
+  }
+
   return {
     heroBanner,
     strategyCard,
@@ -340,6 +441,7 @@ export function extractDashboardData(
     netWorthSpectrum,
     debtSpectrum,
     strategyAnalysis,
+    portfolioComposition,
     chartImages,
     paramSummary: {
       timeHorizon: config.timeHorizon,
@@ -552,6 +654,87 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
     </section>
   ` : '';
 
+  // Portfolio composition section
+  const portfolioCompositionSection = data.portfolioComposition ? (() => {
+    const pc = data.portfolioComposition;
+    const maxWeight = pc.assets.length > 0
+      ? Math.max(...pc.assets.map(a => parseFloat(a.weight) || 0))
+      : 100;
+
+    const assetBarsHtml = pc.assets.map(asset => {
+      const weight = parseFloat(asset.weight) || 0;
+      const relativeWidth = (weight / maxWeight) * 100;
+      return `
+        <div class="asset-bar" style="--bar-width: ${relativeWidth}%; --bar-color: ${asset.color};">
+          <div class="asset-swatch" style="background-color: ${asset.color}"></div>
+          <span class="asset-name">${asset.name}</span>
+          <span class="asset-weight">${asset.weight}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+    <div class="portfolio-section">
+      <div class="portfolio-header">
+        <div class="portfolio-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="portfolio-title">Portfolio Composition</div>
+          <div class="portfolio-subtitle">${pc.assetCount}</div>
+        </div>
+      </div>
+      <div class="portfolio-content">
+        ${pc.donutChartImage ? `
+          <div class="portfolio-donut">
+            <img src="${pc.donutChartImage}" alt="Portfolio allocation donut chart" />
+          </div>
+        ` : ''}
+        <div class="asset-bars">
+          ${assetBarsHtml}
+        </div>
+      </div>
+      <div class="portfolio-params">
+        <div class="portfolio-param">
+          <span class="label">STARTING PORTFOLIO</span>
+          <span class="value">${pc.startingPortfolio}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">TIME HORIZON</span>
+          <span class="value">${pc.timeHorizon}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">ANNUAL WITHDRAWAL</span>
+          <span class="value">${pc.annualWithdrawal}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">WITHDRAWAL GROWTH</span>
+          <span class="value">${pc.withdrawalGrowth}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">SBLOC INTEREST RATE</span>
+          <span class="value">${pc.sblocInterestRate}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">MAX BORROWING</span>
+          <span class="value">${pc.maxBorrowing}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">MAINTENANCE MARGIN</span>
+          <span class="value">${pc.maintenanceMargin}</span>
+        </div>
+        <div class="portfolio-param">
+          <span class="label">SIMULATIONS RUN</span>
+          <span class="value">${pc.simulationsRun}</span>
+        </div>
+      </div>
+    </div>
+    `;
+  })() : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -626,15 +809,44 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
 
     /* Hero Banner */
     .hero-banner {
+      position: relative;
       background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
       color: white;
-      padding: 16px 24px;
+      padding: 20px 24px;
       border-radius: 12px;
       text-align: center;
       margin-bottom: 16px;
+      overflow: hidden;
     }
     .hero-banner.warning {
       background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .hero-watermark {
+      position: absolute;
+      right: -30px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 120px;
+      height: 120px;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .hero-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      margin-bottom: 8px;
+    }
+    .hero-icon img {
+      width: 32px;
+      height: 32px;
+    }
+    .hero-icon .emoji {
+      font-size: 28px;
     }
     .hero-banner .hero-title {
       font-size: 18pt;
@@ -833,6 +1045,130 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
       color: #1e293b;
     }
 
+    /* Portfolio Composition Section */
+    .portfolio-section {
+      background: #ffffff;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .portfolio-header {
+      background: #f0fdfa;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .portfolio-icon {
+      width: 32px;
+      height: 32px;
+      background: #0d9488;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .portfolio-title {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .portfolio-subtitle {
+      font-size: 9pt;
+      color: #64748b;
+    }
+    .portfolio-content {
+      background: #f0fdfa;
+      padding: 16px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .portfolio-donut {
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+    .portfolio-donut img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .asset-bars {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .asset-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .asset-bar::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--bar-width, 0%);
+      background: var(--bar-color, #0d9488);
+      opacity: 0.2;
+      border-radius: 4px;
+    }
+    .asset-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .asset-name {
+      flex: 1;
+      font-size: 9pt;
+      font-weight: 500;
+      color: #1e293b;
+      z-index: 1;
+    }
+    .asset-weight {
+      font-size: 9pt;
+      font-weight: 600;
+      color: #0d9488;
+      z-index: 1;
+    }
+    .portfolio-params {
+      background: white;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 24px;
+    }
+    .portfolio-param {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-left: 8px;
+      border-left: 3px solid #0d9488;
+    }
+    .portfolio-param .label {
+      font-size: 7pt;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .portfolio-param .value {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #0d9488;
+    }
+
     /* Spectrum Sections */
     .spectrum-section {
       margin-bottom: 16px;
@@ -977,6 +1313,12 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
 
   <!-- Hero Banner -->
   <div class="hero-banner ${data.heroBanner.isSuccess ? '' : 'warning'}">
+    ${data.heroBanner.logoBase64 ? `<img src="${data.heroBanner.logoBase64}" alt="" class="hero-watermark" />` : ''}
+    <div class="hero-icon">
+      ${data.heroBanner.isSuccess && data.heroBanner.logoBase64
+        ? `<img src="${data.heroBanner.logoBase64}" alt="eVelo" />`
+        : `<span class="emoji">💪</span>`}
+    </div>
     <div class="hero-title">${data.heroBanner.title || 'Simulation Complete'}</div>
     <div class="hero-subtitle">Buy-Borrow-Die Strategy Analysis</div>
   </div>
@@ -1106,32 +1448,8 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
     </div>
   </div>
 
-  <!-- Parameters Summary -->
-  <div class="params-section">
-    <h3 style="margin: 0 0 10px 0; font-size: 10pt;">Simulation Parameters</h3>
-    <div class="params-grid">
-      <div class="param-item">
-        <span class="param-label">Time Horizon</span>
-        <span class="param-value">${data.paramSummary.timeHorizon} years</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Iterations</span>
-        <span class="param-value">${data.paramSummary.iterations.toLocaleString()}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Inflation Rate</span>
-        <span class="param-value">${formatPercent(data.paramSummary.inflationRate)}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">SBLOC Rate</span>
-        <span class="param-value">${formatPercent(data.paramSummary.sblocRate)}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Max LTV</span>
-        <span class="param-value">${formatPercent(data.paramSummary.maxLtv)}</span>
-      </div>
-    </div>
-  </div>
+  <!-- Portfolio Composition (replaces old Parameters Summary) -->
+  ${portfolioCompositionSection}
 
   <!-- Summary Statistics -->
   <section class="stats-section">
