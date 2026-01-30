@@ -41,6 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 26: Theme Implementation Review** - Comprehensive light/dark theme audit for colors, contrast, readability, and toggle logic
 - [x] **Phase 27: Dashboard FAB Navigation** - Floating action button with elegant section navigation menu for dashboard results
 - [x] **Phase 28: First-Time Simulation Experience** - Improve "Run Your First Simulation" button for users without a portfolio
+- [ ] **Phase 29: Print-Optimized Dashboard** - Print icon in header (conditional), opens print-friendly results window
 
 ## Phase Details
 
@@ -936,10 +937,48 @@ Implementation approach:
 - Toast notifications explain what's happening at each step
 - CSS highlight-pulse animation for portfolio section guidance
 
+### Phase 29: Print-Optimized Dashboard
+**Goal**: Add a print feature that opens a print-friendly window with formatted dashboard results, accessible via a conditional print icon in the header
+**Depends on**: Phase 28
+**Requirements**: UI-01, VIZ-01 through VIZ-07
+**Success Criteria** (what must be TRUE):
+  1. Print icon appears in header only when dashboard has simulation results
+  2. Print icon styling matches existing header icons (settings, help, theme toggle)
+  3. Clicking print icon opens new browser window with print-optimized content
+  4. Print window contains all dashboard results in printer-friendly format
+  5. Charts render correctly in print window (static images or simplified versions)
+  6. Print window includes a prominent "Print" button that triggers browser print dialog
+  7. Print layout uses appropriate page breaks between sections
+  8. Works correctly in both light and dark themes (print version uses light theme)
+  9. Mobile users can access print feature
+  10. Accessible with keyboard navigation
+**Research**: Complete (see 29-RESEARCH.md)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 29-01-PLAN.md -- Print utilities and conditional header button
+- [ ] 29-02-PLAN.md -- Integration wiring and human verification
+
+**Details:**
+Based on research findings:
+- Chart.js `toBase64Image()` for exporting charts as static images
+- `window.open()` to create print preview window
+- Shadow DOM styles don't transfer to new window - use explicit CSS
+- Force light theme in print window regardless of app theme
+- `break-inside: avoid` for clean page breaks between sections
+- Print and Close buttons in top-right, hidden via `@media print`
+
+Implementation approach:
+- Create print-utils.ts with extractChartImage, generatePrintHtml, openPrintWindow
+- Add print button to header-buttons div (hidden by default)
+- Show print button on simulation-complete event
+- Click handler extracts chart images and opens formatted print window
+- Report includes key metrics, parameter summary, chart images, timestamp
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -972,6 +1011,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 26. Theme Implementation Review | 0/4 | Planned | - |
 | 27. Dashboard FAB Navigation | 2/2 | Complete | 2026-01-28 |
 | 28. First-Time Simulation Experience | 1/1 | Complete | 2026-01-28 |
+| 29. Print-Optimized Dashboard | 0/2 | Planned | - |
 
-**Total Plans**: 115
+**Total Plans**: 117
 **Completed Plans**: 110
