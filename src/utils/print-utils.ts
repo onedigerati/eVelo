@@ -25,8 +25,13 @@ export interface ChartImages {
 export interface KeyMetrics {
   initialValue: number;
   terminalValue: number;
+  /** Success rate as a percentage (0-100), NOT a decimal */
   successRate: number;
+  /** CAGR as a decimal (0.10 = 10%) */
   cagr: number;
+  /** Annual withdrawal amount in dollars */
+  annualWithdrawal: number;
+  /** Withdrawal rate as percentage of initial value (0-100) */
   withdrawalRate: number;
 }
 
@@ -87,12 +92,14 @@ export function extractChartImage(
  * Extract all chart images from the dashboard.
  * Iterates through known chart selectors and exports each as a base64 image.
  *
- * @param dashboard - The dashboard element containing charts (results-dashboard or comparison-dashboard)
+ * @param shadowRoot - The shadow root of the dashboard element to search within
  * @returns Object containing all extracted chart images
  */
-export function extractAllChartImages(dashboard: HTMLElement): ChartImages {
-  // Get the shadow root of the dashboard
-  const shadowRoot = dashboard.shadowRoot;
+export function extractAllChartImages(shadowRoot: ShadowRoot | null): ChartImages {
+  if (!shadowRoot) {
+    console.warn('extractAllChartImages: shadowRoot is null');
+    return {};
+  }
 
   // Map of chart property names to their DOM selectors
   const chartSelectors: Record<keyof ChartImages, string> = {
@@ -157,8 +164,18 @@ export function generatePrintHtml(data: PrintableData): string {
     }).format(value);
   };
 
+  /**
+   * Format a decimal as percentage (0.10 -> "10.0%")
+   */
   const formatPercent = (value: number): string => {
     return `${(value * 100).toFixed(1)}%`;
+  };
+
+  /**
+   * Format a value that's already a percentage (80.34 -> "80.3%")
+   */
+  const formatPercentValue = (value: number): string => {
+    return `${value.toFixed(1)}%`;
   };
 
   // Build chart sections - only include charts that were successfully extracted
@@ -417,15 +434,19 @@ export function generatePrintHtml(data: PrintableData): string {
       </div>
       <div class="metric-card">
         <div class="metric-label">Success Rate</div>
-        <div class="metric-value ${data.keyMetrics.successRate >= 0.9 ? 'success' : data.keyMetrics.successRate >= 0.7 ? 'warning' : 'danger'}">${formatPercent(data.keyMetrics.successRate)}</div>
+        <div class="metric-value ${data.keyMetrics.successRate >= 90 ? 'success' : data.keyMetrics.successRate >= 70 ? 'warning' : 'danger'}">${formatPercentValue(data.keyMetrics.successRate)}</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">CAGR</div>
         <div class="metric-value">${formatPercent(data.keyMetrics.cagr)}</div>
       </div>
       <div class="metric-card">
+        <div class="metric-label">Annual Withdrawal</div>
+        <div class="metric-value">${formatCurrency(data.keyMetrics.annualWithdrawal)}</div>
+      </div>
+      <div class="metric-card">
         <div class="metric-label">Withdrawal Rate</div>
-        <div class="metric-value">${formatPercent(data.keyMetrics.withdrawalRate)}</div>
+        <div class="metric-value">${formatPercentValue(data.keyMetrics.withdrawalRate)}</div>
       </div>
     </div>
   </section>

@@ -1578,13 +1578,19 @@ export class AppRoot extends BaseComponent {
       const config = this._simulationConfig || this.collectSimulationParams().config;
 
       // Build printable data
+      const annualWithdrawal = config.sbloc?.annualWithdrawal || 0;
+      const withdrawalRate = config.initialValue > 0
+        ? (annualWithdrawal / config.initialValue) * 100
+        : 0;
+
       const printData: PrintableData = {
         keyMetrics: {
           initialValue: config.initialValue,
           terminalValue: stats.median,
-          successRate: stats.successRate,
+          successRate: stats.successRate, // Already a percentage (0-100)
           cagr: this.calculateCAGRFromResult(),
-          withdrawalRate: config.sbloc?.annualWithdrawal || 0
+          annualWithdrawal,
+          withdrawalRate
         },
         paramSummary: {
           timeHorizon: config.timeHorizon,
