@@ -447,6 +447,13 @@ export class AppRoot extends BaseComponent {
 
         <app-header slot="header">
           <div slot="actions" class="header-buttons">
+            <button id="btn-print" class="header-btn hidden" aria-label="Print report" title="Print report">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+            </button>
             <button id="btn-guide" class="header-btn" aria-label="User Guide" title="User Guide">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -656,6 +663,10 @@ export class AppRoot extends BaseComponent {
       .header-btn:focus-visible {
         outline: 2px solid var(--text-inverse, #ffffff);
         outline-offset: 2px;
+      }
+
+      .header-btn.hidden {
+        display: none;
       }
 
       /* Header buttons container */
@@ -1506,6 +1517,21 @@ export class AppRoot extends BaseComponent {
 
     guideBtn?.addEventListener('click', () => {
       userGuide?.show();
+    });
+
+    // =========================================================================
+    // Print button handler
+    // =========================================================================
+    const printBtn = this.$('#btn-print');
+
+    // Show print button when simulation completes
+    document.addEventListener('simulation-complete', () => {
+      printBtn?.classList.remove('hidden');
+    });
+
+    // Placeholder click handler - will be wired in Plan 02
+    printBtn?.addEventListener('click', () => {
+      console.log('Print button clicked - handler will be added in Plan 02');
     });
 
     // =========================================================================
