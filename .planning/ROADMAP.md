@@ -42,6 +42,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 27: Dashboard FAB Navigation** - Floating action button with elegant section navigation menu for dashboard results
 - [x] **Phase 28: First-Time Simulation Experience** - Improve "Run Your First Simulation" button for users without a portfolio
 - [ ] **Phase 29: Print-Optimized Dashboard** - Print icon in header (conditional), opens print-friendly results window
+- [ ] **Phase 30: React Migration Research** - Comprehensive feasibility study for migrating from Web Components to React
 
 ## Phase Details
 
@@ -975,10 +976,56 @@ Implementation approach:
 - Click handler extracts chart images and opens formatted print window
 - Report includes key metrics, parameter summary, chart images, timestamp
 
+### Phase 30: React Migration Research
+**Goal**: Comprehensive feasibility study for migrating from Web Components + Vite to React
+**Depends on**: Phase 29
+**Requirements**: BUILD-03, BUILD-04
+**Success Criteria** (what must be TRUE):
+  1. Component inventory completed (all 51 Web Components cataloged with complexity rating)
+  2. State management patterns documented (events, services, IndexedDB)
+  3. Shadow DOM migration strategy defined (CSS isolation approach in React)
+  4. Chart.js integration path identified (react-chartjs-2 or custom hooks)
+  5. Web Worker compatibility verified (Comlink with React)
+  6. Testing migration path documented (current E2E → React Testing Library)
+  7. Risk assessment completed with mitigation strategies
+  8. Migration phases defined (incremental vs big-bang approach evaluated)
+  9. Effort estimate provided with justification
+  10. Recommendation documented (migrate vs stay on Web Components)
+**Research**: Complete (see 30-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 30-01-PLAN.md -- Component inventory and state management analysis
+- [ ] 30-02-PLAN.md -- Migration strategy and risk assessment
+- [ ] 30-03-PLAN.md -- Executive summary and migration roadmap
+
+**Details:**
+Based on research findings (30-RESEARCH.md):
+- **Recommendation: DO NOT MIGRATE** unless compelling business need
+- 51 Web Components identified (39 UI + 11 charts + 1 root)
+- 8-12 weeks effort estimate (1 senior developer)
+- Incremental migration via Strangler pattern recommended if migrating
+- React 19 + Vite 6 + Zustand/Jotai as target stack
+- CSS Modules for Shadow DOM replacement
+- dexie-react-hooks for IndexedDB integration
+- react-use-comlink for Web Worker integration
+
+Key deliverables:
+- 30-COMPONENT-INVENTORY.md - All 51 components cataloged with complexity ratings
+- 30-STATE-PATTERNS.md - CustomEvents, services, IndexedDB patterns mapped to React
+- 30-MIGRATION-STRATEGY.md - Technical migration paths for each subsystem
+- 30-RISK-ASSESSMENT.md - Risk matrix with mitigation strategies
+- 30-EXECUTIVE-SUMMARY.md - Final recommendation and decision framework
+- 30-MIGRATION-ROADMAP.md - 6-phase, 12-week migration plan (if approved)
+
+Wave Structure:
+- Wave 1 (parallel): 30-01, 30-02 (independent analysis work)
+- Wave 2: 30-03 (synthesizes findings from Wave 1)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29 -> 30
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -1012,6 +1059,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 27. Dashboard FAB Navigation | 2/2 | Complete | 2026-01-28 |
 | 28. First-Time Simulation Experience | 1/1 | Complete | 2026-01-28 |
 | 29. Print-Optimized Dashboard | 0/2 | Planned | - |
+| 30. React Migration Research | 0/3 | Planned | - |
 
-**Total Plans**: 117
+**Total Plans**: 120
 **Completed Plans**: 110
