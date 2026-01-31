@@ -2,21 +2,21 @@
 phase: quick-018
 plan: 01
 subsystem: ui
-tags: [unicode, icons, welcome-screen, visual-consistency]
+tags: [svg, icons, welcome-screen, visual-consistency]
 
 # Dependency graph
 requires:
   - phase: 17-welcome-page-user-guide
     provides: welcome-screen component with BBD step cards
 provides:
-  - Consistent flat Unicode icons for all three BBD step cards
+  - Consistent flat SVG line-art icons for all three BBD step cards
 affects: []
 
 # Tech tracking
 tech-stack:
   added: []
   patterns:
-    - "Flat Unicode symbols over emoji for cross-platform consistency"
+    - "Inline SVG icons with 2px stroke for consistent flat line-art style"
 
 key-files:
   created: []
@@ -24,63 +24,75 @@ key-files:
     - src/components/ui/welcome-screen.ts
 
 key-decisions:
-  - "Black upward triangle for Buy (growth/appreciation)"
-  - "Clockwise circle arrow for Borrow (money circulation)"
-  - "Balance scale for Die (already correct, kept unchanged)"
+  - "Bar chart SVG for Buy (growing investment)"
+  - "Institution/bank SVG for Borrow (lending)"
+  - "Balance scale SVG for Die (estate/inheritance)"
+  - "Set 2 chosen from mockup options (user preference)"
 
 patterns-established:
-  - "Use Unicode code points (not emoji) for consistent cross-platform rendering"
+  - "Use inline SVG with stroke-based rendering for icon consistency"
+  - "48x48px icon size with 2px stroke weight"
 
 # Metrics
-duration: 2min
+duration: 5min
 completed: 2026-01-31
 ---
 
 # Quick Task 018: Consistent BBD Card Icons Summary
 
-**Replaced 3D emoji icons with flat Unicode symbols for visual consistency across all three BBD step cards**
+**Replaced emoji icons with flat SVG line-art icons for visual consistency across all three BBD step cards**
 
 ## Performance
 
-- **Duration:** 2 min
-- **Started:** 2026-01-31T00:23:50Z
-- **Completed:** 2026-01-31T00:25:50Z
-- **Tasks:** 1
+- **Duration:** 5 min (including mockup review)
+- **Started:** 2026-01-31
+- **Completed:** 2026-01-31
+- **Tasks:** 2 (initial Unicode, then SVG refinement)
 - **Files modified:** 1
 
 ## Accomplishments
 
-- Replaced Buy icon from 3D chart emoji to solid upward triangle
-- Replaced Borrow icon from detailed bank emoji to clockwise circle arrow
-- All three BBD cards now share consistent flat, line-art aesthetic
+- Created HTML mockup with 18 icon options for user review
+- Presented 4 recommended icon sets for comparison
+- Implemented Set 2 (user's choice): Bar Chart + Institution + Balance Scale
+- All three BBD cards now share consistent flat SVG line-art aesthetic
 
 ## Task Commits
 
-1. **Task 1: Replace BBD card icons with flat Unicode symbols** - `7086b9a` (fix)
+1. **Task 1: Replace BBD card icons with flat Unicode symbols** - `7086b9a` (initial)
+2. **Task 2: Replace with SVG icons (Set 2)** - `954dac7` (final)
 
 ## Files Modified
 
-- `src/components/ui/welcome-screen.ts` - Updated icon HTML entities in template()
+- `src/components/ui/welcome-screen.ts` - Replaced Unicode entities with inline SVG icons
 
 ## Icon Changes
 
-| Card   | Before (Emoji)           | After (Unicode)          | Symbol |
-|--------|--------------------------|--------------------------|--------|
-| Buy    | `&#x1F4C8;` (3D chart)   | `&#x25B2;` (triangle)    | Black up-pointing triangle |
-| Borrow | `&#x1F3E6;` (bank)       | `&#x21BB;` (arrow)       | Clockwise open circle arrow |
-| Die    | `&#x2696;` (scale)       | `&#x2696;` (scale)       | Balance scale (unchanged) |
+| Card   | Before (Emoji)           | After (SVG)              | Description |
+|--------|--------------------------|--------------------------|-------------|
+| Buy    | `&#x1F4C8;` (3D chart)   | Bar chart SVG            | Growing bar chart (investment growth) |
+| Borrow | `&#x1F3E6;` (bank)       | Institution SVG          | Bank/institution (lending source) |
+| Die    | `&#x2696;` (emoji scale) | Balance scale SVG        | Balance scale (estate/inheritance) |
 
 ## Decisions Made
 
-- Used Unicode code points instead of emoji for consistent rendering across platforms
-- Chose geometric shapes that intuitively convey meaning:
-  - Triangle pointing up = growth/appreciation
-  - Circle arrow = circulation/borrowing cycle
-  - Balance scale = weighing inheritance
+- Used inline SVG with `stroke="currentColor"` for theme compatibility
+- 48x48px icon size with 2px stroke weight for consistent visual weight
+- Icons inherit teal color from CSS custom property
+- Set 2 chosen for classic finance aesthetic that clearly conveys meaning
+
+## Process
+
+1. Initial implementation used Unicode symbols (quick fix)
+2. User requested more depth - created HTML mockup with options
+3. Presented 6 options per card + 4 complete sets
+4. User selected Set 2 (Bar Chart + Institution + Balance Scale)
+5. Implemented SVG icons with proper CSS styling
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+- Added mockup creation step based on user feedback
+- Changed from Unicode to SVG for better visual depth
 
 ## Issues Encountered
 
@@ -88,7 +100,7 @@ None
 
 ## Next Phase Readiness
 
-- Visual consistency achieved across welcome screen
+- Visual consistency achieved with professional SVG icons
 - No blockers or concerns
 
 ---
