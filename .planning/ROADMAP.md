@@ -43,6 +43,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 28: First-Time Simulation Experience** - Improve "Run Your First Simulation" button for users without a portfolio
 - [ ] **Phase 29: Print-Optimized Dashboard** - Print icon in header (conditional), opens print-friendly results window
 - [x] **Phase 30: React Migration Research** - Comprehensive feasibility study for migrating from Web Components to React
+- [ ] **Phase 31: Widescreen Dashboard Optimization** - Review and optimize dashboard results view for wider desktop screens, better utilize horizontal space
 
 ## Phase Details
 
@@ -1022,10 +1023,54 @@ Wave Structure:
 - Wave 1 (parallel): 30-01, 30-02 (independent analysis work)
 - Wave 2: 30-03 (synthesizes findings from Wave 1)
 
+### Phase 31: Widescreen Dashboard Optimization
+**Goal**: Optimize dashboard results view for widescreen displays (1440px+, 1920px+, 2560px+) with intelligent space utilization
+**Depends on**: Phase 30
+**Requirements**: UI-04, VIZ-01 through VIZ-07
+**Success Criteria** (what must be TRUE):
+  1. Dashboard layout adapts intelligently to widescreen viewports (1440px+, 1920px+, 2560px+)
+  2. Charts expand to fill available width without excessive stretching
+  3. Multi-column layouts utilized where appropriate (side-by-side charts, metrics grids)
+  4. Content density increases on wide screens without sacrificing readability
+  5. Key metrics cards scale appropriately for larger displays
+  6. Tables use available width without horizontal scroll on wide screens
+  7. Visual hierarchy maintained across all viewport sizes
+  8. No excessive whitespace or narrow content on ultrawide monitors
+  9. Responsive breakpoints smoothly transition between tablet/desktop/widescreen
+  10. Performance remains acceptable with larger chart render areas
+**Research**: Complete (see 31-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 31-01-PLAN.md -- Widescreen tokens and grid foundation (Wave 1)
+- [ ] 31-02-PLAN.md -- Dashboard grid widescreen optimization (Wave 2)
+- [ ] 31-03-PLAN.md -- Component-level widescreen polish and verification (Wave 2)
+
+**Details:**
+Based on research findings (31-RESEARCH.md):
+- CSS container queries (97%+ browser support) for component-level responsiveness
+- CSS clamp() for fluid typography and spacing
+- Progressive grid enhancement (2-col → 3-col comparison, 4-col → 6-col stats)
+- Content max-width constraints to prevent over-stretching
+
+Key breakpoints:
+- 1440px: Enhanced spacing, fluid typography begins
+- 1920px: 6-column stats grid, 3-column comparison grid, max-width constraints
+- 2560px: Stricter max-width on sections, centered content
+
+Files to modify:
+- src/styles/tokens.css - Widescreen tokens
+- src/components/ui/results-dashboard.ts - Main dashboard grid
+- src/components/ui/key-metrics-banner.ts - Hero cards
+
+Wave Structure:
+- Wave 1: 31-01 (foundation - tokens)
+- Wave 2 (parallel): 31-02, 31-03 (component updates, both depend on 31-01)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29 -> 30
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -1060,6 +1105,7 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 28. First-Time Simulation Experience | 1/1 | Complete | 2026-01-28 |
 | 29. Print-Optimized Dashboard | 0/2 | Planned | - |
 | 30. React Migration Research | 0/3 | Planned | - |
+| 31. Widescreen Dashboard Optimization | 0/3 | Planned | - |
 
-**Total Plans**: 120
+**Total Plans**: 124
 **Completed Plans**: 110
