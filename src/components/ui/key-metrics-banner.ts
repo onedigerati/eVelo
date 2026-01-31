@@ -930,6 +930,53 @@ export class KeyMetricsBanner extends BaseComponent {
           grid-template-columns: 1fr 1fr;
         }
       }
+
+      /* ============================================
+         Widescreen Responsive Styles
+         ============================================ */
+
+      /* Large desktop (1440px+) - enhanced spacing */
+      @media (min-width: 1440px) {
+        .banner-grid {
+          gap: var(--spacing-fluid-lg, clamp(24px, 3vw, 40px));
+        }
+
+        .metric-card {
+          padding: var(--spacing-fluid-lg, clamp(24px, 3vw, 40px));
+        }
+
+        .hero-value {
+          font-size: var(--font-size-fluid-hero, clamp(2rem, 1.5rem + 2vw, 3.5rem));
+        }
+      }
+
+      /* Full HD widescreen (1920px+) - max-width for content */
+      @media (min-width: 1920px) {
+        .banner-grid {
+          max-width: var(--content-max-width-xl, 1800px);
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .metric-card {
+          padding: var(--spacing-xl, 32px);
+        }
+
+        .hero-value {
+          font-size: 3rem;
+        }
+
+        .metric-label {
+          font-size: var(--font-size-lg, 1.25rem);
+        }
+      }
+
+      /* Ultrawide/4K (2560px+) - stricter constraints */
+      @media (min-width: 2560px) {
+        .banner-grid {
+          max-width: 1600px;
+        }
+      }
     `;
   }
 
