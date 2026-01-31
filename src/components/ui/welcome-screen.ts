@@ -61,7 +61,7 @@ export class WelcomeScreen extends BaseComponent {
           <div class="step-cards">
             <!-- Step 1: Buy -->
             <div class="step-card">
-              <div class="step-icon">&#x1F4C8;</div>
+              <div class="step-icon">&#x25B2;</div>
               <h3 class="step-title">Buy</h3>
               <p class="step-description">
                 Purchase appreciating assets (stocks, real estate).
@@ -71,7 +71,7 @@ export class WelcomeScreen extends BaseComponent {
 
             <!-- Step 2: Borrow -->
             <div class="step-card">
-              <div class="step-icon">&#x1F3E6;</div>
+              <div class="step-icon">&#x21BB;</div>
               <h3 class="step-title">Borrow</h3>
               <p class="step-description">
                 Access cash via securities-backed lines of credit (SBLOC).
