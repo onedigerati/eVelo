@@ -15,6 +15,7 @@ import {
 import type { ApiSource } from '../../data/schemas/market-data';
 import type { CorsProxyType } from '../../data/schemas/settings';
 import './theme-toggle';
+import './historical-data-viewer';
 
 /**
  * API provider information for settings UI
@@ -154,6 +155,18 @@ export class SettingsPanel extends BaseComponent {
               <input type="text" id="cors-custom-url" placeholder="https://your-proxy.com/" />
             </div>
           </section>
+
+          <section class="historical-data-section">
+            <h3>Historical Data</h3>
+            <p class="section-info">
+              View, export, or import custom historical asset data used by the simulation.
+            </p>
+            <button class="btn btn-secondary" id="manage-data-btn">
+              Manage Historical Data
+            </button>
+          </section>
+
+          <historical-data-viewer></historical-data-viewer>
 
           <footer>
             <button id="btn-save" class="btn-primary">Save Settings</button>
@@ -412,6 +425,29 @@ export class SettingsPanel extends BaseComponent {
         outline-offset: 2px;
       }
 
+      /* Historical data section */
+      .btn-secondary {
+        background: var(--surface-primary, #ffffff);
+        color: var(--text-primary, #1e293b);
+        border: 1px solid var(--border-color, #e2e8f0);
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        border-radius: var(--radius-md, 6px);
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background: var(--surface-hover, #f8fafc);
+        border-color: var(--color-primary, #0d9488);
+      }
+
+      .btn-secondary:focus-visible {
+        outline: 2px solid var(--color-primary, #0d9488);
+        outline-offset: 2px;
+      }
+
       /* Toast styling */
       .toast {
         position: fixed;
@@ -543,6 +579,12 @@ export class SettingsPanel extends BaseComponent {
         }
       });
     }
+
+    // Historical data viewer button
+    this.$('#manage-data-btn')?.addEventListener('click', () => {
+      const viewer = this.$('historical-data-viewer') as HTMLElement & { show: () => void };
+      viewer?.show();
+    });
   }
 
   /**
