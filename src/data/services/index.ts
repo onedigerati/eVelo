@@ -61,3 +61,16 @@ export {
   getCorsConfig,
   setCorsConfig
 } from './settings-service';
+
+// Custom data service
+export {
+  saveCustomData,
+  getCustomData,
+  getAllCustomData,
+  hasCustomData,
+  deleteCustomData,
+  resetToDefaults,
+  getCustomSymbols
+} from './custom-data-service';
+
+export type { CustomMarketData } from '../schemas/custom-market-data';
