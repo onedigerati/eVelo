@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 33 of 33 (Bulk Historical Data Management)
-Plan: 01 of 04
+Plan: 02 of 04
 Status: In progress
-Last activity: 2026-01-31 — Completed 33-01-PLAN.md
+Last activity: 2026-01-31 — Completed 33-02-PLAN.md
 
-Progress: ██████████████████████████████████████████ 100% (119/122 plans complete)
+Progress: ██████████████████████████████████████████ 100% (120/122 plans complete)
 
 **Current Phase:**
-Phase 33: Bulk Historical Data Management - IN PROGRESS (1/4 plans complete)
+Phase 33: Bulk Historical Data Management - IN PROGRESS (2/4 plans complete)
 
 **Next Plan:**
-Phase 33 Plan 02: Bulk Import/Export UI Components
+Phase 33 Plan 03: Bulk Import Modal Integration
 
 ## Performance Metrics
 
@@ -64,7 +64,7 @@ Phase 33 Plan 02: Bulk Import/Export UI Components
 | 29-print-optimized-dashboard | 1/2 | 3 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 32-01 (4 min), 32-02 (4 min), 32-03 (3 min), 33-01 (3.5 min)
+- Last 5 plans: 32-02 (4 min), 32-03 (3 min), 33-01 (3.5 min), 33-02 (3 min)
 - Trend: Phase 33 in progress
 
 ## Accumulated Context
@@ -1120,13 +1120,13 @@ Commit: 752a7e4
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed Phase 32 (Historical Asset Data Management)
+Stopped at: Completed 33-02-PLAN.md
 Resume file: None
 
 **Milestone Status:**
-- All 32 phases executed (118 plans total)
-- Phase 32 complete: 3/3 plans
-- Next: No pending phases
+- All phases through 32 complete (118 plans total)
+- Phase 33 in progress: 2/4 plans complete
+- Next: 33-03 (Bulk Import Modal Integration)
 
 **From 32-01:**
 - Papa Parse for RFC 4180 compliant CSV parsing
@@ -1148,3 +1148,18 @@ Resume file: None
 - getEffectiveData() function checks custom data first, falls back to bundled
 - Settings panel provides entry point for historical data management
 - All 10 success criteria verified via human testing
+
+**From 33-01:**
+- BulkValidationResult interface with per-asset AssetValidationResult
+- action field: 'add' | 'update' | 'skip' based on existing data
+- validateBulkCsv and validateBulkJson for multi-asset validation
+- Groups rows by symbol, delegates to single-asset validation
+- Summary counts: total, valid, warnings, errors
+
+**From 33-02:**
+- BulkPreviewTable component with expandable row pattern
+- PreviewRow interface for table data structure
+- Set<string> for expanded symbol state management
+- CustomEvent dispatch: preview-cancelled, preview-confirmed
+- BULK_CSV_TEMPLATE and BULK_JSON_TEMPLATE with 5 years per asset
+- downloadCsvTemplate and downloadJsonTemplate with Blob API
