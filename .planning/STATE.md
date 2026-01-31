@@ -5,26 +5,26 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Milestone complete - all phases executed
+**Current focus:** Phase 32 - Historical Asset Data Management
 
 ## Current Position
 
-Phase: 31 of 31 (Widescreen Dashboard Optimization)
-Plan: 02 of 03
+Phase: 32 of 32 (Historical Asset Data Management)
+Plan: 01 of 03
 Status: Plan complete
-Last activity: 2026-01-31 — Completed 31-02-PLAN.md (widescreen dashboard media queries)
+Last activity: 2026-01-31 — Completed 32-01-PLAN.md (data infrastructure)
 
-Progress: ██████████████████████████████████████████ 100% (113/115 plans complete)
+Progress: ██████████████████████████████████████████ 100% (114/118 plans complete)
 
 **Current Phase:**
-Phase 31: Widescreen Dashboard Optimization - Plan 02 complete (dashboard media queries)
+Phase 32: Historical Asset Data Management - Plan 01 complete (data infrastructure)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 111
+- Total plans completed: 112
 - Average duration: 3.9 min
-- Total execution time: 433.75 min
+- Total execution time: 437.75 min
 
 **By Phase:**
 
@@ -466,6 +466,12 @@ Recent decisions affecting current work:
   - Goals: Better utilize horizontal space on large monitors (1440px+, 1920px+, 2560px+)
   - Issues from screenshots: Narrow content, stacked charts that could be side-by-side, underutilized width
   - Research: CSS container queries, fluid sizing, multi-column layouts, dashboard design patterns
+
+- Phase 32 added: Historical Asset Data Management
+  - User request: Intuitive way to view and update historical asset data used by the simulation
+  - Goals: View bundled data, export for editing, import with validation, help documentation
+  - Key features: Data viewer, CSV/JSON export, import with validation feedback, reset to defaults
+  - User education: Explain data format, column meanings, acceptable value ranges
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
