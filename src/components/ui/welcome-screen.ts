@@ -61,7 +61,13 @@ export class WelcomeScreen extends BaseComponent {
           <div class="step-cards">
             <!-- Step 1: Buy -->
             <div class="step-card">
-              <div class="step-icon">&#x25B2;</div>
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="12" width="4" height="9" rx="1"/>
+                  <rect x="10" y="8" width="4" height="13" rx="1"/>
+                  <rect x="17" y="3" width="4" height="18" rx="1"/>
+                </svg>
+              </div>
               <h3 class="step-title">Buy</h3>
               <p class="step-description">
                 Purchase appreciating assets (stocks, real estate).
@@ -71,7 +77,15 @@ export class WelcomeScreen extends BaseComponent {
 
             <!-- Step 2: Borrow -->
             <div class="step-card">
-              <div class="step-icon">&#x21BB;</div>
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21V5a2 2 0 012-2h14a2 2 0 012 2v16"/>
+                  <path d="M3 10h18"/>
+                  <path d="M9 3v7"/>
+                  <path d="M15 3v7"/>
+                  <path d="M9 21v-4a2 2 0 012-2h2a2 2 0 012 2v4"/>
+                </svg>
+              </div>
               <h3 class="step-title">Borrow</h3>
               <p class="step-description">
                 Access cash via securities-backed lines of credit (SBLOC).
@@ -81,7 +95,20 @@ export class WelcomeScreen extends BaseComponent {
 
             <!-- Step 3: Die -->
             <div class="step-card">
-              <div class="step-icon">&#x2696;</div>
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v3"/>
+                  <path d="M12 21v-3"/>
+                  <path d="M3 12h3"/>
+                  <path d="M21 12h-3"/>
+                  <path d="M18.5 5.5L12 12"/>
+                  <path d="M5.5 5.5L12 12"/>
+                  <circle cx="6" cy="18" r="2"/>
+                  <circle cx="18" cy="18" r="2"/>
+                  <path d="M6 16V8"/>
+                  <path d="M18 16V8"/>
+                </svg>
+              </div>
               <h3 class="step-title">Die</h3>
               <p class="step-description">
                 Heirs inherit assets with stepped-up cost basis under current tax law,
@@ -275,9 +302,16 @@ export class WelcomeScreen extends BaseComponent {
       }
 
       .step-icon {
-        font-size: 2.5rem;
         margin-bottom: var(--spacing-md, 16px);
-        line-height: 1;
+        color: var(--color-primary, #0d9488);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .step-icon svg {
+        width: 48px;
+        height: 48px;
       }
 
       .step-title {
