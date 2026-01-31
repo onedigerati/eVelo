@@ -9,6 +9,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import type { PortfolioRecord } from './schemas/portfolio';
 import type { CachedMarketData } from './schemas/market-data';
 import type { UserSettings } from './schemas/settings';
+import type { CustomMarketData } from './schemas/custom-market-data';
 
 // Safari lazy-load workaround
 // Safari can hang on first IndexedDB access if it's complex
@@ -24,6 +25,7 @@ class EveloDatabase extends Dexie {
   portfolios!: EntityTable<PortfolioRecord, 'id'>;
   marketData!: EntityTable<CachedMarketData, 'id'>;
   settings!: EntityTable<UserSettings, 'id'>;
+  customMarketData!: EntityTable<CustomMarketData, 'id'>;
 
   constructor() {
     super('evelo');
@@ -37,6 +39,16 @@ class EveloDatabase extends Dexie {
       portfolios: '++id, name, modified',
       marketData: '++id, [symbol+source], fetchedAt',
       settings: 'id'
+    });
+
+    // Schema version 2
+    // Added:
+    // - customMarketData: user-imported historical market data
+    this.version(2).stores({
+      portfolios: '++id, name, modified',
+      marketData: '++id, [symbol+source], fetchedAt',
+      settings: 'id',
+      customMarketData: '++id, symbol, importedAt'
     });
   }
 }
