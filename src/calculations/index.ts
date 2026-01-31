@@ -61,6 +61,7 @@ export { DEFAULT_CALCULATION_CONFIG } from './types';
 export {
   calculateCAGR,
   calculateAnnualizedVolatility,
+  terminalValuesToAnnualizedReturns,
   extractPercentiles,
   calculateSuccessRate,
   calculateMetricsSummary,

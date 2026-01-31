@@ -20,6 +20,7 @@ import type { StrategyAnalysisProps, StrategyAnalysis } from './strategy-analysi
 import {
   calculateCAGR,
   calculateAnnualizedVolatility,
+  terminalValuesToAnnualizedReturns,
   calculateTWRR,
   calculateSalaryEquivalent,
   calculateSellStrategy,
@@ -1436,12 +1437,8 @@ export class ResultsDashboard extends BaseComponent {
     // CAGR from median terminal value
     const cagr = calculateCAGR(initialValue, median, timeHorizon);
 
-    // Annualized volatility from terminal value returns
-    // Convert terminal values to annualized returns for volatility calculation
-    const annualizedReturns = terminalValues.map(tv => {
-      const totalReturn = (tv - initialValue) / initialValue;
-      return Math.pow(1 + totalReturn, 1 / timeHorizon) - 1;
-    });
+    // Annualized volatility from terminal value returns (using shared utility)
+    const annualizedReturns = terminalValuesToAnnualizedReturns(terminalValues, initialValue, timeHorizon);
     const volatility = calculateAnnualizedVolatility(annualizedReturns);
 
     // TWRR from yearly percentiles (median path)

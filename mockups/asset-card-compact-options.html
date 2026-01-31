@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Card Compact Options</title>
+  <style>
+    :root {
+      --bg-primary: #0f1419;
+      --bg-card: #1a2332;
+      --bg-input: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --border-color: #30363d;
+      --accent-teal: #2dd4bf;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 40px;
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    h2 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-weight: normal;
+    }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-teal);
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 380px;
+    }
+
+    /* ========== CURRENT DESIGN ========== */
+    .card-current {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+
+    .card-current .row1 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .color-dot.teal { background: var(--accent-teal); }
+    .color-dot.blue { background: var(--accent-blue); }
+    .color-dot.orange { background: var(--accent-orange); }
+
+    .name {
+      font-weight: 600;
+      font-size: 15px;
+      flex: 1;
+    }
+
+    .weight-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .weight-input {
+      width: 60px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .percent {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+      opacity: 0.6;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+      color: #f87171;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(45, 212, 191, 0.15);
+      color: var(--accent-teal);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-current .row2 {
+      margin-left: 28px;
+      margin-bottom: 4px;
+    }
+
+    .stats {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: 28px;
+    }
+
+    /* ========== OPTION A: Single Row Inline ========== */
+    .card-a {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-a .info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .card-a .name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .card-a .badge {
+      font-size: 9px;
+      padding: 1px 4px;
+    }
+
+    .card-a .stats {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: 0;
+      white-space: nowrap;
+    }
+
+    .card-a .weight-input {
+      width: 52px;
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+
+    /* ========== OPTION B: Two Row with Badge Inline ========== */
+    .card-b {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .card-b .row1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-b .name-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .card-b .name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .card-b .badge {
+      font-size: 9px;
+      padding: 1px 5px;
+    }
+
+    .card-b .stats {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: 24px;
+      margin-top: 2px;
+    }
+
+    .card-b .weight-input {
+      width: 52px;
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+
+    /* ========== OPTION C: Minimal - Stats on Hover/Tooltip ========== */
+    .card-c {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .card-c .info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-c .name-type {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .card-c .name {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .card-c .type-text {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-c .weight-input {
+      width: 52px;
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+
+    .card-c .info-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(139, 148, 158, 0.2);
+      color: var(--text-secondary);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      flex-shrink: 0;
+    }
+
+    .card-c .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2d3748;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+
+    .card-c:hover .tooltip {
+      opacity: 1;
+    }
+
+    .card-c .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #2d3748;
+    }
+
+    /* ========== OPTION D: Ultra Compact - Stats as Subtext ========== */
+    .card-d {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-d .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .card-d .info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-d .name-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .card-d .name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .card-d .stats-inline {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .card-d .weight-input {
+      width: 48px;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+
+    .card-d .percent {
+      font-size: 12px;
+    }
+
+    .card-d .delete-btn {
+      padding: 2px 6px;
+      font-size: 14px;
+    }
+
+    /* ========== OPTION E: Horizontal Pill Style ========== */
+    .card-e {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 6px 8px 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-e .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .card-e .name {
+      font-weight: 500;
+      font-size: 13px;
+      flex: 1;
+    }
+
+    .card-e .stats-compact {
+      font-size: 10px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 8px;
+    }
+
+    .card-e .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .card-e .stat-label {
+      opacity: 0.7;
+    }
+
+    .card-e .weight-pill {
+      display: flex;
+      align-items: center;
+      background: var(--bg-input);
+      border-radius: 16px;
+      padding: 2px;
+    }
+
+    .card-e .weight-input {
+      width: 40px;
+      background: transparent;
+      border: none;
+      padding: 4px 6px;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .card-e .percent {
+      font-size: 11px;
+      padding-right: 8px;
+    }
+
+    .card-e .delete-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      padding: 0;
+    }
+
+    /* Height comparison bar */
+    .height-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .height-bar {
+      height: 4px;
+      background: var(--accent-teal);
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 800px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Asset Card Compact Options</h1>
+  <h2>Exploring layouts to reduce vertical height while maintaining usability</h2>
+
+  <!-- Current Design -->
+  <div class="section">
+    <div class="section-title">Current Design</div>
+    <div class="section-desc">3 rows: Name + Weight | Badge | Stats. ~72px per card.</div>
+    <div class="cards-container">
+      <div class="card-current">
+        <div class="row1">
+          <div class="color-dot teal"></div>
+          <span class="name">APPLE</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="row2">
+          <span class="badge">STOCK</span>
+        </div>
+        <div class="stats">Avg: 41.6% | Vol: 70.5%</div>
+      </div>
+
+      <div class="card-current">
+        <div class="row1">
+          <div class="color-dot blue"></div>
+          <span class="name">GOOGLE</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="row2">
+          <span class="badge">STOCK</span>
+        </div>
+        <div class="stats">Avg: 27.5% | Vol: 36.9%</div>
+      </div>
+
+      <div class="card-current">
+        <div class="row1">
+          <div class="color-dot orange"></div>
+          <span class="name">MICROSOFT</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="row2">
+          <span class="badge">STOCK</span>
+        </div>
+        <div class="stats">Avg: 23.5% | Vol: 37.3%</div>
+      </div>
+    </div>
+    <div class="height-indicator">
+      <div class="height-bar" style="width: 100px;"></div>
+      <span>~216px total (3 cards)</span>
+    </div>
+  </div>
+
+  <div class="comparison-grid">
+
+    <!-- Option A: Single Row -->
+    <div class="section">
+      <div class="section-title">Option A: Single Row Inline</div>
+      <div class="section-desc">Everything on one line. Badge + Stats inline. ~42px per card.</div>
+      <div class="cards-container">
+        <div class="card-a">
+          <div class="color-dot teal"></div>
+          <div class="info">
+            <span class="name">APPLE</span>
+            <span class="badge">STOCK</span>
+            <span class="stats">41.6% | 70.5%</span>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-a">
+          <div class="color-dot blue"></div>
+          <div class="info">
+            <span class="name">GOOGLE</span>
+            <span class="badge">STOCK</span>
+            <span class="stats">27.5% | 36.9%</span>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-a">
+          <div class="color-dot orange"></div>
+          <div class="info">
+            <span class="name">MSFT</span>
+            <span class="badge">STOCK</span>
+            <span class="stats">23.5% | 37.3%</span>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="height-indicator">
+        <div class="height-bar" style="width: 58px;"></div>
+        <span>~126px total (42% smaller)</span>
+      </div>
+    </div>
+
+    <!-- Option B: Two Row Compact -->
+    <div class="section">
+      <div class="section-title">Option B: Two Row Compact</div>
+      <div class="section-desc">Name + Badge inline, Stats below. ~52px per card.</div>
+      <div class="cards-container">
+        <div class="card-b">
+          <div class="row1">
+            <div class="color-dot teal"></div>
+            <div class="name-badge">
+              <span class="name">APPLE</span>
+              <span class="badge">STOCK</span>
+            </div>
+            <div class="weight-group">
+              <input type="text" class="weight-input" value="33.3">
+              <span class="percent">%</span>
+            </div>
+            <button class="delete-btn">&times;</button>
+          </div>
+          <div class="stats">Avg: 41.6% | Vol: 70.5%</div>
+        </div>
+
+        <div class="card-b">
+          <div class="row1">
+            <div class="color-dot blue"></div>
+            <div class="name-badge">
+              <span class="name">GOOGLE</span>
+              <span class="badge">STOCK</span>
+            </div>
+            <div class="weight-group">
+              <input type="text" class="weight-input" value="33.3">
+              <span class="percent">%</span>
+            </div>
+            <button class="delete-btn">&times;</button>
+          </div>
+          <div class="stats">Avg: 27.5% | Vol: 36.9%</div>
+        </div>
+
+        <div class="card-b">
+          <div class="row1">
+            <div class="color-dot orange"></div>
+            <div class="name-badge">
+              <span class="name">MICROSOFT</span>
+              <span class="badge">STOCK</span>
+            </div>
+            <div class="weight-group">
+              <input type="text" class="weight-input" value="33.3">
+              <span class="percent">%</span>
+            </div>
+            <button class="delete-btn">&times;</button>
+          </div>
+          <div class="stats">Avg: 23.5% | Vol: 37.3%</div>
+        </div>
+      </div>
+      <div class="height-indicator">
+        <div class="height-bar" style="width: 72px;"></div>
+        <span>~156px total (28% smaller)</span>
+      </div>
+    </div>
+
+    <!-- Option C: Minimal with Tooltip -->
+    <div class="section">
+      <div class="section-title">Option C: Minimal (Stats on Hover)</div>
+      <div class="section-desc">Stats hidden, revealed on hover. Type as text. ~44px per card.</div>
+      <div class="cards-container">
+        <div class="card-c">
+          <div class="color-dot teal"></div>
+          <div class="info">
+            <div class="name-type">
+              <span class="name">APPLE</span>
+              <span class="type-text">Stock</span>
+            </div>
+            <div class="info-icon">i</div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+          <div class="tooltip">Avg: 41.6% | Vol: 70.5%</div>
+        </div>
+
+        <div class="card-c">
+          <div class="color-dot blue"></div>
+          <div class="info">
+            <div class="name-type">
+              <span class="name">GOOGLE</span>
+              <span class="type-text">Stock</span>
+            </div>
+            <div class="info-icon">i</div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+          <div class="tooltip">Avg: 27.5% | Vol: 36.9%</div>
+        </div>
+
+        <div class="card-c">
+          <div class="color-dot orange"></div>
+          <div class="info">
+            <div class="name-type">
+              <span class="name">MICROSOFT</span>
+              <span class="type-text">Stock</span>
+            </div>
+            <div class="info-icon">i</div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+          <div class="tooltip">Avg: 23.5% | Vol: 37.3%</div>
+        </div>
+      </div>
+      <div class="height-indicator">
+        <div class="height-bar" style="width: 61px;"></div>
+        <span>~132px total (39% smaller)</span>
+      </div>
+    </div>
+
+    <!-- Option D: Ultra Compact -->
+    <div class="section">
+      <div class="section-title">Option D: Ultra Compact</div>
+      <div class="section-desc">No badge, stats inline after name. ~36px per card.</div>
+      <div class="cards-container">
+        <div class="card-d">
+          <div class="color-dot teal"></div>
+          <div class="info">
+            <div class="name-row">
+              <span class="name">APPLE</span>
+              <span class="stats-inline">41.6% avg, 70.5% vol</span>
+            </div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-d">
+          <div class="color-dot blue"></div>
+          <div class="info">
+            <div class="name-row">
+              <span class="name">GOOGLE</span>
+              <span class="stats-inline">27.5% avg, 36.9% vol</span>
+            </div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-d">
+          <div class="color-dot orange"></div>
+          <div class="info">
+            <div class="name-row">
+              <span class="name">MICROSOFT</span>
+              <span class="stats-inline">23.5% avg, 37.3% vol</span>
+            </div>
+          </div>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="height-indicator">
+        <div class="height-bar" style="width: 50px;"></div>
+        <span>~108px total (50% smaller)</span>
+      </div>
+    </div>
+
+    <!-- Option E: Pill Style -->
+    <div class="section">
+      <div class="section-title">Option E: Horizontal Pill</div>
+      <div class="section-desc">Rounded pill shape, very compact. ~34px per card.</div>
+      <div class="cards-container">
+        <div class="card-e">
+          <div class="color-dot teal"></div>
+          <span class="name">APPLE</span>
+          <div class="stats-compact">
+            <span class="stat-item"><span class="stat-label">A:</span>41.6%</span>
+            <span class="stat-item"><span class="stat-label">V:</span>70.5%</span>
+          </div>
+          <div class="weight-pill">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-e">
+          <div class="color-dot blue"></div>
+          <span class="name">GOOGLE</span>
+          <div class="stats-compact">
+            <span class="stat-item"><span class="stat-label">A:</span>27.5%</span>
+            <span class="stat-item"><span class="stat-label">V:</span>36.9%</span>
+          </div>
+          <div class="weight-pill">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+
+        <div class="card-e">
+          <div class="color-dot orange"></div>
+          <span class="name">MSFT</span>
+          <div class="stats-compact">
+            <span class="stat-item"><span class="stat-label">A:</span>23.5%</span>
+            <span class="stat-item"><span class="stat-label">V:</span>37.3%</span>
+          </div>
+          <div class="weight-pill">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="height-indicator">
+        <div class="height-bar" style="width: 47px;"></div>
+        <span>~102px total (53% smaller)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section" style="margin-top: 32px;">
+    <div class="section-title">Summary</div>
+    <table style="border-collapse: collapse; font-size: 13px;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--border-color);">
+          <th style="text-align: left; padding: 8px 16px 8px 0;">Option</th>
+          <th style="text-align: left; padding: 8px 16px;">Height/Card</th>
+          <th style="text-align: left; padding: 8px 16px;">Reduction</th>
+          <th style="text-align: left; padding: 8px 16px;">Trade-offs</th>
+        </tr>
+      </thead>
+      <tbody style="color: var(--text-secondary);">
+        <tr><td style="padding: 6px 16px 6px 0;">Current</td><td style="padding: 6px 16px;">~72px</td><td style="padding: 6px 16px;">—</td><td style="padding: 6px 16px;">Baseline</td></tr>
+        <tr><td style="padding: 6px 16px 6px 0; color: var(--text-primary);">A: Single Row</td><td style="padding: 6px 16px;">~42px</td><td style="padding: 6px 16px; color: var(--accent-teal);">42%</td><td style="padding: 6px 16px;">Cramped on narrow screens</td></tr>
+        <tr><td style="padding: 6px 16px 6px 0; color: var(--text-primary);">B: Two Row</td><td style="padding: 6px 16px;">~52px</td><td style="padding: 6px 16px; color: var(--accent-teal);">28%</td><td style="padding: 6px 16px;">Good balance, familiar layout</td></tr>
+        <tr><td style="padding: 6px 16px 6px 0; color: var(--text-primary);">C: Minimal</td><td style="padding: 6px 16px;">~44px</td><td style="padding: 6px 16px; color: var(--accent-teal);">39%</td><td style="padding: 6px 16px;">Stats require hover (less discoverable)</td></tr>
+        <tr><td style="padding: 6px 16px 6px 0; color: var(--text-primary);">D: Ultra Compact</td><td style="padding: 6px 16px;">~36px</td><td style="padding: 6px 16px; color: var(--accent-teal);">50%</td><td style="padding: 6px 16px;">No type badge, dense text</td></tr>
+        <tr><td style="padding: 6px 16px 6px 0; color: var(--text-primary);">E: Pill Style</td><td style="padding: 6px 16px;">~34px</td><td style="padding: 6px 16px; color: var(--accent-teal);">53%</td><td style="padding: 6px 16px;">Most compact, different visual style</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

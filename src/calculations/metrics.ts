@@ -163,6 +163,49 @@ export function calculateAnnualizedVolatility(
 }
 
 /**
+ * Convert terminal portfolio values to annualized returns
+ *
+ * This function handles the edge case where terminal values are negative
+ * (e.g., SBLOC scenarios where debt exceeds portfolio value). In such cases,
+ * the total return is worse than -100%, making Math.pow invalid for fractional
+ * exponents. We cap these at -100% annualized return (complete loss).
+ *
+ * @param terminalValues - Array of terminal portfolio values from simulation
+ * @param initialValue - Starting portfolio value
+ * @param timeHorizon - Investment period in years
+ * @returns Array of annualized returns
+ *
+ * @example
+ * ```typescript
+ * const terminals = [1500000, 2000000, -500000]; // One failed scenario
+ * terminalValuesToAnnualizedReturns(terminals, 1000000, 10);
+ * // Returns [0.0414, 0.0718, -1] (positive growth, positive growth, total loss)
+ * ```
+ */
+export function terminalValuesToAnnualizedReturns(
+  terminalValues: number[] | Float64Array,
+  initialValue: number,
+  timeHorizon: number
+): number[] {
+  const values = terminalValues instanceof Float64Array
+    ? Array.from(terminalValues)
+    : terminalValues;
+
+  return values.map(tv => {
+    const totalReturn = (tv - initialValue) / initialValue;
+
+    // Handle negative terminal values: when totalReturn < -1 (total loss worse than -100%),
+    // 1 + totalReturn becomes negative, and Math.pow with fractional exponent returns NaN.
+    // For failed scenarios (negative net worth), use -1 (complete loss) as the floor.
+    if (1 + totalReturn <= 0) {
+      return -1;
+    }
+
+    return Math.pow(1 + totalReturn, 1 / timeHorizon) - 1;
+  });
+}
+
+/**
  * Extract standard percentiles from simulation terminal values
  *
  * Returns P10, P25, P50 (median), P75, P90 for communicating
@@ -278,16 +321,12 @@ export function calculateMetricsSummary(
     config.timeHorizon
   );
 
-  // Calculate volatility from terminal values
-  // Convert to returns relative to initial value for meaningful volatility
-  const terminalReturns: number[] = [];
-  for (let i = 0; i < output.terminalValues.length; i++) {
-    // Calculate total return for each iteration
-    const totalReturn = (output.terminalValues[i] - config.initialValue) / config.initialValue;
-    // Annualize the total return to get annual return proxy
-    const annualizedReturn = Math.pow(1 + totalReturn, 1 / config.timeHorizon) - 1;
-    terminalReturns.push(annualizedReturn);
-  }
+  // Calculate volatility from terminal values using shared conversion function
+  const terminalReturns = terminalValuesToAnnualizedReturns(
+    Array.from(output.terminalValues),
+    config.initialValue,
+    config.timeHorizon
+  );
   const annualizedVolatility = calculateAnnualizedVolatility(terminalReturns);
 
   // Use pre-calculated success rate from statistics if available,

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge Space Options</title>
+  <style>
+    :root {
+      --bg-primary: #0f1419;
+      --bg-card: #1a2332;
+      --bg-input: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --border-color: #30363d;
+      --accent-teal: #2dd4bf;
+      --accent-purple: #a78bfa;
+      --accent-orange: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 40px;
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: normal;
+      margin-bottom: 32px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .option-box {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .option-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-teal);
+      margin-bottom: 4px;
+    }
+
+    .option-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Base card styles */
+    .asset-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .asset-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .asset-row1 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .asset-symbol {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .asset-name {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .asset-stats {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .weight-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .weight-input {
+      width: 52px;
+      padding: 5px 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .percent {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      opacity: 0.6;
+    }
+
+    /* Badge variants */
+    .badge-full {
+      padding: 1px 5px;
+      background: #e0f7fa;
+      color: #0e7490;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .badge-full.commodity {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .badge-full.index {
+      background: #f5d0fe;
+      color: #86198f;
+    }
+
+    /* Option A: Abbreviated badges */
+    .badge-abbr {
+      padding: 1px 4px;
+      background: #e0f7fa;
+      color: #0e7490;
+      border-radius: 3px;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-abbr.commodity {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .badge-abbr.index {
+      background: #f5d0fe;
+      color: #86198f;
+    }
+
+    /* Option B: Single letter badges */
+    .badge-letter {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e0f7fa;
+      color: #0e7490;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .badge-letter.commodity {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .badge-letter.index {
+      background: #f5d0fe;
+      color: #86198f;
+    }
+
+    /* Option C: Color dot indicator */
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0e7490;
+      flex-shrink: 0;
+    }
+
+    .badge-dot.commodity {
+      background: #9a3412;
+    }
+
+    .badge-dot.index {
+      background: #86198f;
+    }
+
+    /* Option D: Badge on row 2 */
+    .opt-d .asset-row2 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .opt-d .badge-small {
+      padding: 0px 4px;
+      background: #e0f7fa;
+      color: #0e7490;
+      border-radius: 2px;
+      font-size: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .opt-d .badge-small.commodity {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .opt-d .badge-small.index {
+      background: #f5d0fe;
+      color: #86198f;
+    }
+
+    /* Option E: Icon badges */
+    .badge-icon {
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .badge-icon svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .badge-icon.stock svg {
+      color: #0e7490;
+    }
+
+    .badge-icon.commodity svg {
+      color: #9a3412;
+    }
+
+    .badge-icon.index svg {
+      color: #86198f;
+    }
+
+    /* Pros/Cons */
+    .pros-cons {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .pros, .cons {
+      flex: 1;
+    }
+
+    .pros-title {
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .cons-title {
+      color: #f87171;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .pros ul, .cons ul {
+      list-style: none;
+      color: var(--text-secondary);
+    }
+
+    .pros li::before { content: "+ "; color: #10b981; }
+    .cons li::before { content: "- "; color: #f87171; }
+
+    /* Recommendation */
+    .recommended {
+      border: 2px solid var(--accent-teal);
+      position: relative;
+    }
+
+    .recommended::before {
+      content: "RECOMMENDED";
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      background: var(--accent-teal);
+      color: var(--bg-primary);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Summary */
+    .summary {
+      margin-top: 32px;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+    }
+
+    .summary-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-teal);
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    td:first-child {
+      color: var(--text-primary);
+    }
+
+    .check { color: #10b981; }
+    .partial { color: #f59e0b; }
+    .miss { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>Badge Space Options</h1>
+  <h2>Solutions for STOCK/INDEX/COMMODITY badges that get cut off</h2>
+
+  <div class="comparison-grid">
+
+    <!-- Current (Problem) -->
+    <div class="option-box">
+      <div class="option-title">Current (Problem)</div>
+      <div class="option-desc">Full badge text gets cut off when space is tight</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+              <span class="badge-full" style="overflow: hidden; max-width: 30px;">STOCK</span>
+            </div>
+            <span class="asset-name">Apple</span>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+              <span class="badge-full commodity" style="overflow: hidden; max-width: 30px;">COMMODITY</span>
+            </div>
+            <span class="asset-name">Gold ETF</span>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option A: Abbreviated -->
+    <div class="option-box recommended">
+      <div class="option-title">Option A: Abbreviated Text</div>
+      <div class="option-desc">Use 3-letter abbreviations: STK, IDX, CMD</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+              <span class="badge-abbr">STK</span>
+            </div>
+            <span class="asset-name">Apple</span>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+              <span class="badge-abbr commodity">CMD</span>
+            </div>
+            <span class="asset-name">Gold ETF</span>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-purple)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">SPY</span>
+              <span class="badge-abbr index">IDX</span>
+            </div>
+            <span class="asset-name">S&P 500 ETF</span>
+          </div>
+          <span class="asset-stats">12.1% | 18.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul>
+            <li>Predictable width</li>
+            <li>Still readable</li>
+            <li>Color coding intact</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul>
+            <li>Less intuitive for new users</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option B: Single Letter -->
+    <div class="option-box">
+      <div class="option-title">Option B: Single Letter</div>
+      <div class="option-desc">Just S, C, I in a small square badge</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+              <span class="badge-letter">S</span>
+            </div>
+            <span class="asset-name">Apple</span>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+              <span class="badge-letter commodity">C</span>
+            </div>
+            <span class="asset-name">Gold ETF</span>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-purple)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">SPY</span>
+              <span class="badge-letter index">I</span>
+            </div>
+            <span class="asset-name">S&P 500 ETF</span>
+          </div>
+          <span class="asset-stats">12.1% | 18.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul>
+            <li>Ultra compact</li>
+            <li>Consistent size</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul>
+            <li>Cryptic meaning</li>
+            <li>Easy to miss</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option C: Color Dot Only -->
+    <div class="option-box">
+      <div class="option-title">Option C: Color Dot Only</div>
+      <div class="option-desc">Remove text, use colored dot (with legend elsewhere)</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+              <span class="badge-dot"></span>
+            </div>
+            <span class="asset-name">Apple</span>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+              <span class="badge-dot commodity"></span>
+            </div>
+            <span class="asset-name">Gold ETF</span>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-purple)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">SPY</span>
+              <span class="badge-dot index"></span>
+            </div>
+            <span class="asset-name">S&P 500 ETF</span>
+          </div>
+          <span class="asset-stats">12.1% | 18.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul>
+            <li>Minimal space</li>
+            <li>Clean look</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul>
+            <li>Requires legend</li>
+            <li>Accessibility issues</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option D: Badge on Row 2 -->
+    <div class="option-box opt-d">
+      <div class="option-title">Option D: Badge on Second Row</div>
+      <div class="option-desc">Move badge next to name on the second row</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+            </div>
+            <div class="asset-row2">
+              <span class="badge-small">Stock</span>
+              <span class="asset-name">Apple</span>
+            </div>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+            </div>
+            <div class="asset-row2">
+              <span class="badge-small commodity">Commodity</span>
+              <span class="asset-name">Gold ETF</span>
+            </div>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-purple)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">SPY</span>
+            </div>
+            <div class="asset-row2">
+              <span class="badge-small index">Index</span>
+              <span class="asset-name">S&P 500 ETF</span>
+            </div>
+          </div>
+          <span class="asset-stats">12.1% | 18.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul>
+            <li>Full text visible</li>
+            <li>More space on row 1</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul>
+            <li>Row 2 gets crowded</li>
+            <li>Name may truncate</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option E: Remove Badge -->
+    <div class="option-box">
+      <div class="option-title">Option E: Remove Badge Entirely</div>
+      <div class="option-desc">Asset type is shown in available assets list; not needed here</div>
+      <div class="card-list">
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-teal)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">AAPL</span>
+            </div>
+            <span class="asset-name">Apple</span>
+          </div>
+          <span class="asset-stats">41.6% | 70.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-orange)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">GLD</span>
+            </div>
+            <span class="asset-name">Gold ETF</span>
+          </div>
+          <span class="asset-stats">8.2% | 15.3%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+        <div class="asset-card">
+          <div class="color-swatch" style="background: var(--accent-purple)"></div>
+          <div class="asset-info">
+            <div class="asset-row1">
+              <span class="asset-symbol">SPY</span>
+            </div>
+            <span class="asset-name">S&P 500 ETF</span>
+          </div>
+          <span class="asset-stats">12.1% | 18.5%</span>
+          <div class="weight-group">
+            <input type="text" class="weight-input" value="33.3">
+            <span class="percent">%</span>
+          </div>
+          <button class="delete-btn">&times;</button>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Pros</div>
+          <ul>
+            <li>Cleanest layout</li>
+            <li>Maximum space</li>
+            <li>Less visual noise</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Cons</div>
+          <ul>
+            <li>Loses asset type info</li>
+            <li>May confuse some users</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="summary-title">Comparison</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Space</th>
+          <th>Readability</th>
+          <th>Information</th>
+          <th>Elegance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color: var(--accent-teal);">A: Abbreviated (STK/IDX/CMD) ★</td>
+          <td class="check">✓ Compact</td>
+          <td class="check">✓ Clear</td>
+          <td class="check">✓ Full</td>
+          <td class="check">✓</td>
+        </tr>
+        <tr>
+          <td>B: Single Letter (S/I/C)</td>
+          <td class="check">✓ Minimal</td>
+          <td class="partial">◐ Cryptic</td>
+          <td class="partial">◐ Partial</td>
+          <td class="partial">◐</td>
+        </tr>
+        <tr>
+          <td>C: Color Dot Only</td>
+          <td class="check">✓ Minimal</td>
+          <td class="miss">✗ Needs legend</td>
+          <td class="miss">✗ Hidden</td>
+          <td class="partial">◐</td>
+        </tr>
+        <tr>
+          <td>D: Badge on Row 2</td>
+          <td class="partial">◐ Shifts problem</td>
+          <td class="check">✓ Full text</td>
+          <td class="check">✓ Full</td>
+          <td class="partial">◐</td>
+        </tr>
+        <tr>
+          <td>E: Remove Badge</td>
+          <td class="check">✓ Most space</td>
+          <td class="check">✓ Clean</td>
+          <td class="miss">✗ Lost</td>
+          <td class="check">✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

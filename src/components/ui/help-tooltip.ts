@@ -177,7 +177,7 @@ export class HelpTooltip extends BaseComponent {
       // Calculate available space
       const spaceBelow = viewportHeight - triggerRect.bottom - GAP - PADDING;
       const spaceAbove = triggerRect.top - GAP - PADDING;
-      const spaceRight = viewportWidth - triggerRect.left - PADDING;
+      const spaceRight = viewportWidth - triggerRect.right - PADDING;
 
       // Determine vertical position (prefer bottom, use top if not enough space)
       const tooltipHeight = tooltipRect.height || 80; // Estimate if not rendered
