@@ -144,6 +144,8 @@ export class MainLayout extends BaseComponent {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        /* Critical: allows grid item to shrink below content size (fixes zoom issues) */
+        min-width: 0;
       }
 
       .mobile-toggle-row {
@@ -230,6 +232,8 @@ export class MainLayout extends BaseComponent {
         background: var(--surface-primary, #ffffff);
         /* Prevent content from exceeding viewport */
         max-width: 100%;
+        /* Critical: allows flex child to shrink below content size (fixes zoom issues) */
+        min-width: 0;
       }
 
       /* Reduce padding on mobile for more content space */

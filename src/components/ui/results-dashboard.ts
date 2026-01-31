@@ -448,6 +448,8 @@ export class ResultsDashboard extends BaseComponent {
         display: block;
         max-width: 100%;
         overflow-x: hidden;
+        /* Critical: allows flex child to shrink below content size (fixes zoom issues) */
+        min-width: 0;
       }
 
       /* Shadow DOM reset - global box-sizing doesn't penetrate */
@@ -1116,8 +1118,9 @@ export class ResultsDashboard extends BaseComponent {
         }
       }
 
-      /* Large desktop (1440px+) - enhanced spacing and content width */
-      @media (min-width: 1440px) {
+      /* Large desktop (1280px+) - enhanced spacing and content width */
+      /* Lowered from 1440px to account for ~400px sidebar */
+      @media (min-width: 1280px) {
         .dashboard-grid {
           gap: var(--spacing-fluid-lg, clamp(24px, 3vw, 40px));
           padding: var(--spacing-fluid-md, clamp(16px, 2vw, 24px));
@@ -1141,52 +1144,76 @@ export class ResultsDashboard extends BaseComponent {
         }
       }
 
-      /* Full HD widescreen (1920px+) - expanded grids and content constraints */
-      @media (min-width: 1920px) {
-        .dashboard-grid {
-          max-width: var(--content-max-width-xl, 1800px);
-          margin-left: auto;
-          margin-right: auto;
-        }
-
+      /* Widescreen (1400px+) - expanded grids and larger charts */
+      /* Lowered to account for ~400px sidebar (1400px viewport = ~1000px content) */
+      @media (min-width: 1400px) {
         .stats-grid {
           grid-template-columns: repeat(6, 1fr);
         }
 
-        .comparison-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
         .chart-container {
-          height: 500px;
-          max-width: var(--chart-max-width, 1200px);
-          margin-left: auto;
-          margin-right: auto;
+          height: 480px;
         }
 
         .comparison-chart-container {
           height: 420px;
         }
+
+        /* Optimize comparison section for widescreen */
+        .comparison-wrapper {
+          padding: var(--spacing-xl, 32px);
+        }
+
+        .comparison-grid {
+          gap: var(--spacing-xl, 32px);
+        }
+
+        .comparison-chart-card {
+          padding: var(--spacing-lg, 24px);
+        }
       }
 
-      /* Ultrawide/4K (2560px+) - content constraints to prevent over-stretching */
+      /* Extra-wide (1600px+) - even larger comparison charts */
+      @media (min-width: 1600px) {
+        .comparison-chart-container {
+          height: 480px;
+        }
+
+        .comparison-chart-container.short {
+          height: 380px;
+        }
+      }
+
+      /* Full HD+ widescreen (1920px+) - larger charts */
+      @media (min-width: 1920px) {
+        .chart-container {
+          height: 520px;
+        }
+
+        .comparison-chart-container {
+          height: 450px;
+        }
+      }
+
+      /* Ultrawide/4K (2200px+) - content constraints to prevent over-stretching */
+      /* Lowered from 2560px to account for ~400px sidebar */
+      @media (min-width: 2200px) {
+        .dashboard-grid {
+          max-width: var(--content-max-width-2xl, 2000px);
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+
+      /* True ultrawide (2560px+) - stricter constraints */
       @media (min-width: 2560px) {
         .dashboard-grid {
-          max-width: var(--content-max-width-2xl, 2200px);
+          max-width: 2200px;
         }
 
-        .chart-section,
-        .stats-section,
-        .comparison-wrapper,
-        .debt-spectrum-wrapper {
-          max-width: 1400px;
-        }
-
-        /* Center sections that have max-width */
         .chart-section.full-width,
-        .stats-section.full-width,
-        .comparison-wrapper,
-        .debt-spectrum-wrapper {
+        .stats-section.full-width {
+          max-width: 1800px;
           margin-left: auto;
           margin-right: auto;
         }
