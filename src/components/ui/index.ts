@@ -86,3 +86,6 @@ export { UserGuideModal } from './user-guide-modal';
 
 // Navigation Components
 export { FabNavigation } from './fab-navigation';
+
+// Historical Data Components
+export { DataTable } from './data-table';
