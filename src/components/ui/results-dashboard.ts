@@ -1109,6 +1109,82 @@ export class ResultsDashboard extends BaseComponent {
           height: 220px;
         }
       }
+
+      /* Large desktop (1440px+) - enhanced spacing and content width */
+      @media (min-width: 1440px) {
+        .dashboard-grid {
+          gap: var(--spacing-fluid-lg, clamp(24px, 3vw, 40px));
+          padding: var(--spacing-fluid-md, clamp(16px, 2vw, 24px));
+        }
+
+        .chart-section,
+        .stats-section {
+          padding: var(--spacing-fluid-lg, clamp(24px, 3vw, 40px));
+        }
+
+        .chart-container {
+          height: 450px;
+        }
+
+        .comparison-chart-container {
+          height: 400px;
+        }
+
+        .comparison-chart-container.short {
+          height: 320px;
+        }
+      }
+
+      /* Full HD widescreen (1920px+) - expanded grids and content constraints */
+      @media (min-width: 1920px) {
+        .dashboard-grid {
+          max-width: var(--content-max-width-xl, 1800px);
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(6, 1fr);
+        }
+
+        .comparison-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .chart-container {
+          height: 500px;
+          max-width: var(--chart-max-width, 1200px);
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .comparison-chart-container {
+          height: 420px;
+        }
+      }
+
+      /* Ultrawide/4K (2560px+) - content constraints to prevent over-stretching */
+      @media (min-width: 2560px) {
+        .dashboard-grid {
+          max-width: var(--content-max-width-2xl, 2200px);
+        }
+
+        .chart-section,
+        .stats-section,
+        .comparison-wrapper,
+        .debt-spectrum-wrapper {
+          max-width: 1400px;
+        }
+
+        /* Center sections that have max-width */
+        .chart-section.full-width,
+        .stats-section.full-width,
+        .comparison-wrapper,
+        .debt-spectrum-wrapper {
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
     `;
   }
 
@@ -1865,8 +1941,9 @@ export class ResultsDashboard extends BaseComponent {
     const bbdBetter = bbdTerminalNetWorth > sellResult.terminalNetWorth;
     const advantage = bbdTerminalNetWorth - sellResult.terminalNetWorth;
 
-    // Calculate tax savings (difference in costs)
-    const taxSavings = sellResult.lifetimeTaxes - cumulativeInterest;
+    // Calculate tax savings: capital gains taxes BBD avoids by not selling
+    // BBD pays $0 in capital gains taxes, Sell pays lifetimeTaxes
+    const taxSavings = sellResult.lifetimeTaxes;
 
     // Calculate BBD dividend taxes
     // In BBD strategy, the portfolio still generates dividends that are taxable income
