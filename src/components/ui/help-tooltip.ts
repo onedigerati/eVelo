@@ -80,7 +80,7 @@ export class HelpTooltip extends BaseComponent {
       }
 
       .tooltip-content {
-        position: absolute;
+        position: fixed;
         min-width: 200px;
         max-width: 300px;
         padding: 12px 16px;
@@ -184,10 +184,12 @@ export class HelpTooltip extends BaseComponent {
       const showAbove = spaceBelow < tooltipHeight && spaceAbove > spaceBelow;
 
       if (showAbove) {
-        tooltip.style.bottom = `calc(100% + ${GAP}px)`;
+        // Position above trigger (fixed positioning uses viewport coordinates)
+        tooltip.style.bottom = `${viewportHeight - triggerRect.top + GAP}px`;
         tooltip.classList.add('pos-top');
       } else {
-        tooltip.style.top = `calc(100% + ${GAP}px)`;
+        // Position below trigger
+        tooltip.style.top = `${triggerRect.bottom + GAP}px`;
         tooltip.classList.add('pos-bottom');
       }
 
@@ -196,15 +198,14 @@ export class HelpTooltip extends BaseComponent {
 
       if (spaceRight >= tooltipWidth) {
         // Enough space on right - align left edge with trigger
-        tooltip.style.left = '0';
+        tooltip.style.left = `${triggerRect.left}px`;
         // Arrow at left
-        const arrow = tooltip.querySelector('::before') as HTMLElement;
         tooltip.style.setProperty('--arrow-left', '16px');
       } else {
-        // Not enough space - align right edge, but keep within viewport
+        // Not enough space - shift left to fit in viewport
         const rightOffset = Math.max(0, tooltipWidth - spaceRight + PADDING);
-        tooltip.style.left = `-${rightOffset}px`;
-        // Move arrow to point at trigger
+        tooltip.style.left = `${triggerRect.left - rightOffset}px`;
+        // Move arrow to point at trigger (relative to tooltip's left edge)
         tooltip.style.setProperty('--arrow-left', `${rightOffset + 8}px`);
       }
     };
