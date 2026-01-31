@@ -89,3 +89,4 @@ export { FabNavigation } from './fab-navigation';
 
 // Historical Data Components
 export { DataTable } from './data-table';
+export { FileDropZone } from './file-drop-zone';
