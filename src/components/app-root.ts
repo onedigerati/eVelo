@@ -674,6 +674,18 @@ export class AppRoot extends BaseComponent {
         display: none;
       }
 
+      /* Dark theme: match header icons to teal branding */
+      :host-context([data-theme="dark"]) .header-btn {
+        background: rgba(20, 184, 166, 0.1);
+        border-color: rgba(20, 184, 166, 0.3);
+        color: #14b8a6;
+      }
+
+      :host-context([data-theme="dark"]) .header-btn:hover {
+        background: rgba(20, 184, 166, 0.2);
+        border-color: rgba(20, 184, 166, 0.4);
+      }
+
       /* Header buttons container */
       .header-buttons {
         display: flex;
