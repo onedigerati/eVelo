@@ -3,10 +3,13 @@
  *
  * Supports CSV and JSON formats with comprehensive error reporting.
  * Uses Papa Parse for RFC 4180-compliant CSV handling.
+ *
+ * Also provides bulk validation for multi-asset imports with per-asset reporting.
  */
 
 import Papa from 'papaparse';
 import type { PresetData, PresetReturn } from '../services/preset-service';
+import { hasCustomData } from '../services/custom-data-service';
 
 /**
  * Result of validation attempt
@@ -35,6 +38,37 @@ export interface ValidationWarning {
   type: 'anomaly' | 'gap' | 'extreme_value' | 'same_sign';
   row?: number;
   message: string;
+}
+
+/**
+ * Result of bulk validation (multiple assets)
+ */
+export interface BulkValidationResult {
+  /** True if at least one asset is valid */
+  valid: boolean;
+  /** Per-asset validation results */
+  assets: AssetValidationResult[];
+  /** Summary counts */
+  summary: {
+    total: number;
+    valid: number;
+    warnings: number;
+    errors: number;
+  };
+}
+
+/**
+ * Validation result for a single asset in bulk import
+ */
+export interface AssetValidationResult {
+  symbol: string;
+  name: string;
+  /** add = new asset, update = replaces existing, skip = validation failed */
+  action: 'add' | 'update' | 'skip';
+  /** Number of data rows for this asset */
+  recordCount: number;
+  /** Detailed validation result */
+  result: ValidationResult;
 }
 
 /**
@@ -334,4 +368,210 @@ export function parseAndValidateJson(content: string): ValidationResult {
   };
 
   return { valid: true, data, errors: [], warnings };
+}
+
+/**
+ * Bulk CSV row with symbol included
+ */
+interface BulkCsvRow {
+  symbol: string;
+  name: string;
+  asset_class?: string;
+  year: string;
+  annual_return: string;
+}
+
+/**
+ * Validate bulk CSV content with multiple assets
+ *
+ * Expected format:
+ * symbol,name,year,annual_return
+ * SPY,S&P 500,1995,0.1488
+ * SPY,S&P 500,1996,0.2034
+ * QQQ,Invesco QQQ,1995,0.2145
+ *
+ * @param content - Raw CSV string with multiple assets
+ * @returns BulkValidationResult with per-asset results
+ */
+export async function validateBulkCsv(content: string): Promise<BulkValidationResult> {
+  const assetResults: AssetValidationResult[] = [];
+
+  // Parse CSV with Papa Parse
+  const parsed = Papa.parse<BulkCsvRow>(content, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, '_')
+  });
+
+  // Check for required columns
+  const fields = parsed.meta.fields || [];
+  const hasSymbol = fields.includes('symbol');
+  const hasName = fields.includes('name');
+  const hasYear = fields.includes('year');
+  const hasReturn = fields.includes('annual_return');
+
+  if (!hasSymbol || !hasName || !hasYear || !hasReturn) {
+    const missing = [];
+    if (!hasSymbol) missing.push('symbol');
+    if (!hasName) missing.push('name');
+    if (!hasYear) missing.push('year');
+    if (!hasReturn) missing.push('annual_return');
+
+    return {
+      valid: false,
+      assets: [],
+      summary: { total: 0, valid: 0, warnings: 0, errors: 1 }
+    };
+  }
+
+  // Group rows by symbol
+  const symbolGroups = new Map<string, BulkCsvRow[]>();
+
+  for (const row of parsed.data) {
+    const symbol = row.symbol?.trim().toUpperCase();
+    if (!symbol) continue;
+
+    if (!symbolGroups.has(symbol)) {
+      symbolGroups.set(symbol, []);
+    }
+    symbolGroups.get(symbol)!.push(row);
+  }
+
+  // Validate each symbol group
+  for (const [symbol, rows] of symbolGroups) {
+    // Get name from first row
+    const name = rows[0].name?.trim() || symbol;
+    const assetClass = rows[0].asset_class?.trim();
+
+    // Create single-asset CSV content for validation
+    const singleAssetCsv = 'year,annual_return\n' +
+      rows.map(r => `${r.year},${r.annual_return}`).join('\n');
+
+    // Validate using existing single-asset function
+    const validationResult = parseAndValidateCsv(singleAssetCsv, symbol, name);
+
+    // Add asset class if provided and validation passed
+    if (validationResult.valid && validationResult.data && assetClass) {
+      validationResult.data.assetClass = assetClass;
+    }
+
+    // Determine action based on existing custom data
+    let action: 'add' | 'update' | 'skip' = 'skip';
+    if (validationResult.valid) {
+      const hasExisting = await hasCustomData(symbol);
+      action = hasExisting ? 'update' : 'add';
+    }
+
+    assetResults.push({
+      symbol,
+      name,
+      action,
+      recordCount: rows.length,
+      result: validationResult
+    });
+  }
+
+  // Calculate summary
+  const validCount = assetResults.filter(a => a.result.valid).length;
+  const warningCount = assetResults.filter(a => a.result.warnings.length > 0).length;
+  const errorCount = assetResults.filter(a => a.result.errors.length > 0).length;
+
+  return {
+    valid: validCount > 0,
+    assets: assetResults,
+    summary: {
+      total: assetResults.length,
+      valid: validCount,
+      warnings: warningCount,
+      errors: errorCount
+    }
+  };
+}
+
+/**
+ * Validate bulk JSON content with multiple assets
+ *
+ * Expected format:
+ * {
+ *   "version": 1,
+ *   "assets": [
+ *     { "symbol": "SPY", "name": "S&P 500", "returns": [...] },
+ *     { "symbol": "QQQ", "name": "Invesco QQQ", "returns": [...] }
+ *   ]
+ * }
+ *
+ * @param content - Raw JSON string with multiple assets
+ * @returns BulkValidationResult with per-asset results
+ */
+export async function validateBulkJson(content: string): Promise<BulkValidationResult> {
+  const assetResults: AssetValidationResult[] = [];
+
+  // Parse JSON
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    return {
+      valid: false,
+      assets: [],
+      summary: { total: 0, valid: 0, warnings: 0, errors: 1 }
+    };
+  }
+
+  const obj = parsed as Record<string, unknown>;
+
+  // Check for assets array
+  if (!Array.isArray(obj.assets)) {
+    return {
+      valid: false,
+      assets: [],
+      summary: { total: 0, valid: 0, warnings: 0, errors: 1 }
+    };
+  }
+
+  // Validate each asset
+  for (const asset of obj.assets as unknown[]) {
+    // Create single-asset JSON string
+    const assetJson = JSON.stringify(asset);
+
+    // Validate using existing single-asset function
+    const validationResult = parseAndValidateJson(assetJson);
+
+    // Extract symbol and name for result
+    const assetObj = asset as Record<string, unknown>;
+    const symbol = (typeof assetObj.symbol === 'string' ? assetObj.symbol : '').toUpperCase();
+    const name = typeof assetObj.name === 'string' ? assetObj.name : symbol;
+    const recordCount = Array.isArray(assetObj.returns) ? assetObj.returns.length : 0;
+
+    // Determine action based on existing custom data
+    let action: 'add' | 'update' | 'skip' = 'skip';
+    if (validationResult.valid && symbol) {
+      const hasExisting = await hasCustomData(symbol);
+      action = hasExisting ? 'update' : 'add';
+    }
+
+    assetResults.push({
+      symbol,
+      name,
+      action,
+      recordCount,
+      result: validationResult
+    });
+  }
+
+  // Calculate summary
+  const validCount = assetResults.filter(a => a.result.valid).length;
+  const warningCount = assetResults.filter(a => a.result.warnings.length > 0).length;
+  const errorCount = assetResults.filter(a => a.result.errors.length > 0).length;
+
+  return {
+    valid: validCount > 0,
+    assets: assetResults,
+    summary: {
+      total: assetResults.length,
+      valid: validCount,
+      warnings: warningCount,
+      errors: errorCount
+    }
+  };
 }
