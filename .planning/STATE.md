@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 Phase: 29 of 29 (Print-Optimized Dashboard)
 Plan: 01 of 02
 Status: In progress
-Last activity: 2026-01-30 — Completed quick-017 (fix help tooltip formatting)
+Last activity: 2026-01-31 — Completed quick-018 (consistent BBD card icons)
 
 Progress: ██████████████████████████████████████████ 100% (111/112 plans complete)
 
@@ -713,6 +713,13 @@ None
 | 015 | Disable auto-run simulation for sliders on mobile | 2026-01-29 | 266a421 | [015-disable-mobile-slider-auto-simulation](./quick/015-disable-mobile-slider-auto-simulation/) |
 | 016 | Fix Load button for already-selected preset | 2026-01-29 | b4c7c70 | [016-fix-load-button-for-already-selected-pre](./quick/016-fix-load-button-for-already-selected-pre/) |
 | 017 | Fix help tooltip formatting and readability | 2026-01-30 | 3e55ac9 | [017-fix-help-tooltip-formatting](./quick/017-fix-help-tooltip-formatting/) |
+| 018 | Replace BBD card icons with flat Unicode symbols | 2026-01-31 | 7086b9a | [018-consistent-bbd-card-icons](./quick/018-consistent-bbd-card-icons/) |
+
+**From quick-018:**
+- Buy icon: solid upward triangle (growth/appreciation)
+- Borrow icon: clockwise circle arrow (money circulation)
+- Die icon: balance scale (unchanged, already correct style)
+- All three BBD cards now use consistent flat Unicode symbols
 
 **From quick-017:**
 - Complete tooltip restyling: teal background (#0d9488), white text, teal shadow
@@ -1082,8 +1089,8 @@ Commit: 752a7e4
 
 ## Session Continuity
 
-Last session: 2026-01-28
-Stopped at: Completed Phase 27 (Dashboard FAB Navigation) - MILESTONE COMPLETE
+Last session: 2026-01-31
+Stopped at: Completed quick-018 (consistent BBD card icons)
 Resume file: None
 
 **Milestone Status:**
