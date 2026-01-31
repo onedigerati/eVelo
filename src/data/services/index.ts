@@ -73,7 +73,27 @@ export {
   hasCustomData,
   deleteCustomData,
   resetToDefaults,
-  getCustomSymbols
+  getCustomSymbols,
+  // Bulk operations
+  saveAllCustomData,
+  resetAllToDefaults
 } from './custom-data-service';
 
 export type { CustomMarketData } from '../schemas/custom-market-data';
+
+// Bulk export service
+export {
+  exportAllToCsv,
+  exportAllToJson,
+  type BulkExportRow,
+  type BulkJsonExport
+} from './bulk-export-service';
+
+// Bulk import service
+export {
+  parseBulkCsv,
+  parseBulkJson,
+  toPresetData,
+  type ParsedBulkData,
+  type ParsedAsset
+} from './bulk-import-service';

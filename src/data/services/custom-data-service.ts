@@ -83,3 +83,62 @@ export async function getCustomSymbols(): Promise<string[]> {
   const records = await db.customMarketData.toArray();
   return records.map(r => r.symbol);
 }
+
+/**
+ * Save multiple assets in bulk using efficient Dexie operations
+ *
+ * Deletes existing data for all symbols first, then bulk inserts.
+ * More efficient than calling saveCustomData() multiple times.
+ *
+ * @param assets - Array of PresetData to save
+ * @param source - Origin of the data
+ * @returns Array of inserted IDs
+ */
+export async function saveAllCustomData(
+  assets: PresetData[],
+  source: 'user-import' | 'bundled-modified'
+): Promise<number[]> {
+  if (assets.length === 0) {
+    return [];
+  }
+
+  // Collect all symbols to delete
+  const symbols = assets.map(a => a.symbol.toUpperCase());
+
+  // Delete existing data for all symbols in one query
+  await db.customMarketData.where('symbol').anyOf(symbols).delete();
+
+  // Prepare records for bulk insert
+  const importedAt = new Date().toISOString();
+  const records: CustomMarketData[] = assets.map(data => ({
+    symbol: data.symbol.toUpperCase(),
+    name: data.name,
+    assetClass: data.assetClass,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    returns: data.returns,
+    importedAt,
+    source
+  }));
+
+  // Bulk add and return IDs
+  const ids = await db.customMarketData.bulkAdd(records, { allKeys: true });
+  return ids as number[];
+}
+
+/**
+ * Reset all custom data to defaults by clearing the entire table
+ *
+ * After this, all bundled preset data will be used again.
+ *
+ * @returns Number of records that were deleted
+ */
+export async function resetAllToDefaults(): Promise<number> {
+  // Get count before clearing
+  const count = await db.customMarketData.count();
+
+  // Clear entire table
+  await db.customMarketData.clear();
+
+  return count;
+}
