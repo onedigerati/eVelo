@@ -485,6 +485,12 @@ export class ResultsDashboard extends BaseComponent {
         border-color: var(--color-primary, #0d9488);
       }
 
+      /* Add container query context for child components */
+      .chart-section {
+        container-type: inline-size;
+        container-name: chart-section;
+      }
+
       .chart-section h3,
       .stats-section h3 {
         margin: 0 0 var(--spacing-md, 16px) 0;
@@ -1183,6 +1189,19 @@ export class ResultsDashboard extends BaseComponent {
         .debt-spectrum-wrapper {
           margin-left: auto;
           margin-right: auto;
+        }
+      }
+
+      /* Container queries for chart responsiveness based on container (not viewport) */
+      @container chart-section (width >= 600px) {
+        .chart-container {
+          min-height: 380px;
+        }
+      }
+
+      @container chart-section (width >= 900px) {
+        .chart-container {
+          min-height: 450px;
         }
       }
     `;
