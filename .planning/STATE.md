@@ -5,26 +5,29 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
-**Current focus:** Phase 32 - Historical Asset Data Management
+**Current focus:** Phase 33 In Progress - Bulk Historical Data Management
 
 ## Current Position
 
-Phase: 32 of 32 (Historical Asset Data Management)
-Plan: 02 of 03
-Status: Plan complete
-Last activity: 2026-01-31 — Completed 32-02-PLAN.md (UI components)
+Phase: 33 of 33 (Bulk Historical Data Management)
+Plan: 01 of 04
+Status: In progress
+Last activity: 2026-01-31 — Completed 33-01-PLAN.md
 
-Progress: ██████████████████████████████████████████ 100% (115/118 plans complete)
+Progress: ██████████████████████████████████████████ 100% (119/122 plans complete)
 
 **Current Phase:**
-Phase 32: Historical Asset Data Management - Plan 02 complete (UI components)
+Phase 33: Bulk Historical Data Management - IN PROGRESS (1/4 plans complete)
+
+**Next Plan:**
+Phase 33 Plan 02: Bulk Import/Export UI Components
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 113
+- Total plans completed: 119
 - Average duration: 3.9 min
-- Total execution time: 441.75 min
+- Total execution time: 445.25 min
 
 **By Phase:**
 
@@ -61,8 +64,8 @@ Phase 32: Historical Asset Data Management - Plan 02 complete (UI components)
 | 29-print-optimized-dashboard | 1/2 | 3 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 27-01 (4 min), 27-02 (8 min), 28-01 (4 min), 29-01 (3 min)
-- Trend: Phase 29 in progress
+- Last 5 plans: 32-01 (4 min), 32-02 (4 min), 32-03 (3 min), 33-01 (3.5 min)
+- Trend: Phase 33 in progress
 
 ## Accumulated Context
 
@@ -472,6 +475,12 @@ Recent decisions affecting current work:
   - Goals: View bundled data, export for editing, import with validation, help documentation
   - Key features: Data viewer, CSV/JSON export, import with validation feedback, reset to defaults
   - User education: Explain data format, column meanings, acceptable value ranges
+
+- Phase 33 added: Bulk Historical Data Management
+  - User request: Bulk import to update all assets, reset to defaults, format documentation
+  - Goals: Bulk export/import ALL assets, asset class support, reset-to-defaults capability
+  - Key features: Single-file bulk operations, format template download, preview before commit
+  - UI considerations: Intuitive flow (view format → prepare → import → review → confirm)
 
 **From 11-07:**
 - SellStrategyResult interface with terminal wealth, success rate, taxes
@@ -1111,10 +1120,31 @@ Commit: 752a7e4
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 31-01-PLAN.md (widescreen tokens)
+Stopped at: Completed Phase 32 (Historical Asset Data Management)
 Resume file: None
 
 **Milestone Status:**
-- All 31 phases executed (112 plans total)
-- Phase 31 in progress: 1/3 plans complete
-- Next: 31-02-PLAN.md (dashboard container layout)
+- All 32 phases executed (118 plans total)
+- Phase 32 complete: 3/3 plans
+- Next: No pending phases
+
+**From 32-01:**
+- Papa Parse for RFC 4180 compliant CSV parsing
+- CustomMarketData schema with IndexedDB persistence (schema v2)
+- ValidationResult pattern: {valid, data?, errors[], warnings[]}
+- Error types: format, missing_field, invalid_value, duplicate, insufficient_data
+- Warning types: anomaly, gap, extreme_value, same_sign
+- 5-year minimum data required for simulation viability
+- Symbol normalization to uppercase for consistency
+
+**From 32-02:**
+- Virtual scrolling pattern for DataTable (40px row height, only visible rows + 2 buffer rendered)
+- FileDropZone with drag-drop and click support
+- Dual file validation (MIME type and extension for reliability)
+- Symbol grouping in selector: Index ETFs, Bonds, Individual Stocks
+- HistoricalDataViewer modal with view/import modes
+
+**From 32-03:**
+- getEffectiveData() function checks custom data first, falls back to bundled
+- Settings panel provides entry point for historical data management
+- All 10 success criteria verified via human testing
