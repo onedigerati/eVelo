@@ -65,15 +65,40 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
+  /* Fluid spacing - scales smoothly between viewport sizes */
+  --spacing-fluid-sm: clamp(8px, 1vw, 12px);
+  --spacing-fluid-md: clamp(16px, 2vw, 24px);
+  --spacing-fluid-lg: clamp(24px, 3vw, 40px);
+  --spacing-fluid-xl: clamp(32px, 4vw, 56px);
+
   /* Typography */
   --font-family: system-ui, -apple-system, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.25rem;
 
+  /* Fluid font sizes - scales smoothly between viewport sizes */
+  --font-size-fluid-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --font-size-fluid-lg: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  --font-size-fluid-xl: clamp(1.25rem, 1rem + 1vw, 2rem);
+  --font-size-fluid-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2.5rem);
+  --font-size-fluid-hero: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+
   /* Layout */
   --sidebar-width: 400px;
   --sidebar-collapsed-width: 48px;
+
+  /* Widescreen Breakpoints (for reference, used in media queries):
+   * --breakpoint-lg: 1440px (large desktop, 3-column viable)
+   * --breakpoint-xl: 1920px (Full HD widescreen)
+   * --breakpoint-2xl: 2560px (Ultrawide/4K)
+   */
+
+  /* Max content widths for widescreen readability */
+  --content-max-width-lg: 1400px;
+  --content-max-width-xl: 1800px;
+  --content-max-width-2xl: 2200px;
+  --chart-max-width: 1200px;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(26, 36, 36, 0.06);
@@ -116,6 +141,25 @@
   --text-disabled: #6b7280;          /* gray-500 - reduced contrast on dark */
   --surface-disabled: #1f2937;       /* gray-800 - slightly lighter than surface-primary */
   --border-disabled: #4b5563;        /* gray-600 - muted border on dark */
+
+  /* Fluid spacing - scales smoothly between viewport sizes */
+  --spacing-fluid-sm: clamp(8px, 1vw, 12px);
+  --spacing-fluid-md: clamp(16px, 2vw, 24px);
+  --spacing-fluid-lg: clamp(24px, 3vw, 40px);
+  --spacing-fluid-xl: clamp(32px, 4vw, 56px);
+
+  /* Fluid font sizes - scales smoothly between viewport sizes */
+  --font-size-fluid-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --font-size-fluid-lg: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  --font-size-fluid-xl: clamp(1.25rem, 1rem + 1vw, 2rem);
+  --font-size-fluid-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2.5rem);
+  --font-size-fluid-hero: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+
+  /* Max content widths for widescreen readability */
+  --content-max-width-lg: 1400px;
+  --content-max-width-xl: 1800px;
+  --content-max-width-2xl: 2200px;
+  --chart-max-width: 1200px;
 
   /* Shadows - more dramatic for dark theme */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
