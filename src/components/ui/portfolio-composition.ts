@@ -1,6 +1,7 @@
 import { BaseComponent } from '../base-component';
 // Modal dialogs are shown via app-root to avoid mobile overflow clipping issues
-import { getPresetData, getPresetSymbols, PresetData } from '../../data/services/preset-service';
+import { getPresetData, getPresetSymbols, getEffectiveData, PresetData } from '../../data/services/preset-service';
+import { getCustomSymbols } from '../../data/services/custom-data-service';
 import {
   saveTempPortfolio,
   loadLastPortfolio,
@@ -1088,11 +1089,45 @@ export class PortfolioComposition extends BaseComponent {
   }
 
   private loadAvailableAssets(): void {
-    const symbols = getPresetSymbols();
-    this.availableAssets = symbols.map((symbol, index) => {
+    // Load bundled preset symbols first (synchronous)
+    const bundledSymbols = getPresetSymbols();
+    this.availableAssets = bundledSymbols.map((symbol, index) => {
       const preset = getPresetData(symbol);
       return this.calculateAssetStats(symbol, preset, index);
     });
+
+    // Then load any custom-only assets (async)
+    this.loadCustomOnlyAssets();
+  }
+
+  private async loadCustomOnlyAssets(): Promise<void> {
+    try {
+      const bundledSymbols = new Set(getPresetSymbols());
+      const customSymbols = await getCustomSymbols();
+
+      // Find symbols that exist only in custom data (not in bundled presets)
+      const customOnlySymbols = customSymbols.filter(s => !bundledSymbols.has(s));
+
+      if (customOnlySymbols.length === 0) return;
+
+      // Load data for custom-only assets
+      const startIndex = this.availableAssets.length;
+      for (let i = 0; i < customOnlySymbols.length; i++) {
+        const symbol = customOnlySymbols[i];
+        const data = await getEffectiveData(symbol);
+        if (data) {
+          const stats = this.calculateAssetStats(symbol, data, startIndex + i);
+          this.availableAssets.push(stats);
+        }
+      }
+
+      // Re-render to show the new assets
+      if (customOnlySymbols.length > 0) {
+        this.render();
+      }
+    } catch (error) {
+      console.error('Error loading custom-only assets:', error);
+    }
   }
 
   private calculateAssetStats(symbol: string, preset: PresetData | undefined, colorIndex: number): AssetStats {
