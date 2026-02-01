@@ -44,6 +44,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 29: Print-Optimized Dashboard** - Print icon in header (conditional), opens print-friendly results window
 - [x] **Phase 30: React Migration Research** - Comprehensive feasibility study for migrating from Web Components to React
 - [ ] **Phase 31: Widescreen Dashboard Optimization** - Review and optimize dashboard results view for wider desktop screens, better utilize horizontal space
+- [x] **Phase 32: Historical Asset Data Management** - View, export, and import historical asset data with validation and help documentation
+- [ ] **Phase 33: Bulk Historical Data Management** - Bulk import/export all assets with format guidance, asset class support, and reset-to-defaults
 
 ## Phase Details
 
@@ -1067,10 +1069,105 @@ Wave Structure:
 - Wave 1: 31-01 (foundation - tokens)
 - Wave 2 (parallel): 31-02, 31-03 (component updates, both depend on 31-01)
 
+### Phase 32: Historical Asset Data Management
+**Goal**: Provide an intuitive interface for users to view, understand, and update the historical asset data used by the simulation engine
+**Depends on**: Phase 31
+**Requirements**: DATA-01, DATA-02, UI-07
+**Success Criteria** (what must be TRUE):
+  1. User can view all bundled historical asset data (SPY, QQQ, IWM, AGG, etc.) in a clear, readable format
+  2. Data viewer shows year, annual return, and any additional metadata for each asset
+  3. User can export historical data in a standard format (CSV or JSON) for editing
+  4. User can import updated/custom historical data in the same format
+  5. Import validation provides clear error messages for format issues
+  6. Help documentation explains the data format, requirements, and how to edit safely
+  7. User guide explains what each column means and acceptable value ranges
+  8. Warning displayed when imported data differs significantly from expected patterns
+  9. Imported data persists across sessions (stored in IndexedDB)
+  10. User can reset to bundled defaults if custom data causes issues
+**Research**: Complete (see 32-RESEARCH.md)
+**Plans**: 3 plans
+
+Plans:
+- [x] 32-01-PLAN.md -- Data infrastructure (Papa Parse, custom data schema, validation module)
+- [x] 32-02-PLAN.md -- UI components (data table, file drop zone, viewer modal)
+- [x] 32-03-PLAN.md -- Integration and human verification (settings panel, custom data flow)
+
+**Details:**
+Based on research findings (32-RESEARCH.md):
+- Papa Parse for RFC 4180-compliant CSV parsing/unparsing
+- Dual export formats: CSV for Excel/Google Sheets, JSON for technical users
+- Virtual scrolling for large datasets (30+ years of data)
+- Late validation pattern (on submit, not during typing)
+- IndexedDB persistence for custom data via Dexie.js (existing pattern)
+
+Key components:
+- CustomMarketData schema in IndexedDB (separate from bundled presets)
+- Data validation module with CSV and JSON parsing
+- Virtual scrolling DataTable component
+- FileDropZone for drag-and-drop import
+- HistoricalDataViewer modal with symbol selector, export/import buttons
+
+Common pitfalls to avoid:
+- Excel formula injection (sanitize imported strings)
+- Percentage vs decimal confusion (clear documentation)
+- Year format inconsistency (accept multiple formats, normalize on save)
+
+Wave Structure:
+- Wave 1: 32-01 (data infrastructure)
+- Wave 2: 32-02 (UI components, depends on 32-01)
+- Wave 3: 32-03 (integration and verification, depends on 32-01 and 32-02)
+
+### Phase 33: Bulk Historical Data Management
+**Goal**: Enable bulk import/export of all historical asset data with format guidance, asset class support, and reset-to-defaults capability
+**Depends on**: Phase 32
+**Requirements**: DATA-01, DATA-02, UI-07
+**Success Criteria** (what must be TRUE):
+  1. User can bulk export ALL assets in a single file (CSV or JSON) with asset class metadata
+  2. User can bulk import a file to update/add multiple assets at once
+  3. Clear format documentation shown before import (template/example provided)
+  4. Asset class information (equity_stock, equity_index, bond, commodity) included in bulk format
+  5. Validation feedback shows per-asset success/failure with specific error messages
+  6. User can reset ALL custom data to bundled defaults with confirmation
+  7. User can reset individual assets to bundled defaults
+  8. Bulk import supports adding new assets (not just updating existing)
+  9. Preview mode shows what will change before committing bulk import
+  10. Intuitive UI flow: view format → prepare file → import → review → confirm
+**Research**: Complete (see 33-RESEARCH.md)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 33-01-PLAN.md -- Bulk export/import services and validation
+- [ ] 33-02-PLAN.md -- Preview table component and template downloads
+- [ ] 33-03-PLAN.md -- UI integration and reset functionality
+- [ ] 33-04-PLAN.md -- Human verification checkpoint
+
+**Details:**
+Based on research findings (33-RESEARCH.md):
+- Denormalized CSV format with symbol/name/asset_class repeated per return row
+- Papa Parse for bulk CSV parsing (already installed from Phase 32)
+- Dexie bulkAdd/bulkPut for efficient multi-record IndexedDB operations
+- Preview table with add/update/skip actions before committing
+- Two-step confirmation for destructive reset-all operation
+
+Key components:
+- bulk-export-service.ts: exportAllToCsv, exportAllToJson
+- bulk-import-service.ts: parseBulkCsv, parseBulkJson
+- data-validator.ts: validateBulkCsv, validateBulkJson with per-asset results
+- custom-data-service.ts: saveAllCustomData, resetAllToDefaults
+- bulk-preview-table.ts: Preview changes before committing
+- bulk-format-templates.ts: CSV/JSON template constants and download functions
+- historical-data-viewer.ts: Extended with bulk mode tab
+
+Wave Structure:
+- Wave 1: 33-01 (data infrastructure)
+- Wave 2: 33-02 (preview table and templates, depends on 33-01)
+- Wave 3: 33-03 (UI integration, depends on 33-01 and 33-02)
+- Wave 4: 33-04 (human verification, depends on 33-03)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31
+Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31 -> 32 -> 33
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -1106,6 +1203,8 @@ Phases execute in numeric order: 1 -> 2 -> ... -> 7 -> 7.1 -> 8 -> 9 -> 10 -> 11
 | 29. Print-Optimized Dashboard | 0/2 | Planned | - |
 | 30. React Migration Research | 0/3 | Planned | - |
 | 31. Widescreen Dashboard Optimization | 0/3 | Planned | - |
+| 32. Historical Asset Data Management | 3/3 | Complete | 2026-01-31 |
+| 33. Bulk Historical Data Management | 0/4 | Planned | - |
 
-**Total Plans**: 124
-**Completed Plans**: 110
+**Total Plans**: 131
+**Completed Plans**: 118

@@ -64,7 +64,12 @@
       "Skill(gsd:debug)",
       "Bash(cat:*)",
       "Bash(start \"\" \"C:\\\\Users\\\\ungac\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ungac-source-repos-BuyBorrowDie-eVelo\\\\b86f65eb-a34c-4fea-bbf9-fe1e85ae6a0d\\\\scratchpad\\\\dark-mode-header-options.html\")",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(start:*)",
+      "Bash(git -C \"C:\\\\Users\\\\ungac\\\\source\\\\repos\\\\BuyBorrowDie\\\\eVelo\" log --oneline --all -- \"src/data/presets/stocks.json\")",
+      "Bash(git -C \"C:\\\\Users\\\\ungac\\\\source\\\\repos\\\\BuyBorrowDie\\\\eVelo\" show 272fd10 --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\ungac\\\\source\\\\repos\\\\BuyBorrowDie\\\\eVelo\" show 7b53f1b --stat)",
+      "Bash(node -e:*)"
     ]
   }
 }

@@ -1199,7 +1199,7 @@ export class ResultsDashboard extends BaseComponent {
       /* Lowered from 2560px to account for ~400px sidebar */
       @media (min-width: 2200px) {
         .dashboard-grid {
-          max-width: var(--content-max-width-2xl, 2000px);
+          max-width: var(--content-max-width-2xl, 2600px);
           margin-left: auto;
           margin-right: auto;
         }
@@ -1208,12 +1208,12 @@ export class ResultsDashboard extends BaseComponent {
       /* True ultrawide (2560px+) - stricter constraints */
       @media (min-width: 2560px) {
         .dashboard-grid {
-          max-width: 2200px;
+          max-width: 2860px;
         }
 
         .chart-section.full-width,
         .stats-section.full-width {
-          max-width: 1800px;
+          max-width: 2340px;
           margin-left: auto;
           margin-right: auto;
         }

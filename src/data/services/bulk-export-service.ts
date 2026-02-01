@@ -7,6 +7,7 @@
 
 import Papa from 'papaparse';
 import { getPresetSymbols, getEffectiveData, type PresetData } from './preset-service';
+import { getCustomSymbols } from './custom-data-service';
 
 /**
  * Single row in bulk CSV export (denormalized format)
@@ -42,10 +43,20 @@ export interface BulkJsonExport {
  * @returns CSV string ready for download
  */
 export async function exportAllToCsv(): Promise<string> {
-  const symbols = getPresetSymbols();
+  // Get all symbols: bundled presets + custom-only symbols
+  const bundledSymbols = getPresetSymbols();
+  const customSymbols = await getCustomSymbols();
+  const bundledSet = new Set(bundledSymbols);
+
+  // Find custom-only symbols (not in bundled presets)
+  const customOnlySymbols = customSymbols.filter(s => !bundledSet.has(s));
+
+  // Combine all symbols and sort alphabetically
+  const allSymbols = [...bundledSymbols, ...customOnlySymbols].sort((a, b) => a.localeCompare(b));
+
   const rows: BulkExportRow[] = [];
 
-  for (const symbol of symbols) {
+  for (const symbol of allSymbols) {
     const data = await getEffectiveData(symbol);
     if (!data) continue;
 
@@ -78,10 +89,20 @@ export async function exportAllToCsv(): Promise<string> {
  * @returns JSON string with 2-space indentation
  */
 export async function exportAllToJson(): Promise<string> {
-  const symbols = getPresetSymbols();
+  // Get all symbols: bundled presets + custom-only symbols
+  const bundledSymbols = getPresetSymbols();
+  const customSymbols = await getCustomSymbols();
+  const bundledSet = new Set(bundledSymbols);
+
+  // Find custom-only symbols (not in bundled presets)
+  const customOnlySymbols = customSymbols.filter(s => !bundledSet.has(s));
+
+  // Combine all symbols and sort alphabetically
+  const allSymbols = [...bundledSymbols, ...customOnlySymbols].sort((a, b) => a.localeCompare(b));
+
   const assets: PresetData[] = [];
 
-  for (const symbol of symbols) {
+  for (const symbol of allSymbols) {
     const data = await getEffectiveData(symbol);
     if (data) {
       assets.push(data);

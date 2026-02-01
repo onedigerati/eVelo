@@ -161,6 +161,51 @@ export interface StrategyAnalysisData {
 }
 
 /**
+ * Year-by-year percentile row data.
+ */
+export interface YearlyPercentileRow {
+  year: number;
+  annualWithdrawal: string;
+  cumulativeOrLoanBalance: string;
+  p10: string;
+  p25: string;
+  p50: string;
+  p75: string;
+  p90: string;
+}
+
+/**
+ * BBD year-by-year analysis data.
+ */
+export interface BBDYearlyAnalysisData {
+  rows: YearlyPercentileRow[];
+  /** Whether the cumulative column shows loan balance (SBLOC) vs simple cumulative */
+  isSBLOCLoanBalance: boolean;
+}
+
+/**
+ * Sell strategy year-by-year row data.
+ */
+export interface SellYearlyPercentileRow {
+  year: number;
+  annualWithdrawal: string;
+  cumulativeWithdrawal: string;
+  cumulativeTax: string;
+  p10: string;
+  p25: string;
+  p50: string;
+  p75: string;
+  p90: string;
+}
+
+/**
+ * Sell strategy year-by-year analysis data.
+ */
+export interface SellYearlyAnalysisData {
+  rows: SellYearlyPercentileRow[];
+}
+
+/**
  * Complete extracted dashboard data for printing.
  */
 export interface ExtractedDashboardData {
@@ -173,6 +218,8 @@ export interface ExtractedDashboardData {
   debtSpectrum: SpectrumData | null;
   strategyAnalysis: StrategyAnalysisData | null;
   portfolioComposition: PortfolioCompositionData | null;
+  bbdYearlyAnalysis: BBDYearlyAnalysisData | null;
+  sellYearlyAnalysis: SellYearlyAnalysisData | null;
   chartImages: ChartImages;
   paramSummary: ParamSummary;
   timestamp: string;
@@ -205,6 +252,30 @@ function hasClass(shadowRoot: ShadowRoot | null, selector: string, className: st
   if (!shadowRoot) return false;
   const el = shadowRoot.querySelector(selector);
   return el?.classList.contains(className) || false;
+}
+
+/**
+ * Format currency value with compact notation for large values.
+ */
+function formatCurrencyCompact(value: number): string {
+  const absValue = Math.abs(value);
+
+  // Use compact notation for values >= 1M
+  if (absValue >= 1000000) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(value);
+  }
+
+  // Use standard currency for smaller values
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 /**
@@ -355,12 +426,12 @@ export function extractDashboardData(
   const strategyAnalysisEl = dashboardShadowRoot.querySelector('#strategy-analysis');
   const strategyShadow = strategyAnalysisEl?.shadowRoot || null;
   const strategyAnalysis: StrategyAnalysisData | null = strategyShadow ? {
-    verdict: extractText(strategyShadow, '.verdict-title'),
-    verdictDescription: extractText(strategyShadow, '.verdict-description'),
+    verdict: extractText(strategyShadow, '#verdict-headline'),
+    verdictDescription: extractText(strategyShadow, '#verdict-rationale'),
     bbdTerminal: extractText(strategyShadow, '#bbd-terminal'),
     sellTerminal: extractText(strategyShadow, '#sell-terminal'),
-    taxSavings: extractText(strategyShadow, '#tax-savings'),
-    wealthAdvantage: extractText(strategyShadow, '#wealth-advantage'),
+    taxSavings: extractText(strategyShadow, '#diff-tax-savings'),
+    wealthAdvantage: extractText(strategyShadow, '#diff-advantage'),
   } : null;
 
   // Check if SBLOC sections are visible
@@ -415,6 +486,46 @@ export function extractDashboardData(
     };
   }
 
+  // Extract BBD yearly analysis table data
+  const bbdYearlyTableEl = dashboardShadowRoot.querySelector('#yearly-analysis-table') as any;
+  let bbdYearlyAnalysis: BBDYearlyAnalysisData | null = null;
+  if (bbdYearlyTableEl?.data) {
+    const tableData = bbdYearlyTableEl.data;
+    const rows: YearlyPercentileRow[] = tableData.percentiles.map((p: any, index: number) => ({
+      year: p.year,
+      annualWithdrawal: formatCurrencyCompact(tableData.withdrawals.annual[index] || 0),
+      cumulativeOrLoanBalance: formatCurrencyCompact(tableData.withdrawals.cumulative[index] || 0),
+      p10: formatCurrencyCompact(p.p10),
+      p25: formatCurrencyCompact(p.p25),
+      p50: formatCurrencyCompact(p.p50),
+      p75: formatCurrencyCompact(p.p75),
+      p90: formatCurrencyCompact(p.p90),
+    }));
+    bbdYearlyAnalysis = {
+      rows,
+      isSBLOCLoanBalance: tableData.isSBLOCLoanBalance || false,
+    };
+  }
+
+  // Extract Sell yearly analysis table data
+  const sellYearlyTableEl = dashboardShadowRoot.querySelector('#sell-yearly-analysis-table') as any;
+  let sellYearlyAnalysis: SellYearlyAnalysisData | null = null;
+  if (sellYearlyTableEl?.data && hasSblocData) {
+    const tableData = sellYearlyTableEl.data;
+    const rows: SellYearlyPercentileRow[] = tableData.percentiles.map((p: any, index: number) => ({
+      year: p.year,
+      annualWithdrawal: formatCurrencyCompact(tableData.withdrawals.annual[index] || 0),
+      cumulativeWithdrawal: formatCurrencyCompact(tableData.withdrawals.cumulative[index] || 0),
+      cumulativeTax: formatCurrencyCompact(tableData.cumulativeTaxes[index] || 0),
+      p10: formatCurrencyCompact(p.p10),
+      p25: formatCurrencyCompact(p.p25),
+      p50: formatCurrencyCompact(p.p50),
+      p75: formatCurrencyCompact(p.p75),
+      p90: formatCurrencyCompact(p.p90),
+    }));
+    sellYearlyAnalysis = { rows };
+  }
+
   return {
     heroBanner,
     strategyCard,
@@ -425,6 +536,8 @@ export function extractDashboardData(
     debtSpectrum,
     strategyAnalysis,
     portfolioComposition,
+    bbdYearlyAnalysis,
+    sellYearlyAnalysis,
     chartImages,
     paramSummary: {
       timeHorizon: config.timeHorizon,
@@ -715,6 +828,106 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
         </div>
       </div>
     </div>
+    `;
+  })() : '';
+
+  // BBD Year-by-Year Analysis Table section
+  const bbdYearlyAnalysisSection = data.bbdYearlyAnalysis ? (() => {
+    const { rows, isSBLOCLoanBalance } = data.bbdYearlyAnalysis;
+    const cumulativeHeader = isSBLOCLoanBalance ? 'Loan Balance' : 'Cumulative';
+
+    const tableRows = rows.map(row => `
+      <tr>
+        <td class="year-col">${row.year}</td>
+        <td class="withdrawal-col">${row.annualWithdrawal}</td>
+        <td class="withdrawal-col">${row.cumulativeOrLoanBalance}</td>
+        <td class="p10-col">${row.p10}</td>
+        <td class="p25-col">${row.p25}</td>
+        <td class="p50-col">${row.p50}</td>
+        <td class="p75-col">${row.p75}</td>
+        <td class="p90-col">${row.p90}</td>
+      </tr>
+    `).join('');
+
+    return `
+    <section class="yearly-table-section">
+      <div class="table-header-row">
+        <span class="table-icon">📊</span>
+        <h3>Year-by-Year Percentile Analysis</h3>
+      </div>
+      <table class="yearly-analysis-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="year-header">Year</th>
+            <th colspan="2" class="withdrawal-group-header">Withdrawals</th>
+            <th colspan="5" class="percentile-group-header">Net Worth by Percentile</th>
+          </tr>
+          <tr>
+            <th class="withdrawal-header">Annual</th>
+            <th class="withdrawal-header">${cumulativeHeader}</th>
+            <th class="p10-header">10th %ile</th>
+            <th class="p25-header">25th %ile</th>
+            <th class="p50-header">50th %ile</th>
+            <th class="p75-header">75th %ile</th>
+            <th class="p90-header">90th %ile</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </section>
+    `;
+  })() : '';
+
+  // Sell Strategy Year-by-Year Analysis Table section
+  const sellYearlyAnalysisSection = data.sellYearlyAnalysis ? (() => {
+    const { rows } = data.sellYearlyAnalysis;
+
+    const tableRows = rows.map(row => `
+      <tr>
+        <td class="year-col">${row.year}</td>
+        <td class="withdrawal-col">${row.annualWithdrawal}</td>
+        <td class="withdrawal-col">${row.cumulativeWithdrawal}</td>
+        <td class="tax-col">${row.cumulativeTax}</td>
+        <td class="p10-col">${row.p10}</td>
+        <td class="p25-col">${row.p25}</td>
+        <td class="p50-col">${row.p50}</td>
+        <td class="p75-col">${row.p75}</td>
+        <td class="p90-col">${row.p90}</td>
+      </tr>
+    `).join('');
+
+    return `
+    <section class="yearly-table-section sell-strategy">
+      <div class="table-header-row">
+        <span class="table-icon">💰</span>
+        <h3>Sell Strategy Year-by-Year Analysis</h3>
+      </div>
+      <table class="yearly-analysis-table sell-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="year-header">Year</th>
+            <th colspan="2" class="withdrawal-group-header">Withdrawals</th>
+            <th class="tax-group-header">Taxes</th>
+            <th colspan="5" class="percentile-group-header">Portfolio Value by Percentile</th>
+          </tr>
+          <tr>
+            <th class="withdrawal-header">Annual</th>
+            <th class="withdrawal-header">Cumulative</th>
+            <th class="tax-header">Cumulative</th>
+            <th class="p10-header">10th %ile</th>
+            <th class="p25-header">25th %ile</th>
+            <th class="p50-header">50th %ile</th>
+            <th class="p75-header">75th %ile</th>
+            <th class="p90-header">90th %ile</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </section>
     `;
   })() : '';
 
@@ -1278,6 +1491,115 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
       object-fit: contain;
     }
 
+    /* Yearly Analysis Tables */
+    .yearly-table-section {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    .table-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .table-header-row .table-icon {
+      font-size: 14pt;
+    }
+    .table-header-row h3 {
+      margin: 0;
+      font-size: 11pt;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .yearly-analysis-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+    }
+    .yearly-analysis-table th {
+      padding: 6px 8px;
+      text-align: right;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .yearly-analysis-table th:first-child {
+      text-align: left;
+    }
+    .yearly-analysis-table .year-header {
+      text-align: left;
+      background: #f8fafc;
+    }
+    .yearly-analysis-table .withdrawal-group-header {
+      background: #f8fafc;
+      text-align: center;
+    }
+    .yearly-analysis-table .withdrawal-header {
+      background: #f8fafc;
+    }
+    .yearly-analysis-table .tax-group-header {
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+      text-align: center;
+    }
+    .yearly-analysis-table .tax-header {
+      background: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+    }
+    .yearly-analysis-table .percentile-group-header {
+      background: rgba(13, 148, 136, 0.1);
+      color: #0d9488;
+      text-align: center;
+    }
+    .yearly-analysis-table .p10-header { color: #dc2626; }
+    .yearly-analysis-table .p25-header { color: #ea580c; }
+    .yearly-analysis-table .p50-header {
+      color: #0d9488;
+      background: rgba(13, 148, 136, 0.15);
+    }
+    .yearly-analysis-table .p75-header { color: #16a34a; }
+    .yearly-analysis-table .p90-header { color: #15803d; }
+    .yearly-analysis-table td {
+      padding: 5px 8px;
+      text-align: right;
+      color: #1e293b;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .yearly-analysis-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+    }
+    .yearly-analysis-table tbody tr:nth-child(odd) {
+      background: #ffffff;
+    }
+    .yearly-analysis-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .yearly-analysis-table .year-col {
+      font-weight: 500;
+    }
+    .yearly-analysis-table .withdrawal-col {
+      color: #475569;
+    }
+    .yearly-analysis-table .tax-col {
+      color: #d97706;
+      font-weight: 500;
+      background: rgba(245, 158, 11, 0.05);
+    }
+    .yearly-analysis-table .p50-col {
+      background: rgba(13, 148, 136, 0.08);
+      font-weight: 600;
+      color: #0d9488;
+    }
+
     /* Footer */
     .report-footer {
       margin-top: 24px;
@@ -1487,6 +1809,10 @@ export function generatePrintHtmlFromDashboard(data: ExtractedDashboardData): st
   ${strategyAnalysisSection}
 
   ${chartSections.join('\n')}
+
+  ${bbdYearlyAnalysisSection}
+
+  ${sellYearlyAnalysisSection}
 
   <footer class="report-footer">
     <p>Generated by eVelo Portfolio Strategy Simulator</p>

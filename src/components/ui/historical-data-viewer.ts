@@ -851,6 +851,8 @@ export class HistoricalDataViewer extends BaseComponent {
     }
 
     this._bulkValidationResult = null;
+    // Refresh symbol list (new custom-only symbols may have been added)
+    await this.loadAllSymbols();
     await this.loadData();
   }
 
@@ -867,6 +869,8 @@ export class HistoricalDataViewer extends BaseComponent {
       composed: true,
     }));
 
+    // Refresh symbol list (custom-only symbols were removed)
+    await this.loadAllSymbols();
     await this.loadData();
   }
 

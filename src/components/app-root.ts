@@ -4,7 +4,7 @@ import './ui';
 // Import simulation module
 import { runSimulation, SimulationConfig, PortfolioConfig, SimulationOutput, AssetConfig } from '../simulation';
 // Import preset service for historical returns
-import { getPresetData } from '../data/services/preset-service';
+import { getPresetData, getEffectiveData } from '../data/services/preset-service';
 // Import correlation calculation
 import { correlationMatrix as calcCorrelationMatrix } from '../math/correlation';
 // Import portfolio composition types
@@ -967,9 +967,9 @@ export class AppRoot extends BaseComponent {
    * Calculate CAGR from current simulation result
    */
   private calculateCAGRFromResult(): number {
-    if (!this._simulationResult) return 0;
+    if (!this._simulationResult || !this._simulationConfig) return 0;
 
-    const { config } = this.collectSimulationParams();
+    const config = this._simulationConfig;
     const initialValue = config.initialValue;
     const terminalValue = this._simulationResult.statistics.median;
     const years = config.timeHorizon;
@@ -1268,7 +1268,7 @@ export class AppRoot extends BaseComponent {
   /**
    * Collect simulation parameters from UI components
    */
-  private collectSimulationParams(): { config: SimulationConfig; portfolio: PortfolioConfig } {
+  private async collectSimulationParams(): Promise<{ config: SimulationConfig; portfolio: PortfolioConfig }> {
     // Portfolio Settings
     const initialValue = this.getNumberInputValue('initial-investment', 5000000);
     const initialLocBalance = this.getNumberInputValue('initial-loc-balance', 0);
@@ -1380,8 +1380,8 @@ export class AppRoot extends BaseComponent {
     const assetReturnsByYear: Map<string, Map<string, number>> = new Map();
 
     for (const [symbol, weightPercent] of Object.entries(weights)) {
-      // Get historical returns from preset data
-      const preset = getPresetData(symbol);
+      // Get historical returns - check custom data first, fall back to bundled presets
+      const preset = await getEffectiveData(symbol);
       let historicalReturns: number[];
       const returnsByYear: Map<string, number> = new Map();
 
@@ -1488,6 +1488,38 @@ export class AppRoot extends BaseComponent {
       }
     }) as EventListener);
 
+    // Listen for historical data changes to refresh portfolio composition
+    const portfolioComp = this.$('#portfolio-composition') as (PortfolioComposition & { refreshAvailableAssets(): Promise<void> }) | null;
+
+    const handleHistoricalDataChange = async () => {
+      // Refresh portfolio composition's available assets list
+      if (portfolioComp && typeof portfolioComp.refreshAvailableAssets === 'function') {
+        await portfolioComp.refreshAvailableAssets();
+      }
+      // Show toast to confirm data refresh
+      toastContainer?.show('Historical data updated - simulation will use new values', 'info');
+    };
+
+    // Single asset data imported
+    this.shadowRoot?.addEventListener('data-imported', (async () => {
+      await handleHistoricalDataChange();
+    }) as EventListener);
+
+    // Bulk data imported
+    this.shadowRoot?.addEventListener('bulk-data-imported', (async () => {
+      await handleHistoricalDataChange();
+    }) as EventListener);
+
+    // Single asset reset to defaults
+    this.shadowRoot?.addEventListener('data-reset', (async () => {
+      await handleHistoricalDataChange();
+    }) as EventListener);
+
+    // All data reset to defaults
+    this.shadowRoot?.addEventListener('all-data-reset', (async () => {
+      await handleHistoricalDataChange();
+    }) as EventListener);
+
     // Settings button handler
     const settingsBtn = this.$('#btn-settings');
     const settingsPanel = this.$('#settings-panel') as any;
@@ -1563,7 +1595,7 @@ export class AppRoot extends BaseComponent {
     });
 
     // Print button click handler
-    printBtn?.addEventListener('click', () => {
+    printBtn?.addEventListener('click', async () => {
       // Get results dashboard element
       const dashboard = this.$('#results') as any;
       if (!dashboard || !this._simulationResult) {
@@ -1583,7 +1615,7 @@ export class AppRoot extends BaseComponent {
       }
 
       // Get simulation config
-      const config = this._simulationConfig || this.collectSimulationParams().config;
+      const config = this._simulationConfig || (await this.collectSimulationParams()).config;
 
       // Extract all dashboard data from rendered DOM
       const dashboardData = extractDashboardData(dashboardShadowRoot, config);
@@ -1807,8 +1839,8 @@ export class AppRoot extends BaseComponent {
           progress.setAttribute('value', '0');
         }
 
-        // Collect parameters from UI
-        const { config, portfolio } = this.collectSimulationParams();
+        // Collect parameters from UI (async to load custom historical data)
+        const { config, portfolio } = await this.collectSimulationParams();
 
         // Run the real Monte Carlo simulation
         const result = await runSimulation(config, portfolio, (percent) => {

@@ -953,7 +953,7 @@ export class KeyMetricsBanner extends BaseComponent {
       /* Full HD widescreen (1920px+) - max-width for content */
       @media (min-width: 1920px) {
         .banner-grid {
-          max-width: var(--content-max-width-xl, 1800px);
+          max-width: var(--content-max-width-xl, 2340px);
           margin-left: auto;
           margin-right: auto;
         }

@@ -990,6 +990,25 @@ export class PortfolioComposition extends BaseComponent {
     this.loadInitialPortfolio();
   }
 
+  /**
+   * Public method to refresh available assets after historical data changes.
+   * Should be called when custom data is imported/reset.
+   */
+  public async refreshAvailableAssets(): Promise<void> {
+    // Reload bundled asset data (synchronous)
+    const bundledSymbols = getPresetSymbols();
+    this.availableAssets = bundledSymbols.map((symbol, index) => {
+      const preset = getPresetData(symbol);
+      return this.calculateAssetStats(symbol, preset, index);
+    });
+
+    // Load effective data (custom overrides) and custom-only assets
+    await this.loadEffectiveAssetData();
+
+    // Re-render to update the UI (in case loadEffectiveAssetData didn't trigger render)
+    this.render();
+  }
+
   private async loadInitialPortfolio(): Promise<void> {
     try {
       const lastPortfolio = await loadLastPortfolio();
@@ -1089,45 +1108,71 @@ export class PortfolioComposition extends BaseComponent {
   }
 
   private loadAvailableAssets(): void {
-    // Load bundled preset symbols first (synchronous)
+    // Load bundled preset symbols first (synchronous for fast initial render)
     const bundledSymbols = getPresetSymbols();
     this.availableAssets = bundledSymbols.map((symbol, index) => {
       const preset = getPresetData(symbol);
       return this.calculateAssetStats(symbol, preset, index);
     });
 
-    // Then load any custom-only assets (async)
-    this.loadCustomOnlyAssets();
+    // Then asynchronously update with effective data (custom overrides) and add custom-only assets
+    this.loadEffectiveAssetData();
   }
 
-  private async loadCustomOnlyAssets(): Promise<void> {
+  private async loadEffectiveAssetData(): Promise<void> {
     try {
-      const bundledSymbols = new Set(getPresetSymbols());
+      const bundledSymbols = getPresetSymbols();
       const customSymbols = await getCustomSymbols();
+      const customSymbolSet = new Set(customSymbols);
 
-      // Find symbols that exist only in custom data (not in bundled presets)
-      const customOnlySymbols = customSymbols.filter(s => !bundledSymbols.has(s));
+      let needsRender = false;
 
-      if (customOnlySymbols.length === 0) return;
-
-      // Load data for custom-only assets
-      const startIndex = this.availableAssets.length;
-      for (let i = 0; i < customOnlySymbols.length; i++) {
-        const symbol = customOnlySymbols[i];
-        const data = await getEffectiveData(symbol);
-        if (data) {
-          const stats = this.calculateAssetStats(symbol, data, startIndex + i);
-          this.availableAssets.push(stats);
+      // Update bundled assets with effective data (custom takes precedence)
+      for (let i = 0; i < bundledSymbols.length; i++) {
+        const symbol = bundledSymbols[i];
+        if (customSymbolSet.has(symbol)) {
+          // This bundled symbol has custom data - update stats
+          const data = await getEffectiveData(symbol);
+          if (data) {
+            this.availableAssets[i] = this.calculateAssetStats(symbol, data, i);
+            needsRender = true;
+          }
         }
       }
 
-      // Re-render to show the new assets
+      // Find and add symbols that exist only in custom data (not in bundled presets)
+      const bundledSymbolSet = new Set(bundledSymbols);
+      const customOnlySymbols = customSymbols.filter(s => !bundledSymbolSet.has(s));
+
       if (customOnlySymbols.length > 0) {
+        // Sort custom-only symbols alphabetically
+        customOnlySymbols.sort((a, b) => a.localeCompare(b));
+
+        const startIndex = this.availableAssets.length;
+        for (let i = 0; i < customOnlySymbols.length; i++) {
+          const symbol = customOnlySymbols[i];
+          const data = await getEffectiveData(symbol);
+          if (data) {
+            const stats = this.calculateAssetStats(symbol, data, startIndex + i);
+            this.availableAssets.push(stats);
+            needsRender = true;
+          }
+        }
+      }
+
+      // Re-render if any data changed
+      if (needsRender) {
         this.render();
       }
     } catch (error) {
-      console.error('Error loading custom-only assets:', error);
+      console.error('Error loading effective asset data:', error);
     }
+  }
+
+  private async loadCustomOnlyAssets(): Promise<void> {
+    // This method is now handled by loadEffectiveAssetData but kept for compatibility
+    // It may be called during refresh to ensure custom-only assets are loaded
+    await this.loadEffectiveAssetData();
   }
 
   private calculateAssetStats(symbol: string, preset: PresetData | undefined, colorIndex: number): AssetStats {
