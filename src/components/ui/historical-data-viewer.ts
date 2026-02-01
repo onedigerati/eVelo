@@ -240,6 +240,60 @@ export class HistoricalDataViewer extends BaseComponent {
         <file-drop-zone id="bulk-file-drop"></file-drop-zone>
       </div>
 
+      <div class="bulk-section ai-generation-section">
+        <h3>AI-Assisted Data Generation</h3>
+        <p class="bulk-description">
+          Use AI assistants (ChatGPT, Gemini, Claude) to generate properly formatted CSV data for bulk import.
+          Copy the prompt template below and paste it into any AI assistant.
+        </p>
+        <div class="prompt-container">
+          <details>
+            <summary>View Prompt Template</summary>
+            <pre class="prompt-template">System/User Role: You are a financial data specialist.
+
+Task: I will provide a list of ticker symbols. Generate a CSV export (in a code block) following the exact schema of the provided "Bulk Import Template."
+
+The Schema:
+
+symbol: The ticker symbol.
+name: The full legal company/fund name.
+asset_class: Categorize as equity_stock, equity_index, fixed_income, or crypto.
+year: The calendar year.
+annual_return: The total annual return as a decimal (e.g., 0.125).
+
+Data Requirements:
+
+Contiguous 31-Year Span: Provide data for exactly 31 years, starting from 1995 through 2025.
+
+Handling Young Companies (Proxy Backfilling): If a company has not been in business/public for the full 31 years:
+- For the years before the company existed, use the annual returns of the S&P 500 (SPY) as a proxy.
+- Keep the symbol and name columns consistent with the requested ticker, even for the proxy years.
+- This ensures every ticker has a full, unbroken 31-year history.
+
+These are the only supported values for asset_class:
+equity_stock, equity_index, commodity
+
+Make sure you make your best judgement to properly classify the assets.
+
+Formatting Rules:
+
+Output in standard CSV format.
+Header: symbol,name,asset_class,year,annual_return
+Ensure high accuracy for the historical return percentages.
+
+Input Tickers:
+[INSERT TICKERS HERE]</pre>
+          </details>
+          <button class="btn btn-secondary copy-prompt-btn" id="copy-prompt-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            <span class="copy-prompt-text">Copy Prompt</span>
+          </button>
+        </div>
+      </div>
+
       <div class="bulk-section reset-section">
         <h3>Reset to Defaults</h3>
         <p class="bulk-description">
@@ -708,6 +762,7 @@ export class HistoricalDataViewer extends BaseComponent {
     this.$('#bulk-export-json')?.addEventListener('click', () => this.handleBulkExportJson());
     this.$('#download-csv-template')?.addEventListener('click', () => downloadCsvTemplate());
     this.$('#download-json-template')?.addEventListener('click', () => downloadJsonTemplate());
+    this.$('#copy-prompt-btn')?.addEventListener('click', () => this.handleCopyPrompt());
 
     // Bulk file drop zone
     const bulkFileDropZone = this.$('#bulk-file-drop');
@@ -932,6 +987,63 @@ export class HistoricalDataViewer extends BaseComponent {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  private async handleCopyPrompt(): Promise<void> {
+    const promptTemplate = `System/User Role: You are a financial data specialist.
+
+Task: I will provide a list of ticker symbols. Generate a CSV export (in a code block) following the exact schema of the provided "Bulk Import Template."
+
+The Schema:
+
+symbol: The ticker symbol.
+name: The full legal company/fund name.
+asset_class: Categorize as equity_stock, equity_index, fixed_income, or crypto.
+year: The calendar year.
+annual_return: The total annual return as a decimal (e.g., 0.125).
+
+Data Requirements:
+
+Contiguous 31-Year Span: Provide data for exactly 31 years, starting from 1995 through 2025.
+
+Handling Young Companies (Proxy Backfilling): If a company has not been in business/public for the full 31 years:
+- For the years before the company existed, use the annual returns of the S&P 500 (SPY) as a proxy.
+- Keep the symbol and name columns consistent with the requested ticker, even for the proxy years.
+- This ensures every ticker has a full, unbroken 31-year history.
+
+These are the only supported values for asset_class:
+equity_stock, equity_index, commodity
+
+Make sure you make your best judgement to properly classify the assets.
+
+Formatting Rules:
+
+Output in standard CSV format.
+Header: symbol,name,asset_class,year,annual_return
+Ensure high accuracy for the historical return percentages.
+
+Input Tickers:
+[INSERT TICKERS HERE]`;
+
+    try {
+      await navigator.clipboard.writeText(promptTemplate);
+
+      // Show success feedback
+      const btn = this.$('#copy-prompt-btn');
+      const textSpan = this.$('.copy-prompt-text');
+
+      if (btn && textSpan) {
+        btn.classList.add('copy-success');
+        textSpan.textContent = 'Copied!';
+
+        setTimeout(() => {
+          btn.classList.remove('copy-success');
+          textSpan.textContent = 'Copy Prompt';
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy prompt:', err);
+    }
   }
 
   protected styles(): string {
@@ -1534,6 +1646,81 @@ export class HistoricalDataViewer extends BaseComponent {
         margin-bottom: 4px;
       }
 
+      /* AI Generation Section */
+      .ai-generation-section {
+        background: rgba(13, 148, 136, 0.05);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+      }
+
+      .prompt-container {
+        margin-top: 16px;
+      }
+
+      .prompt-container details {
+        background: var(--surface-primary, #fff);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: var(--border-radius-sm, 6px);
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .prompt-container summary {
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--text-secondary, #6b7280);
+        font-size: 0.875rem;
+        user-select: none;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .prompt-container summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .prompt-container summary::before {
+        content: '▶';
+        display: inline-block;
+        width: 12px;
+        transition: transform 0.2s;
+        color: var(--color-primary, #0d9488);
+      }
+
+      .prompt-container details[open] summary::before {
+        transform: rotate(90deg);
+      }
+
+      .prompt-template {
+        margin: 12px 0 0 0;
+        background: var(--surface-secondary, #f9fafb);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: var(--border-radius-sm, 4px);
+        padding: 12px;
+        font-size: 0.75rem;
+        line-height: 1.6;
+        overflow-x: auto;
+        color: var(--text-primary, #111827);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .copy-prompt-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .copy-prompt-btn.copy-success {
+        background: var(--color-success, #059669);
+        color: white;
+        border-color: var(--color-success, #059669);
+      }
+
+      .copy-prompt-btn.copy-success svg {
+        stroke: white;
+      }
+
       /* Dark theme */
       :host-context([data-theme="dark"]) .modal-container {
         background: var(--surface-primary);
@@ -1629,6 +1816,26 @@ export class HistoricalDataViewer extends BaseComponent {
       :host-context([data-theme="dark"]) .help-block code {
         background: var(--surface-primary);
         border-color: var(--border-color);
+      }
+
+      :host-context([data-theme="dark"]) .ai-generation-section {
+        background: rgba(13, 148, 136, 0.1);
+        border-color: rgba(13, 148, 136, 0.3);
+      }
+
+      :host-context([data-theme="dark"]) .prompt-container details {
+        background: var(--surface-secondary);
+        border-color: var(--border-color);
+      }
+
+      :host-context([data-theme="dark"]) .prompt-container summary {
+        color: var(--text-secondary);
+      }
+
+      :host-context([data-theme="dark"]) .prompt-template {
+        background: var(--surface-primary);
+        border-color: var(--border-color);
+        color: var(--text-primary);
       }
     `;
   }
