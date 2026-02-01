@@ -56,6 +56,7 @@ export class HistoricalDataViewer extends BaseComponent {
   private _showResetAllConfirm = false;
   private _resetAllCheckbox = false;
   private _customSymbolCount = 0;
+  private _allSymbols: string[] = [];
 
   /**
    * Show the modal for a specific symbol
@@ -72,7 +73,22 @@ export class HistoricalDataViewer extends BaseComponent {
     this._showHelp = false;
     this._showResetAllConfirm = false;
     this._resetAllCheckbox = false;
+    await this.loadAllSymbols();
     await this.loadData();
+  }
+
+  /**
+   * Load all available symbols (bundled + custom-only)
+   */
+  private async loadAllSymbols(): Promise<void> {
+    const bundledSymbols = getPresetSymbols();
+    const customSymbols = await getCustomSymbols();
+
+    // Merge: bundled + any custom-only symbols not in bundled
+    const bundledSet = new Set(bundledSymbols);
+    const customOnlySymbols = customSymbols.filter(s => !bundledSet.has(s));
+
+    this._allSymbols = [...bundledSymbols, ...customOnlySymbols];
   }
 
   /**
@@ -307,7 +323,7 @@ export class HistoricalDataViewer extends BaseComponent {
   }
 
   private renderSymbolSelector(): string {
-    const symbols = getPresetSymbols();
+    const symbols = this._allSymbols.length > 0 ? this._allSymbols : getPresetSymbols();
     const groupedSymbols = this.groupSymbolsByClass(symbols);
 
     return `
@@ -339,6 +355,7 @@ export class HistoricalDataViewer extends BaseComponent {
     symbols.forEach(symbol => {
       const data = getPresetData(symbol);
       if (!data) {
+        // Custom-only assets (no bundled preset) go to Individual Stocks
         groups['Individual Stocks'].push(symbol);
         return;
       }
@@ -351,6 +368,11 @@ export class HistoricalDataViewer extends BaseComponent {
       } else {
         groups['Individual Stocks'].push(symbol);
       }
+    });
+
+    // Sort each group alphabetically
+    Object.keys(groups).forEach(key => {
+      groups[key].sort((a, b) => a.localeCompare(b));
     });
 
     // Remove empty groups
