@@ -735,6 +735,14 @@ None
 | 016 | Fix Load button for already-selected preset | 2026-01-29 | b4c7c70 | [016-fix-load-button-for-already-selected-pre](./quick/016-fix-load-button-for-already-selected-pre/) |
 | 017 | Fix help tooltip formatting and readability | 2026-01-30 | 3e55ac9 | [017-fix-help-tooltip-formatting](./quick/017-fix-help-tooltip-formatting/) |
 | 018 | Replace BBD card icons with flat SVG line-art icons | 2026-01-31 | 954dac7 | [018-consistent-bbd-card-icons](./quick/018-consistent-bbd-card-icons/) |
+| 019 | Add AI-assisted data generation guide to Bulk Operations | 2026-01-31 | a0a8646 | [019-add-ai-assisted-data-generation-guide-to](./quick/019-add-ai-assisted-data-generation-guide-to/) |
+
+**From quick-019:**
+- AI prompt template with copy-to-clipboard for generating bulk historical data
+- Collapsible details/summary pattern using native HTML
+- Full 31-year data specification with proxy backfilling for young companies
+- One-click copy functionality with 2-second visual feedback
+- Dark theme support for AI generation section
 
 **From quick-018:**
 - Buy icon: Bar chart SVG (growing investment)
@@ -1120,7 +1128,7 @@ Commit: 752a7e4
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 33-02-PLAN.md
+Stopped at: Completed quick-019 (AI-assisted data generation guide)
 Resume file: None
 
 **Milestone Status:**
