@@ -118,6 +118,35 @@ export class WelcomeScreen extends BaseComponent {
           </div>
         </section>
 
+        <!-- Video Section -->
+        <section class="video-section">
+          <div class="video-card">
+            <div class="video-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <div class="video-content">
+              <h3 class="video-title">Learn More About Buy-Borrow-Die</h3>
+              <p class="video-description">
+                Watch this comprehensive explanation of the BBD strategy and how it works in practice.
+              </p>
+              <a href="https://youtu.be/-hqEIseS_e0?si=rC-GDoL3Tvc8cyQI"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="video-link">
+                <span class="video-link-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                  </svg>
+                </span>
+                Watch on YouTube
+                <span class="external-icon">↗</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
         <!-- Benefits & Risks Section -->
         <section class="benefits-risks-section">
           <div class="benefits-column">
@@ -328,6 +357,117 @@ export class WelcomeScreen extends BaseComponent {
         line-height: 1.6;
       }
 
+      /* Video Section */
+      .video-section {
+        margin-bottom: var(--spacing-xl, 32px);
+      }
+
+      .video-card {
+        background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+        border-radius: var(--border-radius-lg, 12px);
+        padding: var(--spacing-lg, 24px);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg, 24px);
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .video-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover, 0 8px 32px rgba(13, 148, 136, 0.3));
+      }
+
+      .video-icon {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .video-card:hover .video-icon {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      .video-icon svg {
+        width: 32px;
+        height: 32px;
+        margin-left: 4px;
+      }
+
+      .video-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .video-title {
+        margin: 0 0 var(--spacing-xs, 4px) 0;
+        font-size: var(--font-size-lg, 1.25rem);
+        font-weight: 600;
+        color: white;
+      }
+
+      .video-description {
+        margin: 0 0 var(--spacing-md, 16px) 0;
+        font-size: var(--font-size-sm, 0.875rem);
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+      }
+
+      .video-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm, 8px);
+        padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+        background: white;
+        color: var(--color-primary, #0d9488);
+        text-decoration: none;
+        border-radius: var(--border-radius-md, 8px);
+        font-size: var(--font-size-sm, 0.875rem);
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .video-link:hover {
+        background: #f0fdfa;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .video-link:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+      }
+
+      .video-link-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .video-link-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .external-icon {
+        font-size: 1rem;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+      }
+
+      .video-link:hover .external-icon {
+        opacity: 1;
+      }
+
       /* Benefits & Risks Section */
       .benefits-risks-section {
         display: grid;
@@ -503,6 +643,26 @@ export class WelcomeScreen extends BaseComponent {
           grid-template-columns: 1fr;
         }
 
+        .video-card {
+          flex-direction: column;
+          text-align: center;
+          padding: var(--spacing-md, 16px);
+        }
+
+        .video-icon {
+          width: 56px;
+          height: 56px;
+        }
+
+        .video-icon svg {
+          width: 28px;
+          height: 28px;
+        }
+
+        .video-title {
+          font-size: var(--font-size-md, 1rem);
+        }
+
         .benefits-risks-section {
           grid-template-columns: 1fr;
         }
@@ -573,6 +733,18 @@ export class WelcomeScreen extends BaseComponent {
 
       :host-context([data-theme="dark"]) .cta-button.secondary:hover {
         background: rgba(20, 184, 166, 0.15);
+      }
+
+      :host-context([data-theme="dark"]) .video-card {
+        background: linear-gradient(135deg, #0d7c72 0%, #0f9b8e 100%);
+      }
+
+      :host-context([data-theme="dark"]) .video-link {
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      :host-context([data-theme="dark"]) .video-link:hover {
+        background: white;
       }
     `;
   }
