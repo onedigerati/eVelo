@@ -37,7 +37,7 @@ jobs:
         run: npm run build:portable
 
       - name: Copy portable to dist
-        run: cp dist-portable/eVelo.html dist/eVelo.html
+        run: cp dist-portable/index.html dist/eVelo.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
