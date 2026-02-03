@@ -15,7 +15,7 @@ export { sum, round, almostEqual, EPSILON } from './precision';
 export { mean, variance, stddev, percentile } from './statistics';
 
 // Correlation functions
-export { pearsonCorrelation, correlationMatrix, choleskyDecomposition } from './correlation';
+export { pearsonCorrelation, correlationMatrix, choleskyDecomposition, regularizeCorrelationMatrix } from './correlation';
 
 // Distribution functions
 export { normalRandom, lognormalRandom, correlatedSamples } from './distributions';

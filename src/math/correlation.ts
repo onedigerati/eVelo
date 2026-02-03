@@ -11,6 +11,12 @@ import { sum, round, EPSILON } from './precision';
 /** Default decimal precision for output values */
 const DEFAULT_PRECISION = 6;
 
+/** Maximum correlation for off-diagonal elements (prevents singularity) */
+const MAX_CORRELATION = 0.9999;
+
+/** Regularization factor added to diagonal when matrix is near-singular */
+const REGULARIZATION_EPSILON = 1e-6;
+
 /**
  * Calculate Pearson correlation coefficient between two arrays
  *
@@ -93,10 +99,53 @@ export function correlationMatrix(assetReturns: number[][]): number[][] {
 }
 
 /**
+ * Regularize a correlation matrix to ensure it's positive-definite
+ *
+ * This handles two common issues:
+ * 1. Off-diagonal correlations of exactly ±1.0 (makes matrix singular)
+ * 2. Near-singular matrices that fail Cholesky (adds small diagonal regularization)
+ *
+ * @param matrix - Correlation matrix to regularize
+ * @param addDiagonalRegularization - Whether to also add diagonal regularization
+ * @returns A new regularized matrix (original is not modified)
+ */
+export function regularizeCorrelationMatrix(
+  matrix: number[][],
+  addDiagonalRegularization: boolean = false
+): number[][] {
+  const n = matrix.length;
+  if (n === 0) return [];
+
+  // Create a copy of the matrix
+  const regularized: number[][] = matrix.map(row => [...row]);
+
+  // Cap off-diagonal correlations at ±MAX_CORRELATION
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i !== j) {
+        regularized[i][j] = Math.max(-MAX_CORRELATION, Math.min(MAX_CORRELATION, regularized[i][j]));
+      }
+    }
+  }
+
+  // Optionally add small diagonal regularization
+  if (addDiagonalRegularization) {
+    for (let i = 0; i < n; i++) {
+      regularized[i][i] = 1.0 + REGULARIZATION_EPSILON;
+    }
+  }
+
+  return regularized;
+}
+
+/**
  * Cholesky decomposition of a symmetric positive-definite matrix
  *
  * Produces lower triangular matrix L such that L * L^T = input matrix.
  * Used to generate correlated random samples: Y = L * Z where Z is uncorrelated.
+ *
+ * Automatically regularizes near-singular matrices (e.g., when assets have
+ * perfect or near-perfect correlations) to ensure successful decomposition.
  *
  * @param matrix - Symmetric positive-definite matrix (typically correlation matrix)
  * @returns Lower triangular matrix L, or null if matrix is not positive-definite
@@ -107,6 +156,38 @@ export function choleskyDecomposition(matrix: number[][]): number[][] | null {
   if (n === 0) {
     return [];
   }
+
+  // Try with original matrix first
+  let result = choleskyDecompositionInternal(matrix);
+  if (result !== null) {
+    return result;
+  }
+
+  // First attempt: cap correlations at ±0.9999
+  const regularized = regularizeCorrelationMatrix(matrix, false);
+  result = choleskyDecompositionInternal(regularized);
+  if (result !== null) {
+    console.warn('Correlation matrix required regularization (capped correlations at ±0.9999)');
+    return result;
+  }
+
+  // Second attempt: add diagonal regularization
+  const fullyRegularized = regularizeCorrelationMatrix(matrix, true);
+  result = choleskyDecompositionInternal(fullyRegularized);
+  if (result !== null) {
+    console.warn('Correlation matrix required diagonal regularization');
+    return result;
+  }
+
+  // If still failing, return null
+  return null;
+}
+
+/**
+ * Internal Cholesky decomposition without regularization attempts
+ */
+function choleskyDecompositionInternal(matrix: number[][]): number[][] | null {
+  const n = matrix.length;
 
   // Initialize L matrix with zeros
   const L: number[][] = Array(n)
