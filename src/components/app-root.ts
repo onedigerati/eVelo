@@ -71,7 +71,7 @@ export class AppRoot extends BaseComponent {
     return `
       <main-layout>
         <sidebar-panel slot="sidebar" title="Strategy Parameters">
-          <param-section title="Your Portfolio" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12V7H5a2 2 0 0 1 0-4h14v4'/><path d='M3 5v14a2 2 0 0 0 2 2h16v-5'/><path d='M18 12a2 2 0 0 0 0 4h4v-4Z'/></svg>" open>
+          <param-section id="your-portfolio-section" title="Your Portfolio" icon="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12V7H5a2 2 0 0 1 0-4h14v4'/><path d='M3 5v14a2 2 0 0 0 2 2h16v-5'/><path d='M18 12a2 2 0 0 0 0 4h4v-4Z'/></svg>" open>
             <div class="param-group">
               <label>Initial Investment</label>
               <number-input
@@ -1249,13 +1249,17 @@ export class AppRoot extends BaseComponent {
         mainLayout.removeAttribute('sidebar-collapsed');
       }
 
+      // Scroll to the "Your Portfolio" section (parent of portfolio-composition)
+      const portfolioSection = this.$('#your-portfolio-section') as HTMLElement | null;
       const portfolioComp = this.$('#portfolio-composition') as HTMLElement | null;
 
-      if (portfolioComp) {
-        // Scroll to portfolio section (in sidebar on desktop, or visible area on mobile)
-        portfolioComp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (portfolioSection) {
+        // Scroll to the top of the Your Portfolio section
+        portfolioSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
 
-        // Add temporary highlight animation
+      if (portfolioComp) {
+        // Add temporary highlight animation to the portfolio composition
         portfolioComp.classList.add('highlight-pulse');
         setTimeout(() => {
           portfolioComp.classList.remove('highlight-pulse');
