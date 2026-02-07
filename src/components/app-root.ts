@@ -1241,8 +1241,14 @@ export class AppRoot extends BaseComponent {
    * Highlight portfolio section for custom setup
    */
   private highlightPortfolioSection(): void {
-    // Small delay to allow welcome screen to hide
+    // Small delay to allow any state changes to settle
     setTimeout(() => {
+      // On mobile, expand the sidebar so user can see the portfolio section
+      const mainLayout = this.$('main-layout') as HTMLElement | null;
+      if (window.matchMedia('(max-width: 768px)').matches && mainLayout) {
+        mainLayout.removeAttribute('sidebar-collapsed');
+      }
+
       const portfolioComp = this.$('#portfolio-composition') as HTMLElement | null;
 
       if (portfolioComp) {
@@ -1663,8 +1669,8 @@ export class AppRoot extends BaseComponent {
         welcome?.classList.add('hidden');
         runBtn?.click();
       } else if (result === 'confirm') {
-        // Open custom portfolio setup
-        welcome?.classList.add('hidden');
+        // Open custom portfolio setup - keep welcome screen visible
+        // It will be hidden after the first simulation runs successfully
         this.highlightPortfolioSection();
       }
       // result === 'cancel' - stay on welcome screen (do nothing)
