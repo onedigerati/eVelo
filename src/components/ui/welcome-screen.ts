@@ -138,7 +138,7 @@ export class WelcomeScreen extends BaseComponent {
                 </div>
               </div>
             </a>
-            <a href="https://youtu.be/wHIM74Vhlm0?si=s0-2kUKxnvP2jvFV"
+            <a href="https://www.youtube.com/watch?v=exnBeSCUBCc"
                target="_blank"
                rel="noopener noreferrer"
                class="video-card-link">
