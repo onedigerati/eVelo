@@ -150,7 +150,7 @@ export class WelcomeScreen extends BaseComponent {
                 </div>
                 <div class="video-item-text">
                   <span class="video-item-title">eVelo App Walkthrough <span class="external-icon">↗</span></span>
-                  <span class="video-item-desc">See eVelo in action — a guided tour of the simulator showing how to set up portfolios and interpret your results.</span>
+                  <span class="video-item-desc">Investment philosophy from legendary investor - Peter Lynch.</span>
                 </div>
               </div>
             </a>
