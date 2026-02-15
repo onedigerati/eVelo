@@ -149,8 +149,8 @@ export class WelcomeScreen extends BaseComponent {
                   </svg>
                 </div>
                 <div class="video-item-text">
-                  <span class="video-item-title">eVelo App Walkthrough <span class="external-icon">↗</span></span>
-                  <span class="video-item-desc">Investment philosophy from legendary investor - Peter Lynch.</span>
+                  <span class="video-item-title">Peter Lynch - Investment Philosophy <span class="external-icon">↗</span></span>
+                  <span class="video-item-desc">Advice from a legendary investor.</span>
                 </div>
               </div>
             </a>
