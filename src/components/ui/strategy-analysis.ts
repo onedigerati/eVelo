@@ -424,13 +424,13 @@ export class StrategyAnalysis extends BaseComponent {
         margin: 0;
         font-size: var(--font-size-lg, 1.125rem);
         font-weight: 700;
-        color: #1e293b; /* Force dark text on light accent banner */
+        color: var(--text-primary, #1e293b);
       }
 
       .verdict-text p {
         margin: var(--spacing-xs, 4px) 0 0 0;
         font-size: var(--font-size-sm, 0.875rem);
-        color: #475569; /* Force gray text on light accent banner */
+        color: var(--text-secondary, #475569);
         max-width: 500px;
       }
 
@@ -468,7 +468,7 @@ export class StrategyAnalysis extends BaseComponent {
       }
 
       .dial-text {
-        fill: #1e293b; /* Force dark text on light accent banner */
+        fill: var(--text-primary, #1e293b);
         font-size: 1.2rem;
         font-weight: 700;
         text-anchor: middle;
@@ -476,7 +476,7 @@ export class StrategyAnalysis extends BaseComponent {
       }
 
       .dial-label {
-        fill: #475569; /* Force gray text on light accent banner */
+        fill: var(--text-secondary, #475569);
         font-size: 0.6rem;
         font-weight: 600;
         text-anchor: middle;
