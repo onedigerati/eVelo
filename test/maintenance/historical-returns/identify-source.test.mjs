@@ -140,6 +140,15 @@ test('invalid manifest JSON and non-object roots fail explicitly', t => {
   }
 });
 
+test('duplicate manifest keys fail without a success summary', t => {
+  const f = fixture(t);
+  const text = JSON.stringify(f.provenance)
+    .replace(`"snapshotSha256":"${f.provenance.snapshotSha256}"`,
+      `"snapshotSha256":"${f.provenance.snapshotSha256}","snapshotSha256":"${'0'.repeat(64)}"`);
+  writeFileSync(f.manifest, text);
+  fails(run(['--source', f.source, '--manifest', f.manifest]), /duplicate JSON object key.*snapshotSha256/i);
+});
+
 test('filename and checksum mismatches fail, including a change to whitespace bytes', t => {
   const f = fixture(t);
   f.provenance.snapshotFilename = 'different.csv';

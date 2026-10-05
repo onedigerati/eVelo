@@ -38,6 +38,86 @@ function requirePair(source, manifest) {
   }
 }
 
+function assertNoDuplicateJsonKeys(text) {
+  let index = 0;
+
+  function skipWhitespace() {
+    while (/\s/.test(text[index] ?? '') && index < text.length) index++;
+  }
+
+  function readString() {
+    const start = index++;
+    while (index < text.length) {
+      const character = text[index++];
+      if (character === '"') return JSON.parse(text.slice(start, index));
+      if (character === '\\') index++;
+    }
+    throw new Error('Invalid JSON string.');
+  }
+
+  function readObject() {
+    index++;
+    skipWhitespace();
+    const keys = new Set();
+    if (text[index] === '}') {
+      index++;
+      return;
+    }
+
+    while (index < text.length) {
+      skipWhitespace();
+      if (text[index] !== '"') throw new Error('Invalid JSON object key.');
+      const key = readString();
+      if (keys.has(key)) throw new Error(`Duplicate JSON object key: ${JSON.stringify(key)}.`);
+      keys.add(key);
+      skipWhitespace();
+      if (text[index++] !== ':') throw new Error('Invalid JSON object member.');
+      readValue();
+      skipWhitespace();
+      if (text[index] === '}') {
+        index++;
+        return;
+      }
+      if (text[index++] !== ',') throw new Error('Invalid JSON object separator.');
+    }
+    throw new Error('Unterminated JSON object.');
+  }
+
+  function readArray() {
+    index++;
+    skipWhitespace();
+    if (text[index] === ']') {
+      index++;
+      return;
+    }
+    while (index < text.length) {
+      readValue();
+      skipWhitespace();
+      if (text[index] === ']') {
+        index++;
+        return;
+      }
+      if (text[index++] !== ',') throw new Error('Invalid JSON array separator.');
+    }
+    throw new Error('Unterminated JSON array.');
+  }
+
+  function readValue() {
+    skipWhitespace();
+    if (text[index] === '{') return readObject();
+    if (text[index] === '[') return readArray();
+    if (text[index] === '"') {
+      readString();
+      return;
+    }
+    while (index < text.length && !/[\s,}\]]/.test(text[index])) index++;
+  }
+
+  readValue();
+  skipWhitespace();
+  if (index !== text.length) throw new Error('Unexpected content after JSON value.');
+}
+
 function identify(args) {
   const options = parseArguments(args);
   const source = options['--source'];
@@ -53,7 +133,9 @@ function identify(args) {
 
   let manifest;
   try {
-    manifest = JSON.parse(manifestInput.bytes.toString('utf8'));
+    const manifestText = manifestInput.bytes.toString('utf8');
+    assertNoDuplicateJsonKeys(manifestText);
+    manifest = JSON.parse(manifestText);
   } catch (error) {
     throw new Error(`Manifest ${manifestPath} is not readable JSON: ${error.message}`, { cause: error });
   }
