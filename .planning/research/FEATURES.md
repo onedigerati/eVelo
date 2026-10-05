@@ -1,387 +1,102 @@
-# Features Research: eVelo Portfolio Monte Carlo Simulator
+# Feature Landscape
 
-**Researched:** 2026-01-17
-**Domain:** Portfolio simulation, Monte Carlo analysis, Buy-Borrow-Die strategy
-**Confidence:** MEDIUM-HIGH (verified against competitor tools, financial literature, and official sources)
+**Domain:** Repeatable reviewed-file updates to bundled historical asset return presets
+**Project:** eVelo Portfolio Strategy Simulator
+**Researched:** 2026-10-05
+**Confidence:** MEDIUM-HIGH (high confidence on eVelo's current data boundaries; recommendations are workflow design judgments)
 
 ## Executive Summary
 
-Portfolio Monte Carlo simulators in 2025-2026 have matured into a well-defined category with clear user expectations. Table stakes include historical backtesting (1871-present data), configurable withdrawal strategies, success rate visualization, and exportable results. Professional-grade tools differentiate through regime-aware simulation, block bootstrap resampling, multiple withdrawal strategy options, and sophisticated risk metrics (CVaR, drawdown analysis).
+Treat bundled return presets as maintained source data, not as ordinary user-imported market data. The maintainer should be able to provide a provider-neutral CSV or JSON file, generate a candidate update without changing tracked files, inspect an exact old-versus-new diff and validation report, and then explicitly apply a complete reviewed update. The workflow must not require a network connection or assume a particular quote/data API.
 
-For eVelo's Buy-Borrow-Die focus, the critical differentiator is SBLOC modeling with margin call detection - a feature virtually absent from existing retirement calculators. The "Die" component (stepped-up basis simulation) is also unexplored territory in current tools.
+The repository already has useful building blocks for browser-side bulk imports: CSV/JSON parsing, asset-level validation, templates, and bulk export (`src/data/services/bulk-import-service.ts`, `src/data/validation/data-validator.ts`, `src/data/formats/bulk-format-templates.ts`, `src/data/services/bulk-export-service.ts`). Those features serve app users' custom data. The bundled presets are a separate trust boundary: checked-in JSON under `src/data/presets/` is imported synchronously by `src/data/services/preset-service.ts`, while user custom data can take precedence at runtime. A maintainer workflow should change the checked-in baseline only, and should not accidentally treat an IndexedDB override or an export of “effective” data as canonical input.
 
-**Primary recommendation:** Build table stakes first (Monte Carlo core, probability cone visualization, percentile outcomes), then differentiate with BBD-specific features (SBLOC modeling, margin call probability, stepped-up basis calculation).
+The highest-value differentiator is an auditable, deterministic review loop: strict validation, no-write dry-run by default, per-asset/per-year diffs, an explicit apply step, provenance, and a retained report. Statistical checks can identify suspicious entries but cannot establish that a historical return is factually correct; retain human review for methodology choices and source disagreements.
 
-## Feature Categories
+## Table Stakes
 
-### Table Stakes (Must Have)
+Features users and maintainers need for a safe, repeatable update:
 
-These features are expected by any user of portfolio simulators. Missing any of these will cause immediate abandonment.
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Provider-neutral CSV and JSON input | Maintainers may obtain source data through different vendors or manual research; tying the workflow to one provider constrains updates and reproducibility. | Medium | Accept files as input; do not fetch from an API. Define one documented schema for each format, with canonical symbols, asset class, year, and decimal annual return. |
+| Downloadable / checked-in format examples | Avoids guesswork about headers, JSON shape, return units, and expected asset identifiers. | Low | Reuse or align with the existing templates in `src/data/formats/bulk-format-templates.ts`; distinguish a sample/template from authoritative data. |
+| Strict syntax and semantic validation | A syntactically readable file can still be incomplete or unsafe to apply. | Medium | Reject invalid numbers, duplicate symbol/year pairs, non-finite values, malformed years, missing series, unknown symbols unless explicitly allowed, conflicting metadata, and ambiguous units. Report row/asset locations. |
+| Whole-batch integrity checks | A single valid row or asset does not prove a complete, consistent update. | Medium | Check expected asset coverage, unique symbols and years, chronological ordering, deliberate gaps, date range, and that every bundled file/output target is accounted for. Do not silently omit invalid assets. |
+| Dry-run as the default | Maintainers must be able to examine proposed changes without mutating the repository. | Low-Medium | Parse, validate, generate candidate files in a temporary/output location, and exit without modifying `src/data/presets/`. Applying changes must require a separate explicit action. |
+| Reviewable before/after diff | Numeric changes across long return histories are easy to miss in a wholesale JSON rewrite. | Medium | Show additions, removals, changed values, changed metadata, and year-range shifts by symbol and year. Format percentages and absolute percentage-point deltas clearly; provide both concise summary and detailed rows. |
+| Safe explicit apply and rollback | A rejected or incorrect update must not leave a mixed baseline. | Medium | Apply only a validated candidate after review; prefer all-or-nothing writes across the target bundle. Keep generated data under version control so existing Git review/history can serve as the audit and recovery mechanism. |
+| Provenance and methodology fields | Historical return values depend on source, total-return convention, period boundaries, and corrections—not just a ticker and number. | Medium | Record provider/source citation, source as-of/retrieval date, return convention (e.g., calendar-year total return), units/precision, input-file hash, workflow version/command, and rationale for overrides. Preserve per-symbol exceptions rather than silently blending conventions. |
+| Human-readable and machine-readable report | Reviewers need a skim-friendly decision artifact and maintainers need a stable record that can be compared or processed. | Low-Medium | Emit a readable Markdown or text report plus structured JSON summary. Include input/output hashes, timestamp, assets/years changed, unchanged, added/removed, errors/warnings, and apply status. |
+| Explicit separation from user custom data | The runtime deliberately allows custom data to override bundled defaults. | Medium | Scope the maintainer tool to repository files. `getEffectiveData()` in `src/data/services/preset-service.ts` prioritizes custom data; avoid using `exportAllToJson()` in `src/data/services/bulk-export-service.ts` as a source-of-truth export without first separating bundled from custom data. |
+| Documented maintenance cadence | Data can become stale, but indiscriminate refreshes create noise and incomplete periods can be mistaken for final annual data. | Low | Recommend review after the latest full calendar year is available and separately when a verified material correction is found. Do not auto-refresh on a timer or include a partial current year by default. |
 
-| Feature | Why Table Stakes | Complexity | Source |
-|---------|------------------|------------|--------|
-| **Historical returns simulation** | All major tools use 100+ years of data (1871-present) | LOW | FireCalc, cFIREsim, Portfolio Visualizer |
-| **Configurable time horizon** | Users need to set their specific planning period (10-50 years) | LOW | Universal |
-| **Asset allocation inputs** | Stock/bond/other percentages with weights | LOW | Universal |
-| **Success rate percentage** | The single most-cited metric ("X% of simulations succeeded") | LOW | All competitors |
-| **Probability cone / fan chart** | Visual representation of outcome distribution over time | MEDIUM | Portfolio Visualizer |
-| **Percentile outcomes (P10, P25, P50, P75, P90)** | Users need to understand best/worst/median cases | LOW | Industry standard |
-| **Portfolio value timeline** | Show balance over time across scenarios | LOW | Universal |
-| **Withdrawal rate configuration** | Fixed %, inflation-adjusted, or dynamic withdrawals | MEDIUM | 4% rule research |
-| **Inflation adjustment** | Real vs nominal values - critical for long-term planning | LOW | All tools |
-| **Export capability (CSV/print)** | Users share results with advisors, need records | LOW | FI Calc, cFIREsim |
-| **Mobile-responsive design** | Significant portion of users access on mobile | MEDIUM | Modern expectation |
+## Differentiators
 
-### Differentiators (Competitive Advantages)
+Valuable additions beyond a basic import-and-overwrite script:
 
-Features that would distinguish eVelo from Portfolio Visualizer, FireCalc, and cFIREsim.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Reproducible candidate generation | The same input and workflow version produce byte-stable candidate files and make irrelevant formatting churn obvious. | Medium | Normalize symbol ordering, year ordering, numeric precision, and line endings; avoid timestamps inside generated preset data. Keep run timestamps in the report/manifest instead. |
+| Coverage and anomaly dashboard in the report | Lets reviewers focus on meaningful changes instead of reading every row. | Medium | Surface new/missing tail years, unusually large return changes, long series shifts, and changes to start/end years. Label statistical outliers as warnings, not facts or automatic rejection. |
+| Per-asset evidence and exception ledger | Financial data often has convention edge cases; reviewers can understand why a value differs from the bulk source. | Medium-High | Capture a short rationale and source reference for manual corrections, corporate actions, inception boundaries, or non-standard return conventions. Avoid unannotated one-off overrides. |
+| Baseline-aware intent summary | Prevents users from confusing “file parsed” with “all expected bundled assets updated.” | Medium | State whether the input is a complete replacement or an explicit subset. For full refreshes, fail if expected symbols are missing; for intentional subset updates, require explicit scope and report untouched assets. |
+| CI verification of generated data | Prevents malformed bundles from reaching builds after a reviewed update. | Medium | Run schema/coverage checks and app tests/build against the generated candidate or committed files. Keep external-data retrieval and source research out of CI. |
+| Update packet for review | Provides one compact artifact bundle to share between a data preparer and reviewer. | Medium | Include the proposed diff, validation report, provenance manifest, and input checksum; separate preparer from approver where the project's review process supports it. |
 
-#### BBD-Specific Differentiators (HIGH VALUE)
+## Anti-Features
 
-| Feature | Why Differentiating | Complexity | Notes |
-|---------|---------------------|------------|-------|
-| **SBLOC modeling with margin calls** | No existing tool models leveraged borrowing against portfolio | HIGH | Core BBD value prop |
-| **Margin call probability by year** | Unique visualization for BBD risk assessment | MEDIUM | Depends on SBLOC engine |
-| **Loan-to-value ratio tracking** | LTV varies by asset type (50-70% equities, 90-95% treasuries) | MEDIUM | Critical for realistic SBLOC |
-| **Forced liquidation simulation** | What happens when margin calls hit during bear markets | HIGH | BBD worst-case analysis |
-| **Stepped-up basis calculation** | Tax savings at death - the "Die" component | MEDIUM | Estate planning value |
-| **Tax savings comparison (BBD vs sell)** | Side-by-side: what you save by NOT selling | MEDIUM | Core value demonstration |
-| **Interest accrual modeling** | SBLOC interest compounds; affects long-term outcomes | LOW | Part of SBLOC engine |
-| **Salary-equivalent display** | "Borrowing $X/year tax-free = earning $Y pre-tax salary" | LOW | Powerful UX insight |
-
-#### Simulation Quality Differentiators (MEDIUM VALUE)
-
-| Feature | Why Differentiating | Complexity | Notes |
-|---------|---------------------|------------|-------|
-| **Block bootstrap resampling** | Superior to standard bootstrap; preserves autocorrelation and volatility clustering | HIGH | Academic gold standard |
-| **Regime-switching models** | Bull/bear/crash periods with different return distributions | HIGH | More realistic than i.i.d. |
-| **Correlation-aware multi-asset** | Assets don't move independently; correlations change in crashes | MEDIUM | Dynamic correlations critical |
-| **Configurable iteration count (1K-100K)** | Power users want more iterations; casual users want speed | LOW | Standard range |
-| **Fat-tailed distributions** | Real returns have more extreme events than normal distribution | MEDIUM | Lognormal or t-distributions |
-
-#### UX Differentiators (MEDIUM VALUE)
-
-| Feature | Why Differentiating | Complexity | Notes |
-|---------|---------------------|------------|-------|
-| **Instant feedback (no page reload)** | Single-page app feel; real-time parameter updates | MEDIUM | SPA architecture |
-| **Fully offline capable** | Use without internet after initial data load | MEDIUM | PWA with service worker |
-| **Savable/shareable scenarios** | Export configuration, share with advisor | LOW | JSON export/import |
-| **Plain language recommendations** | "Consider reducing withdrawal rate" vs raw numbers | MEDIUM | AI-like guidance |
-| **What-if scenario comparison** | Side-by-side A vs B analysis | MEDIUM | Popular in ProjectionLab |
-
-### Anti-Features (Do NOT Build)
-
-Features that would hurt the product through complexity, inaccuracy, or poor UX.
-
-| Anti-Feature | Why Harmful | Alternative |
-|--------------|-------------|-------------|
-| **Budgeting integration** | Forces users to itemize expenses; kills UX, causes inaccurate guesses | Simple annual spending input |
-| **RMD/tax bracket micro-optimization** | Tax code complexity; creates false precision; not core to BBD | Educational disclaimer + link to CPA |
-| **Roth conversion ladder planning** | Complex tax strategy tangential to BBD; scope creep | Out of scope |
-| **Monthly/weekly withdrawal simulation** | Unnecessary precision; adds computation; confuses users | Annual modeling is sufficient |
-| **Real-time market data** | Expensive, complex, adds no value to simulation | Historical data only |
-| **Account linking / Plaid integration** | Security concerns; users won't trust; complex to maintain | Manual portfolio entry |
-| **"Precise" point predictions** | False confidence; users take them as gospel | Always show ranges/distributions |
-| **Too many input fields** | Analysis paralysis; users abandon complex forms | Progressive disclosure, smart defaults |
-| **Requiring registration** | Friction before value; users leave | Full functionality without login |
-| **Single "magic number" outputs** | "You need exactly $2,433,000" is misleading | Distribution of outcomes |
-| **Hourly/daily granularity** | Computational overhead with no planning benefit | Monthly or annual granularity |
-
-## Competitor Analysis
-
-| Feature | Portfolio Visualizer | FireCalc | cFIREsim | FI Calc | eVelo (Planned) |
-|---------|---------------------|----------|----------|---------|-----------------|
-| **Historical data depth** | 1972-present | 1871-present | 1871-present | 1871-present | 30+ years bundled |
-| **Monte Carlo iterations** | Variable | ~100-120 scenarios | All historical periods | All historical periods | 1K-100K |
-| **Bootstrap resampling** | Yes | No (sequential) | No (sequential) | No (sequential) | Yes (block) |
-| **Regime switching** | No | No | No | No | Yes |
-| **Multi-asset correlation** | Yes | Limited | Limited | Limited | Yes |
-| **SBLOC/margin modeling** | No | No | No | No | Yes (core) |
-| **Margin call simulation** | No | No | No | No | Yes (core) |
-| **Withdrawal strategies** | Multiple | Multiple | Multiple | Multiple (8+) | Fixed + inflation-adj |
-| **Social Security modeling** | Yes | Yes | Yes | Yes | Out of scope |
-| **Pension integration** | Yes | Yes | Yes | Yes | Out of scope |
-| **Glide path allocation** | Yes | No | Yes | Yes | Future consideration |
-| **Success rate** | Yes | Yes | Yes | Yes | Yes |
-| **Probability cone** | Yes | No | No | No | Yes |
-| **Drawdown analysis** | Yes | No | Limited | Limited | Yes |
-| **Terminal wealth histogram** | Yes | No | Yes | Yes | Yes |
-| **Export to CSV** | Yes (paid) | No | Yes | Yes | Yes |
-| **Offline capable** | No | No | No | No | Yes |
-| **Free tier** | Limited | Yes | Yes | Yes | Full |
-| **Open source** | No | No | Yes | No | TBD |
-
-### Competitor Gaps eVelo Exploits
-
-1. **No SBLOC modeling anywhere** - This is eVelo's primary moat
-2. **No margin call risk visualization** - Critical for BBD strategy
-3. **No stepped-up basis calculation** - The "Die" benefit is unquantified elsewhere
-4. **Bootstrap resampling rare** - Most use sequential historical or parametric only
-5. **Regime switching absent** - Bull/bear market awareness improves realism
-6. **Offline capability missing** - All competitors require internet
-
-## BBD Strategy Features
-
-### Phase 1: Buy (Portfolio Construction)
-
-| Feature | Purpose | Complexity |
-|---------|---------|------------|
-| Multi-asset selection (2-5 assets) | Diversification modeling | LOW |
-| Historical returns loading | Foundation for simulation | MEDIUM |
-| Custom weight allocation | User portfolio specification | LOW |
-| Correlation matrix display | Show diversification benefit | MEDIUM |
-| Bundled presets (S&P 500, 60/40, etc.) | Quick start for users | LOW |
-
-### Phase 2: Borrow (SBLOC Modeling)
-
-| Feature | Purpose | Complexity |
-|---------|---------|------------|
-| SBLOC setup (LTV ratio, interest rate) | Define borrowing terms | LOW |
-| LTV by asset type (50-70% equities, 90%+ bonds) | Realistic advance rates | MEDIUM |
-| Annual borrowing amount | Cash flow needs | LOW |
-| Interest accrual (SOFR + spread, floating) | Cost of borrowing | LOW |
-| Maintenance threshold | When margin calls trigger | MEDIUM |
-| Margin call detection | Flag danger scenarios | HIGH |
-| Forced liquidation logic | Simulate selling in drawdown | HIGH |
-| Loan balance tracking over time | Visual of debt growth | LOW |
-| Interest vs principal breakdown | Understand cost structure | LOW |
-
-### Phase 3: Die (Estate Planning)
-
-| Feature | Purpose | Complexity |
-|---------|---------|------------|
-| Stepped-up basis calculation | Tax savings to heirs | MEDIUM |
-| Final portfolio value distribution | What heirs inherit | LOW |
-| Embedded gain calculation | What would have been taxed | LOW |
-| Tax savings summary | BBD vs sell comparison | MEDIUM |
-| Estate tax threshold awareness | Note $13.99M exemption (2025) | LOW |
-
-### BBD Strategy Comparison Feature
-
-| Metric | BBD Strategy | Traditional (Sell) |
-|--------|--------------|-------------------|
-| Annual cash available | SBLOC draw | Post-tax from sales |
-| Tax paid annually | Interest only (not tax) | Capital gains |
-| Portfolio value at death | Reduced by debt | Reduced by sales |
-| Heirs receive | Stepped-up basis | Partially depleted |
-| Total tax paid | Interest cost | Capital gains + taxes |
-
-This comparison table should be a core output of every simulation.
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Automatically fetch from a vendor API or scrape data during apply | The requested workflow is file-based and provider-neutral; network availability, API changes, and provider-specific adjustments undermine repeatability and make review harder. | Accept prepared CSV/JSON files. Keep any future acquisition step separate and optional. |
+| One-step import that immediately overwrites bundled JSON | Removes the review boundary and makes accidental data corruption costly to diagnose. | Dry-run, inspect diff/report, then explicitly apply. |
+| Silent partial success or implicit skip behavior | The output can appear complete while omitting a failed asset or malformed year. | Fail the batch by default; require intentional subset scope and make all skipped/rejected items explicit. |
+| Guessing units, filling missing history, or fabricating returns | Heuristics can silently change meaning; proxy or interpolated returns can bias simulation inputs. | Require an explicit documented convention and year coverage. Keep intentionally absent years absent unless a reviewer explicitly approves a documented methodology. |
+| Treating outlier checks as proof of truth | Plausible-looking values may be wrong, and true crash-year values can look anomalous. | Use statistical checks to focus human review; validate provenance and methodology independently. |
+| Unexplained rounding or normalization | Changing decimal/percent representation or precision can produce large errors or meaningless diffs. | State the input unit, preserve the declared precision policy, reject ambiguous input, and report rounding differences. |
+| Mixing app-user custom data into the committed baseline | User overrides have different ownership and persistence; exporting effective data can fold personal data into bundled presets. | Keep repository maintenance separate from browser import/export and operate only on the bundled baseline. |
+| Frequent automatic “latest” updates or partial-year bundles | Increases churn without guaranteeing accuracy and may mix complete and incomplete periods. | Use an explicit review cadence based on complete periods and verified corrections. |
+| Rewriting all data files with unstable formatting | Creates noisy diffs that obscure the actual economic changes. | Deterministic ordering and formatting; report semantic changes separately from serialization changes. |
 
 ## Feature Dependencies
 
-```
-[Historical Data Engine]
-         |
-         v
-[Bootstrap Resampling] --> [Regime Switching Model]
-         |                          |
-         v                          v
-[Correlation Matrix] --------> [Monte Carlo Engine]
-                                    |
-                    +---------------+---------------+
-                    |               |               |
-                    v               v               v
-            [Portfolio Sim]  [SBLOC Engine]  [Percentile Calc]
-                    |               |               |
-                    v               v               v
-            [Probability    [Margin Call    [Terminal Value
-               Cone]        Detection]       Histogram]
-                    |               |               |
-                    +-------+-------+               |
-                            |                       |
-                            v                       v
-                    [BBD vs Sell          [Stepped-Up Basis
-                     Comparison]           Calculation]
-                            |                       |
-                            +----------+------------+
-                                       |
-                                       v
-                              [Results Dashboard]
+```text
+CSV/JSON schema + format guidance
+    → parse file
+    → validate syntax, values, coverage, and scope
+    → construct candidate bundle (no writes)
+    → generate per-asset/per-year diff + report + provenance
+    → maintainer review/approval
+    → explicit all-or-nothing apply to src/data/presets/
+    → validation/build/tests on committed baseline
+    → Git review history and rollback
 ```
 
-### Critical Path
+Provenance and an explicit return methodology should be defined alongside the file schema, before relying on diff or anomaly features. Diff generation depends on validated candidate data. Apply must depend on a successful dry-run and an affirmative review decision. The cadence governs when to start a refresh, not whether a particular update is trustworthy.
 
-1. Historical Data Engine (foundation)
-2. Monte Carlo Engine (core)
-3. Basic Visualizations (probability cone, histogram)
-4. SBLOC Engine (BBD differentiator)
-5. Margin Call Detection (risk assessment)
-6. Stepped-Up Basis (estate value)
-7. Comparison Dashboard (synthesis)
+## MVP Recommendation
 
-### Parallelizable
+Prioritize:
 
-- Visualization components (once engine complete)
-- Export functionality (independent)
-- Theme/UI polish (independent)
-- Help/documentation (independent)
+1. **Provider-neutral CSV and JSON files** with a documented schema, decimal-return convention, year format, metadata, and explicit full-refresh versus subset scope.
+2. **Fail-closed validation and a no-write dry-run** with asset/coverage checks and actionable row-level errors and warnings.
+3. **Review packet before apply:** exact per-symbol/per-year diff, summary report, provenance/hash manifest, and separate explicit apply that updates only committed bundled presets.
+4. **Repeatable maintenance checklist:** update after complete-year data is ready or a verified correction arises; capture return methodology and exception rationale; run bundle validation/build checks; review and retain the report with the change.
 
-## Complexity Assessment
+Defer: automatic provider/API acquisition (not required and conflicts with the provider-neutral file boundary); a scheduled refresh bot (adds churn without replacing source verification); automated “correction” or gap filling; and a complex multi-reviewer approval service. Git-based review is sufficient for the initial maintainer workflow.
 
-| Feature | Complexity | Dependencies | Effort | Notes |
-|---------|------------|--------------|--------|-------|
-| Historical data loading | MEDIUM | None | 2-3 days | API integration, caching |
-| Basic Monte Carlo (i.i.d.) | LOW | Data | 1-2 days | Standard implementation |
-| Bootstrap resampling (simple) | LOW | MC engine | 1 day | Random sampling |
-| Block bootstrap | HIGH | MC engine | 3-4 days | Overlapping blocks, parameter tuning |
-| Regime switching | HIGH | MC engine | 4-5 days | HMM or threshold-based |
-| Correlation-aware simulation | MEDIUM | MC engine | 2 days | Cholesky decomposition |
-| SBLOC interest accrual | LOW | MC engine | 0.5 days | Simple compounding |
-| LTV tracking | MEDIUM | MC + SBLOC | 1 day | Per-asset LTV rules |
-| Margin call detection | HIGH | MC + SBLOC | 2-3 days | Threshold logic, forced liquidation |
-| Probability cone chart | MEDIUM | MC results | 1-2 days | Chart.js fan chart |
-| Terminal histogram | LOW | MC results | 0.5 days | Standard histogram |
-| Percentile calculations | LOW | MC results | 0.5 days | Standard statistics |
-| Success rate | LOW | MC results | 0.5 days | Count successes |
-| BBD vs sell comparison | MEDIUM | Full engine | 2 days | Parallel simulation paths |
-| Stepped-up basis calc | MEDIUM | MC results | 1 day | Tax math |
-| Salary-equivalent display | LOW | Tax calc | 0.5 days | Simple formula |
-| Export to CSV/JSON | LOW | Results | 0.5 days | Standard serialization |
-| Print-friendly view | MEDIUM | UI | 1-2 days | CSS print styles |
-| Offline PWA | MEDIUM | All | 2-3 days | Service worker, caching |
-| Theme toggle | LOW | UI | 0.5 days | CSS variables |
+## eVelo-Specific Context
 
-**Total estimated core effort:** 4-6 weeks for MVP with BBD differentiators
-
-## Visualization Requirements
-
-### Essential (Table Stakes)
-
-| Visualization | Purpose | Chart Type | Priority |
-|---------------|---------|------------|----------|
-| **Probability cone** | Show outcome distribution over time | Fan chart (area) | P0 |
-| **Terminal value histogram** | Distribution of ending balances | Histogram (bar) | P0 |
-| **Success rate indicator** | Single most important metric | Text/gauge | P0 |
-| **Portfolio allocation** | Show asset weights | Donut chart | P1 |
-| **Percentile table** | P10/P25/P50/P75/P90 values | Data table | P0 |
-
-### Differentiating
-
-| Visualization | Purpose | Chart Type | Priority |
-|---------------|---------|------------|----------|
-| **Margin call probability by year** | BBD risk visualization | Bar chart | P1 |
-| **SBLOC balance over time** | Debt trajectory | Line chart | P1 |
-| **LTV ratio timeline** | Proximity to margin call | Line with danger zone | P1 |
-| **BBD vs sell comparison** | Strategy comparison | Side-by-side bars | P1 |
-| **Correlation heatmap** | Asset relationships | Heatmap | P2 |
-| **Drawdown analysis** | Worst-case depth | Line chart | P2 |
-
-### Nice-to-Have
-
-| Visualization | Purpose | Chart Type | Priority |
-|---------------|---------|------------|----------|
-| Rolling returns | Performance consistency | Line chart | P3 |
-| Efficient frontier | Optimal allocation | Scatter plot | P3 |
-| Individual simulation paths | Monte Carlo "spaghetti" | Multi-line | P3 |
-
-## SBLOC/Margin Call Modeling Standards
-
-Based on financial industry research:
-
-### Typical LTV Ratios by Asset Type
-
-| Asset Class | Advance Rate | Maintenance Level | Source |
-|-------------|--------------|-------------------|--------|
-| U.S. Treasury Securities | 90-95% | 85% | Arc, Schwab |
-| Investment-Grade Bonds | 70-80% | 65% | Arc, Schwab |
-| Blue-Chip Stocks | 60-70% | 50% | Corient, FINRA |
-| Small-Cap/Volatile Stocks | 40-50% | 35% | Industry practice |
-| Mutual Funds (diversified) | 50-65% | 45% | Schwab, Fidelity |
-
-### Margin Call Trigger Logic
-
-```
-IF portfolio_value < (loan_balance / maintenance_LTV):
-    TRIGGER margin_call
-    OPTIONS:
-        1. Deposit additional assets
-        2. Pay down loan principal
-        3. Forced liquidation (worst case)
-```
-
-### Modeling Recommendations
-
-1. **Default to conservative LTV (50%)** - Match wealth manager guidance
-2. **Model forced liquidation** - Sell highest-gain assets first (worst tax outcome)
-3. **Stress test with 2008/2020 drawdowns** - Real historical stress
-4. **Show "danger zone" on LTV chart** - Visual risk indicator
-5. **Calculate recovery time** - How long until safe LTV restored
-
-## Monte Carlo Iteration Standards
-
-Based on industry practice and academic research:
-
-| Use Case | Recommended Iterations | Rationale |
-|----------|----------------------|-----------|
-| Quick preview | 1,000 | Speed; rough distribution |
-| Standard analysis | 10,000 | Good convergence; industry standard |
-| High confidence | 50,000-100,000 | Tail risk analysis; publication quality |
-
-### Convergence Guidance
-
-- Success rate typically stable by 5,000-10,000 iterations
-- Tail percentiles (P5, P95) need 25,000+ for stability
-- Diminishing returns beyond 100,000
-
-### Resampling Method Comparison
-
-| Method | Preserves | Complexity | Recommendation |
-|--------|-----------|------------|----------------|
-| Simple bootstrap | Fat tails, skewness | LOW | Baseline |
-| Block bootstrap | Autocorrelation, volatility clustering | HIGH | Preferred for accuracy |
-| Parametric (normal) | Nothing (assumes normal) | LOW | Avoid - unrealistic |
-| Regime-switching | Market state persistence | HIGH | Best for realism |
-
-**eVelo should implement:** Block bootstrap as primary, with regime-switching as enhancement.
-
-## Open Questions
-
-1. **Block size for bootstrap** - Literature suggests 12-24 months; needs empirical testing
-2. **Regime detection method** - HMM vs threshold-based (simpler)
-3. **SBLOC interest rate modeling** - Fixed vs floating SOFR+spread
-4. **Multiple SBLOC accounts** - One per asset class or one aggregate?
-5. **Forced liquidation order** - Highest gain first? User configurable?
+- `src/data/presets/stocks.json`, `src/data/presets/indices.json`, and `src/data/presets/sp500.json` are bundled data candidates. `src/data/services/preset-service.ts` statically imports stocks and indices and types the runtime preset model.
+- `src/data/services/bulk-import-service.ts` and `src/data/validation/data-validator.ts` parse and validate app-level bulk input; `src/components/ui/historical-data-viewer.ts` is the user-facing view/import workflow. These are related precedents, but do not by themselves implement a maintainer-side reviewed file-to-repository workflow.
+- `src/data/services/bulk-export-service.ts` calls `getEffectiveData()`, which can return custom user data in preference to bundled data. This behavior makes a clear bundled-only source boundary a table-stakes safety feature.
+- `.planning/quick/021-refresh-preset-asset-data/STATE.md` documents a recent refresh exercise with separate computed returns, correction inputs, a dry-run output, a diff report, explicit `--apply`, and build/smoke verification. It also records significant source/methodology edge cases and fabricated or misaligned historical entries discovered during review. This supports retaining an evidence-and-correction ledger; it is not evidence that raw API acquisition should be part of the requested workflow.
+- Existing annual preset entries are consumed as simulation inputs (`src/calculations/return-probabilities.ts` and `src/data/services/preset-service.ts`), so errors can affect simulation results. Preserve their annual-return semantics and don't conflate data-format validation with validation of financial truth.
 
 ## Sources
 
-### Primary (HIGH confidence)
-
-- [Portfolio Visualizer Monte Carlo](https://www.portfoliovisualizer.com/monte-carlo-simulation) - Feature reference
-- [Portfolio Visualizer Analysis Tools](https://www.portfoliovisualizer.com/analysis) - Comprehensive tool list
-- [cFIREsim](https://cfiresim.com/) - Open source feature reference
-- [FI Calc](https://ficalc.app/) - Modern UI/UX reference
-- [FireCalc](https://www.firecalc.com/) - Historical simulation methodology
-- [FINRA SBLOC Guide](https://www.finra.org/investors/insights/securities-backed-lines-credit) - Authoritative margin call information
-- [Schwab Pledged Asset Line](https://www.schwab.com/pledged-asset-line/rates) - LTV and rate reference
-
-### Secondary (MEDIUM confidence)
-
-- [Capital Spectator - Block Bootstrap](https://www.capitalspectator.com/a-better-way-to-run-bootstrap-return-tests-block-resampling/) - Bootstrap methodology
-- [Yale Budget Lab - Buy Borrow Die](https://budgetlab.yale.edu/research/buy-borrow-die-options-reforming-tax-treatment-borrowing-against-appreciated-assets) - BBD policy analysis
-- [White Coat Investor - Retirement Calculators](https://www.whitecoatinvestor.com/best-retirement-calculators-2025/) - Tool comparisons
-- [Rob Berger - cFIREsim Review](https://robberger.com/tools/cfiresim/) - Feature analysis
-- [MDPI - Regime Switching Factor Investing](https://www.mdpi.com/1911-8074/13/12/311) - Regime model reference
-
-### Tertiary (LOW confidence - needs validation)
-
-- Blog posts about BBD implementation specifics
-- Community forum discussions on margin call experiences
-- Individual tool reviews (subjective)
-
-## Confidence Assessment
-
-| Area | Confidence | Reason |
-|------|------------|--------|
-| Table stakes features | HIGH | Consistent across all competitor tools; well-documented |
-| Monte Carlo methodology | HIGH | Academic literature, Portfolio Visualizer docs |
-| SBLOC LTV ratios | MEDIUM | Multiple sources agree; may vary by institution |
-| Margin call mechanics | MEDIUM | FINRA guidance + broker documentation; implementation varies |
-| BBD-specific features | MEDIUM | Strategy well-documented; simulation tooling is novel |
-| Complexity estimates | LOW | Depends heavily on implementation choices; rough estimates |
-| Competitor feature accuracy | MEDIUM | Based on public documentation; may have hidden features |
-
----
-
-**Research date:** 2026-01-17
-**Valid until:** 2026-04-17 (3 months - stable domain, slow-moving feature landscape)
+- **Repository (high confidence; directly inspected):** `.planning/STATE.md` (Phase 33 scope: bulk import/export, format guidance, asset-class support, reset and preview); `.planning/ROADMAP.md` (Phase 32/33 goals); `.planning/quick/021-refresh-preset-asset-data/STATE.md` (refresh decisions and review history); `src/data/services/preset-service.ts`; `src/data/services/bulk-import-service.ts`; `src/data/services/bulk-export-service.ts`; `src/data/validation/data-validator.ts`; `src/data/formats/bulk-format-templates.ts`; `src/components/ui/historical-data-viewer.ts`; `src/data/presets/`.
+- **RFC 4180, Common Format and MIME Type for CSV Files** (MEDIUM confidence, verified from the IETF RFC text): https://www.rfc-editor.org/rfc/rfc4180 — CSV's common interchange rules include consistent field counts and quoting/escaping for delimiters, line breaks, and quotes; RFC 4180 is informational and recognizes implementation variation.
+- **RFC 8259, The JavaScript Object Notation (JSON) Data Interchange Format** (MEDIUM confidence, verified from the IETF RFC text): https://www.rfc-editor.org/rfc/rfc8259 — JSON is a language-independent interchange format; unique object member names are important for interoperable interpretation. Use explicit versioning and strict schema validation for the workflow's JSON envelope.
+- **Git `diff` documentation** (MEDIUM confidence, official documentation inspected): https://git-scm.com/docs/git-diff — supports repository-native review of candidate changes.
+- **Git `revert` documentation** (MEDIUM confidence, official documentation inspected): https://git-scm.com/docs/git-revert — supports preserving a reviewed correction as history rather than relying on destructive in-place recovery.
