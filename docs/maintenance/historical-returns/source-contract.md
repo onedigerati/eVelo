@@ -178,6 +178,36 @@ Compute it after preparing the final snapshot; any byte change requires a new
 digest and review. It does not attest to source attribution, methodology,
 reviewer authority or exception truth.
 
+## Inherited exceptions and new-source provenance
+
+The [verified exception ledger](verified-exception-ledger.md) preserves the
+completed historical methodology, asset/year corrections, first-full-year
+boundaries and metadata/file-retention decisions. It is review context, not a
+substitute for recording exceptions applicable to a newly reviewed snapshot.
+Under D-02 and D-06, each current manifest exception must independently identify
+the affected symbols and years (or metadata field), state the accepted
+value/policy, explain its rationale and cite evidence traceable to the selected
+reviewed source. Record the approving reviewer and date in that snapshot's
+manifest even when adopting an inherited decision.
+
+Use the explicitly selected CSV/JSON snapshot plus its adjacent manifest for
+every new review. The source-byte SHA-256 is specific to that snapshot, not to
+this ledger, a normalized parse or the old verification outputs. The archive
+does not establish a checksum for unavailable original provider snapshot bytes;
+do not invent one. Its final applied decisions are evidenced by archived review
+records, and earlier preliminary findings may differ from the final convention
+decision. The ledger explains that precedence.
+
+The archived `fetch_returns.mjs` and completed 45-asset verification are
+historical evidence only, not maintained acquisition or review instructions.
+Do not rerun them as part of this workflow. New review remains
+maintainer-initiated when a selected, explicitly reviewed snapshot represents a
+newly completed year or material source correction, with no unattended cadence.
+Preserve complete-set coverage by default and explicitly declared subsets,
+completed calendar years only, dry-run candidate ownership outside presets and
+separate explicit apply in later phases. IndexedDB custom overrides remain
+outside every stage's ownership boundary.
+
 ## Review policy and ownership boundaries
 
 Only **completed calendar years** are baseline inputs: exclude the current
