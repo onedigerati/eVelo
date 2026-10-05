@@ -13,6 +13,8 @@ The strongest recommendation is to keep this workflow outside browser runtime se
 
 The primary risk is not technical complexity but trust and method. Historical return data can be wrong even when it parses cleanly: source provenance, return convention, coverage policy, and correction rationale all matter. The research is consistent that the maintainers should default to fail-closed validation, dry-run review, explicit apply steps, and a source ledger. Exact metadata layout and full-vs-subset refresh policy remain open design questions, and those questions should be resolved in planning because they affect auditability, reviewer effort, and what counts as a valid change.
 
+Implementation context: `.planning/quick/021-refresh-preset-asset-data/STATE.md` records a completed but still-uncommitted refresh pass for 45 bundled assets. It is evidence that the project has already researched and rebuilt the historical bundle with `fetch_returns.mjs`, `rebuild_presets.mjs`, `computed_returns.json`, `corrections.json`, and verification artifacts; it also documents the critical caveat that the current Yahoo fetch script is a one-off research artifact, not the productized long-term boundary. The new milestone should productize/maintain this existing reviewed workflow rather than redoing a new refresh from scratch, while isolating or retiring the fetch path and preserving the decision history (including the dead `sp500.json` follow-up and methodology exceptions).
+
 ## Key Findings
 
 ### Recommended Stack
@@ -49,6 +51,8 @@ The recommended stack is intentionally small and repo-native. Use the existing N
 
 The architecture is a staged offline pipeline: reviewed source snapshots live outside the app bundle, a local script reads explicit inputs, normalizes them, validates them, and generates candidate output in a staging area, then a reviewer compares output against the current tracked presets before an explicit apply step. The runtime app continues to consume `src/data/presets/*.json` through the static import/service layer, while custom user data remains a separate override path. That separation keeps the bundle update mechanism auditable and prevents accidental mutation of user-owned state.
 
+The quick-task archive (`.planning/quick/021-refresh-preset-asset-data/`) should be treated as implementation context and historical evidence, not as the active source of truth. It documents a real reviewed refresh exercise that produced `computed_returns.json` and `corrections.json`, but the milestone should convert that work into a repeatable maintainer workflow with a reviewed-source contract and explicit provenance—not a direct fetch script that remains coupled to Yahoo or to the project-local artifact directory.
+
 **Major components:**
 1. Source snapshot selector — accepts explicit reviewed files or named snapshots and rejects ambiguous missing inputs.
 2. Parser + normalizer — converts CSV/JSON into canonical intermediate records with explicit units, field names, and policy rules.
@@ -69,10 +73,10 @@ The architecture is a staged offline pipeline: reviewed source snapshots live ou
 Based on the combined research, the milestone should be structured around reviewability and trust, not provider integration.
 
 ### Phase 1: Source contract and review governance
-**Rationale:** The chosen boundary is explicit reviewed input files. The source schema, provenance fields, and file-policy rules must be decided first because they determine validation, diff behavior, and reviewer expectations.
-**Delivers:** A documented CSV/JSON contract, source snapshot structure, and a provenance model covering source attribution, methodology, reviewer, checksum, and explicit exception notes.
-**Addresses:** provider-neutral inputs, provenance, maintenance cadence, and the lack of implicit source discovery.
-**Avoids:** silent heuristics, guessed units, and unreviewed upstream sourcing.
+**Rationale:** The chosen boundary is explicit reviewed input files. The source schema, provenance fields, and file-policy rules must be decided first because they determine validation, diff behavior, and reviewer expectations. This phase should also productize the already-researched quick-task workflow rather than redoing a refresh from scratch.
+**Delivers:** A documented CSV/JSON contract, source snapshot structure, and a provenance model covering source attribution, methodology, reviewer, checksum, and explicit exception notes; preserve the historical exception ledger and `sp500.json` decision record without depending on the one-off fetch script.
+**Addresses:** provider-neutral inputs, provenance, maintenance cadence, the existing evidence from `.planning/quick/...`, and the lack of implicit source discovery.
+**Avoids:** silent heuristics, guessed units, unreviewed upstream sourcing, and re-running the same manual refresh in a way that loses the earlier decisions.
 
 ### Phase 2: Deterministic validation and dry-run diff generation
 **Rationale:** A refresh is only reviewable if it is deterministic, strict, and non-mutating by default. This phase creates the candidate bundle and the human-readable summary before any tracked file is changed.
