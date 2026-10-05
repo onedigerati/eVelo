@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "refresh:identify": "node scripts/maintenance/historical-returns/identify-source.mjs",
+    "test:refresh-identify": "node --test test/maintenance/historical-returns/identify-source.test.mjs",
     "test:e2e": "node test/e2e/run-all.js",
     "test:e2e:smoke": "node test/e2e/smoke.js",
     "test:e2e:workflow": "node test/e2e/workflow.js",
