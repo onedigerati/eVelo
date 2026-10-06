@@ -197,6 +197,54 @@ test('complete scope accepts the full physical baseline without removals', t => 
   assert.doesNotMatch(report, /removed-asset|removed-period/);
 });
 
+test('subset scope requires exact declared symbol and year sets', t => {
+  const symbolMismatch = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2078\nSPY,S&P 500 ETF,equity_index,2025,0.1772\n',
+  });
+  writeManifest(symbolMismatch, {
+    ...symbolMismatch.provenance,
+    assetScope: { mode: 'subset', symbols: ['QQQ'], rationale: 'Review only QQQ for this check.' },
+  });
+  assertBlockingReport(symbolMismatch, /subset-symbol-mismatch/);
+
+  const yearMismatch = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2024,0.2558\n',
+  });
+  writeManifest(yearMismatch, {
+    ...yearMismatch.provenance,
+    coveredCalendarYears: [2025],
+  });
+  assertBlockingReport(yearMismatch, /subset-years-mismatch/);
+});
+
+test('subset scope keeps adjacent calendar years as separate records', t => {
+  const f = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', '2024', '0.2558'],
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', '2025', '0.2078'],
+  ]);
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  const candidate = JSON.parse(readFileSync(path.join(f.output, 'indices.json'), 'utf8'));
+  assert.deepEqual(candidate.QQQ.returns.filter(item => ['2024', '2025'].includes(item.date)), [
+    { date: '2024', return: 0.2558 },
+    { date: '2025', return: 0.2078 },
+  ]);
+});
+
+test('a new period absent from the baseline is retained as an addition', t => {
+  const f = rowsFixture(t, [
+    ['IWM', 'Russell 2000 ETF', 'equity_index', '2000', '0.0178'],
+  ]);
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  const candidate = JSON.parse(readFileSync(path.join(f.output, 'indices.json'), 'utf8'));
+  assert.deepEqual(candidate.IWM.returns.slice(0, 2), [
+    { date: '2000', return: 0.0178 },
+    { date: '2001', return: 0.0178 },
+  ]);
+  assert.match(readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8'), /Added: IWM\/2000/);
+});
+
 test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
   const f = fixture(t);
   fails(run([]), /missing required --source/i);

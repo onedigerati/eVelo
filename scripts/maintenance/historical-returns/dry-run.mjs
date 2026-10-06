@@ -958,6 +958,48 @@ function mergeReviewedAssets(sourceAssets, stocks, indices) {
   return candidates;
 }
 
+function compareCoverageAndBuildCandidates(sourceAssets, manifest, stocks, indices, diagnostics) {
+  const baseline = new Map();
+  for (const [filename, partition] of [['stocks.json', stocks], ['indices.json', indices]]) {
+    for (const [symbol, asset] of Object.entries(partition)) {
+      let record = baseline.get(symbol);
+      if (!record) {
+        record = { asset, partitions: [] };
+        baseline.set(symbol, record);
+      }
+      record.partitions.push(filename);
+    }
+  }
+
+  const sourceBySymbol = new Map(sourceAssets.map(asset => [asset.symbol, asset]));
+  if (manifest.assetScope.mode === 'complete') {
+    for (const [symbol, record] of baseline) {
+      const sourceAsset = sourceBySymbol.get(symbol);
+      const file = record.partitions.join(', ');
+      if (!sourceAsset) {
+        addDiagnostic(diagnostics, {
+          file, symbol, field: 'symbol', code: 'removed-asset',
+          message: 'Complete source omitted an asset present in the bundled baseline.',
+        });
+        continue;
+      }
+
+      const sourceYears = new Set(sourceAsset.returns.map(item => item.year));
+      for (const item of record.asset.returns) {
+        const year = Number(item.date);
+        if (!sourceYears.has(year)) {
+          addDiagnostic(diagnostics, {
+            file, symbol, year, field: 'year', code: 'removed-period',
+            message: 'Complete source omitted a previously covered bundled period.',
+          });
+        }
+      }
+    }
+  }
+
+  return mergeReviewedAssets(sourceAssets, stocks, indices);
+}
+
 function orderedJson(value) {
   return `${JSON.stringify(Object.fromEntries(Object.keys(value).sort(compareText).map(key => [key, value[key]])), null, 2)}\n`;
 }
@@ -1095,18 +1137,25 @@ function main(args) {
   const assets = parseSourceRecords(pair, diagnostics);
   validateManifest(pair.manifest, pair.manifestFilename, diagnostics);
   collectDiagnostics(pair, assets, diagnostics);
+  let stocks = null;
+  let indices = null;
+  let candidates = null;
+  if (!diagnostics.some(item => item.severity === 'blocking')) {
+    stocks = loadBaseline('stocks.json');
+    indices = loadBaseline('indices.json');
+    candidates = compareCoverageAndBuildCandidates(
+      assets, pair.manifest, stocks, indices, diagnostics,
+    );
+  }
   const sortedDiagnostics = sortDiagnostics(diagnostics);
   const blockingCount = sortedDiagnostics.filter(item => item.severity === 'blocking').length;
   if (blockingCount) {
-    writeReport(options['--output-dir'], renderReport(pair, assets, null, null, sortedDiagnostics));
+    writeReport(options['--output-dir'], renderReport(pair, assets, stocks, indices, sortedDiagnostics));
     console.error(`refresh:dry-run: blocked by ${blockingCount} validation error(s). Report: dry-run-report.md`);
     process.exitCode = 1;
     return;
   }
 
-  const stocks = loadBaseline('stocks.json');
-  const indices = loadBaseline('indices.json');
-  const candidates = mergeReviewedAssets(assets, stocks, indices);
   const report = renderReport(pair, assets, stocks, indices, sortedDiagnostics);
   writeOutputs(options['--output-dir'], candidates, report);
   console.log([
