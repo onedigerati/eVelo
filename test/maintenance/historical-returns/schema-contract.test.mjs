@@ -79,7 +79,7 @@ function required(object, names) {
 
 function textDefinition(node) {
   assert.equal(node.type, 'string');
-  assert.equal(node.minLength, 1);
+  assert(node.minLength >= 1);
   assert.equal(node.pattern, '\\S');
 }
 
@@ -109,14 +109,21 @@ test('source required fields have resolved definitions, constraints and closed s
   const year = property(sourceSchema, annualReturn, 'year', 'integer');
   assert.equal(year.minimum, 1);
   assert.equal(year.maximum, 9999);
-  assert.equal(property(sourceSchema, annualReturn, 'return', 'number').multipleOf, 0.0001);
+  const annualValue = property(sourceSchema, annualReturn, 'return', 'number');
+  assert.equal(annualValue.minimum, -1);
+  assert.equal(annualValue.multipleOf, 0.0001);
 });
 
 test('all nine manifest fields, methodology, scope and exception definitions are constrained', () => {
   assert.equal(manifestSchema.$schema, 'https://json-schema.org/draft/2020-12/schema');
   required(manifestSchema, ['sourceAttribution', 'snapshotFilename', 'snapshotSha256', 'methodology',
     'coveredCalendarYears', 'assetScope', 'reviewer', 'reviewDate', 'exceptions']);
-  for (const key of ['sourceAttribution', 'reviewer']) textDefinition(property(manifestSchema, manifestSchema, key, 'string'));
+  const attribution = property(manifestSchema, manifestSchema, 'sourceAttribution', 'string');
+  const reviewer = property(manifestSchema, manifestSchema, 'reviewer', 'string');
+  assert.equal(attribution.minLength, 12);
+  assert.equal(reviewer.minLength, 3);
+  assert(attribution.not.pattern);
+  assert(reviewer.not.pattern);
   const filename = property(manifestSchema, manifestSchema, 'snapshotFilename', 'string');
   assert.equal(filename.minLength, 1);
   assert.equal(filename.pattern, '^[^/\\\\\\r\\n]+\\.(csv|json)$');
@@ -147,18 +154,28 @@ test('all nine manifest fields, methodology, scope and exception definitions are
   assert.equal(symbols.minItems, 1);
   assert.equal(symbols.uniqueItems, true);
   textDefinition(resolve(manifestSchema, symbols.items));
-  textDefinition(property(manifestSchema, declaredSubset, 'rationale', 'string'));
+  const subsetRationale = property(manifestSchema, declaredSubset, 'rationale', 'string');
+  assert.equal(subsetRationale.minLength, 12);
+  assert(subsetRationale.not.pattern);
   const exceptions = property(manifestSchema, manifestSchema, 'exceptions', 'array');
   const exception = resolve(manifestSchema, exceptions.items);
   required(exception, ['symbols', 'acceptedValueOrPolicy', 'rationale', 'evidence']);
   assert.deepEqual(exception.anyOf.map(branch => branch.required), [['years'], ['metadataField']]);
   yearsDefinition(property(manifestSchema, exception.anyOf[0], 'years', 'array'));
-  textDefinition(property(manifestSchema, exception.anyOf[1], 'metadataField', 'string'));
+  const metadataField = property(manifestSchema, exception.anyOf[1], 'metadataField', 'string');
+  assert.equal(metadataField.minLength, 3);
+  assert(metadataField.not.pattern);
   assert.deepEqual(property(manifestSchema, exception, 'symbols', 'array'), symbols);
   yearsDefinition(property(manifestSchema, exception, 'years', 'array'));
-  for (const key of ['metadataField', 'acceptedValueOrPolicy', 'rationale', 'evidence']) {
-    textDefinition(property(manifestSchema, exception, key, 'string'));
-  }
+  const acceptedValue = property(manifestSchema, exception, 'acceptedValueOrPolicy', 'string');
+  const rationale = property(manifestSchema, exception, 'rationale', 'string');
+  const evidence = property(manifestSchema, exception, 'evidence', 'string');
+  assert.equal(acceptedValue.minLength, 1);
+  assert(acceptedValue.not.pattern);
+  assert.equal(rationale.minLength, 12);
+  assert(evidence.minLength >= 12);
+  assert(rationale.not.pattern);
+  assert(evidence.not.pattern);
 });
 
 function expectFixture(name, validator, value, expected) {
@@ -184,13 +201,15 @@ for (const assetClass of ['equity_index', 'equity_stock', 'bond', 'commodity']) 
   fixture.assets[0].assetClass = assetClass;
   expectFixture(`valid ${assetClass} source`, validateSource, fixture, true);
 }
-for (const value of [0, 0.1, -0.1004, 0.0218, 0.1681, 0.0588, 9.6639]) {
+for (const value of [-1, 0, 0.1, -0.1004, 0.0218, 0.1681, 0.0588, 9.6639]) {
   const fixture = structuredClone(source);
   fixture.assets[0].returns[0].return = value;
   expectFixture(`valid four-place decimal ${value}`, validateSource, fixture, true);
 }
 expectFixture('valid complete manifest with empty exceptions', validateManifest, manifest, true);
 expectFixture('valid explicit subset manifest', validateManifest, { ...manifest, assetScope: subset }, true);
+expectFixture('valid zero-valued exception', validateManifest,
+  { ...manifest, exceptions: [{ ...yearException, acceptedValueOrPolicy: '0' }] }, true);
 expectFixture('valid fully evidenced year and metadata exceptions', validateManifest,
   { ...manifest, exceptions: [yearException, metadataException] }, true);
 expectFixture('valid leap-day review', validateManifest, { ...manifest, reviewDate: '2024-02-29' }, true);
@@ -221,6 +240,7 @@ for (const [name, keys, value] of [
   ['zero year', ['assets', 0, 'returns', 0, 'year'], 0],
   ['out-of-range year', ['assets', 0, 'returns', 0, 'year'], 10000],
   ['five-place return', ['assets', 0, 'returns', 0, 'return'], 0.02181],
+  ['return below total loss', ['assets', 0, 'returns', 0, 'return'], -1.0001],
   ['nonfinite return', ['assets', 0, 'returns', 0, 'return'], Infinity],
   ['NaN return', ['assets', 0, 'returns', 0, 'return'], NaN],
   ['unknown source key', ['extra'], true],
@@ -272,6 +292,18 @@ for (const [name, keys, value] of [
   ['unknown complete-scope key', ['assetScope', 'extra'], true],
   ['complete cannot silently declare symbols', ['assetScope', 'symbols'], ['TEST']],
 ]) mutation(name, validateManifest, manifest, keys, value);
+for (const [field, value] of [
+  [['sourceAttribution'], 'TBD'],
+  [['sourceAttribution'], 'x'],
+  [['reviewer'], 'unknown'],
+  [['reviewer'], 'x'],
+]) mutation(`manifest placeholder ${field.join('.')}: ${value}`, validateManifest, manifest, field, value);
+for (const value of ['TBD', ' x ', 'N/A', 'unknown', '?']) {
+  mutation(`placeholder exception rationale: ${value}`, validateManifest,
+    { ...manifest, exceptions: [yearException] }, ['exceptions', 0, 'rationale'], value);
+  mutation(`placeholder exception evidence: ${value}`, validateManifest,
+    { ...manifest, exceptions: [yearException] }, ['exceptions', 0, 'evidence'], value);
+}
 for (const date of ['', '2026-1-02', '2026-01-02T00:00:00Z', '2026-02-29',
   '2024-02-30', '2026-04-31', '2026-13-01', '2026-00-01', '2026-01-00', '0000-01-01']) {
   mutation(`invalid calendar date ${JSON.stringify(date)}`, validateManifest, manifest, ['reviewDate'], date);

@@ -46,8 +46,9 @@
         },
         "return": {
           "type": "number",
+          "minimum": -1,
           "multipleOf": 0.0001,
-          "description": "Calendar-year total return with dividends reinvested, last-trading-day to last-trading-day, in decimal units at four-decimal precision. ETF presets use ETF-level returns, not index total-return substitutes."
+          "description": "Calendar-year total return with dividends reinvested, last-trading-day to last-trading-day, in decimal units at four-decimal precision; cannot be less than a total loss. ETF presets use ETF-level returns, not index total-return substitutes."
         }
       }
     }

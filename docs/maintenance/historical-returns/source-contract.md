@@ -66,7 +66,7 @@ or quotes, and no comments or provenance embedded in data rows. Repeated
 | `name` | Explicit, nonempty, nonblank display name |
 | `assetClass` | `equity_index`, `equity_stock`, `bond` or `commodity`, matching preset data vocabulary |
 | `year` | Integer calendar year, not a date or fractional/string year in JSON |
-| `return` | Numeric decimal total return at four-decimal precision, not a percent string |
+| `return` | Numeric decimal total return at least `-1` and at four-decimal precision, not a percent string |
 
 The equivalent JSON shape is:
 
@@ -91,7 +91,7 @@ The equivalent JSON shape is:
 | `assets[].symbol`, `.name`, `.assetClass` | Same explicit metadata as CSV |
 | `assets[].returns` | Required nonempty array of annual records |
 | `returns[].year` | Integer year from 1 through 9999; completed-year cutoff is a separate semantic check |
-| `returns[].return` | Number, multiple of `0.0001`; the spelling is `year`, not preset `date` |
+| `returns[].return` | Number at least `-1`, multiple of `0.0001`; the spelling is `year`, not preset `date` |
 
 There must be one asset record per symbol and one annual record per symbol/year.
 No missing years may be silently filled. Cross-record uniqueness, CSV metadata
@@ -102,18 +102,23 @@ No raw prices or price-to-return calculations belong in this input.
 
 ## Adjacent review manifest
 
-All nine keys are required by the manifest contract. Nonempty text means at
-least one non-whitespace character, not a placeholder or inferred default.
+All nine keys are required by the manifest contract. Provenance fields reject
+common placeholder-only values and require minimum lengths appropriate to their
+purpose. Source attribution, subset rationale, exception rationale, and
+evidence require at least 12 characters; reviewer identifiers require at least
+3 characters. These shape checks reject obvious placeholders but do not
+establish that a source reference is durable, that evidence supports the claim,
+or that the named reviewer is authorized.
 
 | Field | Type and meaning |
 |---|---|
-| `sourceAttribution` | Nonblank string identifying source owner/provider and durable snapshot reference |
+| `sourceAttribution` | At least 12 characters identifying source owner/provider and durable snapshot reference; common placeholder-only values are rejected |
 | `snapshotFilename` | Source basename ending in `.csv` or `.json`, with no directory path |
 | `snapshotSha256` | Exactly 64 lowercase hexadecimal characters; SHA-256 over the original selected bytes |
 | `methodology` | Closed object with the exact fields and values shown below |
 | `coveredCalendarYears` | Nonempty unique array of integer years, 1 through 9999 |
 | `assetScope` | Closed complete/subset object as described below |
-| `reviewer` | Nonblank string identifying the person approving the snapshot |
+| `reviewer` | At least 3 non-placeholder characters identifying the person approving the snapshot |
 | `reviewDate` | Real calendar date `YYYY-MM-DD`; no timestamp or impossible date |
 | `exceptions` | Array, including an explicit empty array when none apply; entries described below |
 
@@ -223,8 +228,9 @@ a newly completed year or a material source correction. There is no unattended
 cadence, provider retrieval or raw-price calculation in this workflow.
 
 **Phase 2** owns strict schema and source-record checks, symbol/period rules,
-finite-value/metadata/coverage validation, deterministic dry-run candidates and
-complete diffs. Dry run is the future default; candidates belong outside
+finite-value/metadata/coverage validation, semantic sufficiency of provenance
+claims, deterministic dry-run candidates and complete diffs. Dry run is the
+future default; candidates belong outside
 `src/data/presets`. **Phase 3** owns separate explicit apply of validated,
 reviewed candidates to narrowly declared bundled preset files. Neither
 capability is delivered by this Phase 1 identity command.
