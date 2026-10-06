@@ -53,6 +53,7 @@ Validate explicitly selected, reviewed CSV/JSON annual-return snapshots and adja
 - The repository uses Node ESM and `node:test` for the maintenance identity command; package scripts live in `package.json`.
 - `src/data/validation/data-validator.ts` and `bulk-import-service.ts` use Papa Parse, but normalize headers, parse values permissively, and sit on the browser import path. Reuse only parsing primitives that can be wrapped in strict fail-closed checks.
 - Existing application import services can write IndexedDB custom data and are outside this workflow's ownership boundary.
+- Do not reuse the Phase 1 ledger-check command surfaced in `prior_verify_commands`: it reflects the pre-deviation raw-archive links and is intentionally obsolete after the user-approved sanitized-evidence substitution.
 
 ### Integration Points
 - Phase 2 extends the Phase 1 maintenance CLI and source contract without changing bundled presets.
