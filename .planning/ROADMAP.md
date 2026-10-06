@@ -49,6 +49,10 @@ Plans:
   3. Repeating a dry run with the same reviewed inputs produces the same candidate preset files outside `src/data/presets` and a complete human-readable report of added, removed, and changed assets and periods, while leaving bundled presets untouched.
 
 **Plans**: TBD
+- [x] 02-01-PLAN.md
+- [x] 02-02-PLAN.md
+- [ ] 02-03-PLAN.md
+- [ ] 02-04-PLAN.md
 
 ### Phase 3: Gated Apply & Maintenance
 
@@ -70,5 +74,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Source Contract & Review Governance | 2/2 | Complete    | 2026-10-05 |
-| 2. Deterministic Validation & Dry-Run Diff | 0/TBD | Not started | - |
+| 2. Deterministic Validation & Dry-Run Diff | 2/4 | In Progress | - |
 | 3. Gated Apply & Maintenance | 0/TBD | Not started | - |
