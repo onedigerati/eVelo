@@ -55,10 +55,11 @@ The richer narrative preserves the Yahoo dividend artifact for AVGO, Axcelis spi
 
 ## Verification
 
-- Ran the exact Plan 02 Task 1 verifier from disk: all 28 required ID/subject/year-or-field/value tuples and decision-specific rationales passed. Each row's archived state link resolves; all required correction/metadata rows also link corrections.json. Both AGG correction rows independently include NAV and premium-dislocation rationale.
+- The original Plan 02 Task 1 verifier passed in the execution workspace before evidence sanitization: all 28 required ID/subject/year-or-field/value tuples and decision-specific rationales were checked against the raw archive. That archive was not committed; after the user approved sanitized evidence instead of importing it, the final ledger links each row to the corresponding section of the committed historical-evidence record.
+- Rechecked the final sanitized ledger's 28 unique decision IDs, six-column rows, nonempty rationale fields, and per-row local evidence links to the sanitized record.
 - Ran the exact Task 2 provenance-link term assertion successfully.
 - Rechecked the Plan 01 source-contract term assertion after linkage.
-- Combined identity and schema tests passed 191/191 with no skips or todos.
+- Combined identity and schema tests passed 209/209 with no skips or todos (11 identity tests and 198 schema-contract tests).
 - Actual `npm run refresh:identify -- --source ... --manifest ...` entry point succeeded for separately selected CSV and JSON fixtures. Temporary fixtures were removed.
 - Scoped whitespace checks passed, and both task commits are ancestors of HEAD.
 - Compared the final `git diff --binary` with the captured pre-execution baseline: all pre-existing tracked dirty-file changes are byte-for-byte unchanged. Preset-byte immutability is additionally asserted by subprocess tests.
@@ -66,7 +67,20 @@ The richer narrative preserves the Yahoo dividend artifact for AVGO, Axcelis spi
 
 ## Deviations from plan
 
-None to the declared deliverables or verification requirements. An optional deeper ETN archive read initially encountered its existing UTF-8 BOM; the read-only inspection handled that BOM without altering any archive bytes.
+After execution, the user approved a sanitized evidence record instead of
+importing the untracked raw quick-task archive. The plan's original per-row
+links to `STATE.md` and `corrections.json` were therefore superseded by links
+from each ledger row to the matching section of
+`historical-evidence.md`, which preserves cited sources and decision rationales
+while explicitly disclosing that raw snapshots, per-asset verification files,
+and historical source-byte checksums are unavailable. The raw archive was not
+committed; no such files or checksums are claimed. Plan 01-02's key-link and
+verification criteria were updated to record and validate this approved
+substitute.
+
+An optional deeper ETN archive read initially encountered its existing UTF-8
+BOM; the read-only inspection handled that BOM without altering any archive
+bytes.
 
 As in 01-01, the user's narrow-artifact scope takes precedence over general state-update workflow steps: existing dirty STATE.md, ROADMAP.md, REQUIREMENTS.md and config remain untouched and unstaged. Completion is recorded in the two new summaries. Global workflow/template reference reads were permission-blocked earlier; no bypass was attempted.
 

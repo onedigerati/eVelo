@@ -18,7 +18,7 @@ analysis window, methodology, storage convention and historical file ownership.
 Each row includes a self-contained rationale and links to its evidence category
 in the sanitized historical evidence record.
 
-| ID | Subject | Year/field | Accepted value/policy | Rationale | Repository record |
+| ID | Subject | Year/field | Accepted value/policy | Rationale | Archived evidence |
 |---|---|---|---|---|---|
 | start-AMZN | AMZN | startYear | 1998 | First full calendar year after the 1997 IPO; exclude the partial listing year. | [Boundary evidence](historical-evidence.md#full-calendar-year-coverage-boundaries) |
 | start-GOOGL | GOOGL | startYear | 2005 | First full calendar year after the 2004 IPO; do not retain fabricated pre-IPO history. | [Boundary evidence](historical-evidence.md#full-calendar-year-coverage-boundaries) |
