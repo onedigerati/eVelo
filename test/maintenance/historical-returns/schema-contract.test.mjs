@@ -219,6 +219,7 @@ expectFixture('valid manifest with reviewed new-symbol partition', validateManif
 for (const [label, routeMap] of [
   ['wrong partition', { NEW: 'funds.json' }],
   ['blank symbol key', { ' ': 'stocks.json' }],
+  ['padded symbol key', { ' NEW ': 'stocks.json' }],
   ['wrong route type', { NEW: true }],
   ['non-object map', ['stocks.json']],
 ]) {

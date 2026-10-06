@@ -711,6 +711,31 @@ test('JSON roots and duplicate manifest keys are rejected with blocking reports'
   assertBlockingReport(duplicateManifest, /duplicate.*reviewer/i);
 });
 
+test('malformed UTF-8 in source and manifest is rejected before candidates are written', t => {
+  const invalidSource = fixture(t);
+  const sourceBytes = Buffer.concat([
+    Buffer.from('symbol,name,assetClass,year,return\nQQQ,Nasdaq-'),
+    Buffer.from([0xff]),
+    Buffer.from('100 ETF,equity_index,2025,0.2078\n'),
+  ]);
+  writeFileSync(invalidSource.source, sourceBytes);
+  writeManifest(invalidSource);
+  assertBlockingReport(invalidSource, /source-encoding/);
+
+  const invalidManifest = fixture(t);
+  const manifestBytes = readFileSync(invalidManifest.manifest);
+  const reviewer = Buffer.from('"Test reviewer"');
+  const reviewerStart = manifestBytes.indexOf(reviewer);
+  assert.notEqual(reviewerStart, -1);
+  const malformedManifest = Buffer.concat([
+    manifestBytes.subarray(0, reviewerStart + 1),
+    Buffer.from([0xff]),
+    manifestBytes.subarray(reviewerStart + 2),
+  ]);
+  writeFileSync(invalidManifest.manifest, malformedManifest);
+  assertBlockingReport(invalidManifest, /manifest-encoding/);
+});
+
 test('JSON source rejects repeated asset symbols independently of their return periods', t => {
   const f = fixture(t, {
     extension: 'json',
