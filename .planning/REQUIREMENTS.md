@@ -20,9 +20,9 @@
 
 ### Apply and Maintenance
 
-- [ ] **DATAREF-07**: Maintainer can explicitly apply a successfully validated and reviewed candidate, and the operation changes only the declared bundled preset files, never browser-stored custom overrides.
-- [ ] **DATAREF-08**: The workflow is runnable from a normal repository checkout without machine-specific absolute paths and has regression tests for malformed input, coverage, determinism, and compatibility with the preset data shape.
-- [ ] **DATAREF-09**: A maintainer runbook explains source preparation, return methodology, refresh cadence, review and apply steps, verification, exceptions, and rollback; the workflow does not fetch provider data or schedule silent updates.
+- [x] **DATAREF-07**: Maintainer can explicitly apply a successfully validated and reviewed candidate, and the operation changes only the declared bundled preset files, never browser-stored custom overrides.
+- [x] **DATAREF-08**: The workflow is runnable from a normal repository checkout without machine-specific absolute paths and has regression tests for malformed input, coverage, determinism, and compatibility with the preset data shape.
+- [x] **DATAREF-09**: A maintainer runbook explains source preparation, return methodology, refresh cadence, review and apply steps, verification, exceptions, and rollback; the workflow does not fetch provider data or schedule silent updates.
 
 ## Future Requirements
 

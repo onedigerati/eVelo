@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: Historical Data Refresh Workflow
 current_phase: 3
 current_phase_name: Gated Apply & Maintenance
-status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-10-06T20:21:02.133Z"
+status: verifying
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-10-06T20:27:15.030Z"
 last_activity: 2026-10-06
 last_activity_desc: Phase 3 execution started
-state_head: 981bf614bc58a325fc3f0be808f64ada09c016ba
+state_head: f7dccf56a5673c83e79b7541a62c578783964ee1
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 9
 ---
 
 # Project State
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-10-06)
 ## Current Position
 
 Phase: 3 (Gated Apply & Maintenance) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
+Plan: 3 of 3
+Status: Phase complete — ready for verification
 Last activity: 2026-10-06 — Phase 3 execution started
 
 Progress: [███████░░░] 67%
@@ -52,6 +52,8 @@ Progress: [███████░░░] 67%
 | Phase 02 P03 | 9 min | 3 tasks | 5 files |
 | Phase 02 P04 | 10min | 2 tasks | 2 files |
 | Phase 3 P1 | 9min | 2 tasks | 3 files |
+| Phase 3 P2 | 10min | 2 tasks | 2 files |
+| Phase 3 P3 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -71,6 +73,8 @@ Progress: [███████░░░] 67%
 - [Phase 02]: Emit deterministic candidates and reports only to safe external destinations with exclusive writes; bundled presets remain unchanged.
 - [Phase 02]: Refuse overwrite and preset-path aliases, but do not claim an all-output transaction guarantee for interruption or concurrent runs.
 - [Phase 3]: Use --confirm-apply as the distinct affirmative mutation signal. — The separate flag keeps ordinary refresh runs preview-only and makes the mutation boundary explicit in the command and its regression tests.
+- [Phase 3]: Apply hardening now fails closed across tampering, stale baselines, malformed inputs, and dirty targets while validating PresetData shape. — The safer boundary is to reject all unsafe preconditions before write and verify compatibility at apply-time instead of relying only on downstream runtime behavior.
+- [Phase 3]: Documented maintenance is explicit and serial: reviewed source preparation, preview/apply verification, and path-limited rollback with no scheduler or provider boundaries crossed. — Operational safety depends on consistent maintainer procedure; contract tests keep command examples, rollback scope, and exclusions from drifting.
 
 ### Pending Todos
 
@@ -89,6 +93,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-10-06T20:21:02.100Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-10-06T20:27:14.993Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
