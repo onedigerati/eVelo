@@ -62,6 +62,23 @@ function writeManifest(f, provenance = f.provenance) {
   return manifest;
 }
 
+function rowsFixture(t, records) {
+  const years = [...new Set(records.map(record => Number(record[3])))].sort((left, right) => left - right);
+  const symbols = [...new Set(records.map(record => record[0]))].sort();
+  return fixture(t, {
+    sourceText: `${[ ['symbol', 'name', 'assetClass', 'year', 'return'], ...records ]
+      .map(record => record.join(',')).join('\n')}\n`,
+    provenance: {
+      coveredCalendarYears: years,
+      assetScope: {
+        mode: 'subset',
+        symbols,
+        rationale: 'Explicitly reviewed source selection for runtime tests.',
+      },
+    },
+  });
+}
+
 function run(args, cwd = root) {
   return spawnSync(process.execPath, [command, ...args], { cwd, encoding: 'utf8' });
 }
@@ -161,6 +178,7 @@ test('valid CSV quoting preserves embedded commas in metadata', t => {
 for (const [name, sourceText, expected] of [
   ['reordered header', 'name,symbol,assetClass,year,return\nNasdaq-100 ETF,QQQ,equity_index,2025,0.2078\n', /header/i],
   ['duplicate header', 'symbol,name,assetClass,year,year\nQQQ,Nasdaq-100 ETF,equity_index,2025,2025\n', /header/i],
+  ['padded header', 'symbol,name,assetClass,year,return \nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2078\n', /header/i],
   ['blank record', 'symbol,name,assetClass,year,return\n\nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2078\n', /blank|row/i],
   ['extra field', 'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2078,extra\n', /five|column|field/i],
   ['missing field', 'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2025\n', /five|column|field/i],
@@ -189,6 +207,42 @@ test('JSON parser reports malformed syntax and nested duplicate keys', t => {
     sourceText: '{"assets":[{"symbol":"QQQ","name":"Nasdaq-100 ETF","assetClass":"equity_index","returns":[{"year":2025,"year":2025,"return":0.2078}]}]}',
   });
   assertBlockingReport(duplicate, /duplicate.*year|year.*duplicate/i);
+});
+
+test('JSON roots and duplicate manifest keys are rejected with blocking reports', t => {
+  const sourceRoot = fixture(t, { extension: 'json', sourceText: '[]' });
+  assertBlockingReport(sourceRoot, /root|object/i);
+
+  const manifestRoot = fixture(t);
+  writeFileSync(manifestRoot.manifest, '[]');
+  assertBlockingReport(manifestRoot, /manifest.*object/i);
+
+  const nullManifest = fixture(t);
+  writeFileSync(nullManifest.manifest, 'null');
+  assertBlockingReport(nullManifest, /manifest.*object/i);
+
+  const duplicateManifest = fixture(t);
+  const manifestText = readFileSync(duplicateManifest.manifest, 'utf8')
+    .replace('"reviewer": "Test reviewer",', '"reviewer": "Test reviewer",\n  "reviewer": "Other reviewer",');
+  writeFileSync(duplicateManifest.manifest, manifestText);
+  assertBlockingReport(duplicateManifest, /duplicate.*reviewer/i);
+});
+
+test('JSON source rejects repeated asset symbols independently of their return periods', t => {
+  const f = fixture(t, {
+    extension: 'json',
+    sourceText: JSON.stringify({
+      assets: [
+        { symbol: 'QQQ', name: 'Nasdaq-100 ETF', assetClass: 'equity_index', returns: [{ year: 2024, return: 0.1000 }] },
+        { symbol: 'QQQ', name: 'Nasdaq-100 ETF', assetClass: 'equity_index', returns: [{ year: 2025, return: 0.2078 }] },
+      ],
+    }),
+    provenance: {
+      coveredCalendarYears: [2024, 2025],
+      assetScope: { mode: 'subset', symbols: ['QQQ'], rationale: 'Reviewed two completed periods.' },
+    },
+  });
+  assertBlockingReport(f, /duplicate-symbol/);
 });
 
 test('JSON source shape failures retain field context and block candidates', t => {
@@ -221,4 +275,119 @@ test('manifest shape and provenance failures block a valid source', t => {
   for (const field of ['methodology', 'reviewer', 'extra']) {
     assert.match(report, new RegExp(field, 'i'), `missing ${field} context`);
   }
+});
+
+test('source and manifest validation continue independently', t => {
+  const f = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,invalid_class,2025,0.2078\n',
+  });
+  const manifest = structuredClone(f.provenance);
+  manifest.reviewer = 'TBD';
+  writeManifest(f, manifest);
+  const report = assertBlockingReport(f, /assetClass|reviewer/i);
+  assert.match(report, /assetClass/);
+  assert.match(report, /reviewer/);
+});
+
+test('duplicate periods and conflicting repeated CSV metadata are independent blocking diagnostics', t => {
+  const f = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', '2025', '0.2078'],
+    ['QQQ', 'Different Nasdaq label', 'equity_index', '2025', '0.2080'],
+  ]);
+  const report = assertBlockingReport(f, /metadata-conflict/);
+  assert.match(report, /duplicate-period/);
+  const rowThree = report.split('\n').filter(line => line.startsWith('| review.csv | 3 |'));
+  assert.deepEqual(rowThree.map(line => line.split('|')[5].trim()), ['name', 'year']);
+  assert.deepEqual(rowThree.map(line => line.split('|')[6].trim()), ['metadata-conflict', 'duplicate-period']);
+});
+
+for (const [label, returnValue, code] of [
+  ['NaN', 'NaN', 'return-number'],
+  ['Infinity', 'Infinity', 'return-number'],
+  ['trailing text', '0.2junk', 'return-number'],
+  ['percent notation', '5%', 'return-number'],
+  ['below total loss', '-1.0001', 'return-lower-bound'],
+  ['excess precision', '0.02181', 'return-precision'],
+]) {
+  test(`CSV return ${label} is a blocking diagnostic`, t => {
+    const f = rowsFixture(t, [
+      ['QQQ', 'Nasdaq-100 ETF', 'equity_index', '2025', returnValue],
+    ]);
+    assertBlockingReport(f, new RegExp(code));
+  });
+}
+
+test('JSON overflow-to-infinity return is blocked', t => {
+  const f = fixture(t, {
+    extension: 'json',
+    sourceText: '{"assets":[{"symbol":"QQQ","name":"Nasdaq-100 ETF","assetClass":"equity_index","returns":[{"year":2025,"return":1e999}]}]}',
+  });
+  assertBlockingReport(f, /return-number/);
+});
+
+test('current UTC calendar year is blocked but the preceding completed year is accepted', t => {
+  const currentYear = new Date().getUTCFullYear();
+  const current = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear), '0.0218'],
+  ]);
+  assertBlockingReport(current, /incomplete-calendar-year/);
+
+  const completed = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear - 1), '0.0218'],
+  ]);
+  const result = run([
+    '--source', completed.source,
+    '--manifest', completed.manifest,
+    '--output-dir', completed.output,
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(path.join(completed.output, 'stocks.json')), true);
+  assert.match(readFileSync(path.join(completed.output, 'dry-run-report.md'), 'utf8'), /Blocking errors\s*\n\nNone/i);
+});
+
+test('outlier thresholds are strict and warning-only data still produces candidates', t => {
+  const currentYear = new Date().getUTCFullYear();
+  const f = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear - 1), '-0.9001'],
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear - 2), '-0.9'],
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear - 3), '3.0001'],
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear - 4), '3.0'],
+  ]);
+  const before = presetBytes();
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(path.join(f.output, 'stocks.json')), true);
+  const report = readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8');
+  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Changes')[0];
+  const warningRows = warningSection.split('\n').filter(line => line.startsWith('| review.csv |'));
+  assert.equal(warningRows.length, 2);
+  assert.deepEqual(warningRows.map(line => line.split('|')[6].trim()), ['outlier-low', 'outlier-high']);
+  assert.deepEqual(presetBytes(), before);
+});
+
+test('independent diagnostics retain stable source-row and field ordering and suppress candidates', t => {
+  const currentYear = new Date().getUTCFullYear();
+  const f = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(currentYear), '3.0001'],
+    ['QQQ', 'Different Nasdaq label', 'equity_index', String(currentYear), '-1.0001'],
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', '2025', '0.01junk'],
+  ]);
+  const report = assertBlockingReport(f, /incomplete-calendar-year/);
+  const blockingSection = report.split('## Blocking errors\n\n')[1].split('\n## Warnings')[0];
+  const diagnosticRows = blockingSection.split('\n').filter(line => line.startsWith('| review.csv |'));
+  assert.deepEqual(diagnosticRows.map(line => [
+    line.split('|')[2].trim(),
+    line.split('|')[5].trim(),
+    line.split('|')[6].trim(),
+  ]), [
+    ['2', 'year', 'incomplete-calendar-year'],
+    ['3', 'name', 'metadata-conflict'],
+    ['3', 'return', 'return-lower-bound'],
+    ['3', 'year', 'duplicate-period'],
+    ['3', 'year', 'incomplete-calendar-year'],
+    ['4', 'return', 'return-number'],
+  ]);
+  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Changes')[0];
+  assert.match(warningSection, /outlier-high/);
+  assert.match(warningSection, /outlier-low/);
 });

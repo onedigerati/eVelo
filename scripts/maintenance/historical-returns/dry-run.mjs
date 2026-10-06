@@ -15,7 +15,6 @@ import Papa from 'papaparse';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const presetDirectory = path.join(root, 'src/data/presets');
-const outputNames = ['stocks.json', 'indices.json', 'dry-run-report.md'];
 const expectedHeader = ['symbol', 'name', 'assetClass', 'year', 'return'];
 const assetClasses = new Set(['equity_index', 'equity_stock', 'bond', 'commodity']);
 const usage = 'Usage: npm run refresh:dry-run -- --source SOURCE_PATH --manifest MANIFEST_PATH --output-dir OUTPUT_DIR';
@@ -230,10 +229,13 @@ function readReviewedPair(options, diagnostics) {
     });
   }
 
+  const diagnosticsBeforeManifest = diagnostics.length;
   const manifest = manifestBytes
     ? parseJson(manifestBytes.toString('utf8'), manifestFilename, diagnostics)
     : null;
-  if (manifest !== null && (typeof manifest !== 'object' || Array.isArray(manifest))) {
+  const manifestJsonFailed = diagnostics.slice(diagnosticsBeforeManifest)
+    .some(item => item.code === 'json-syntax');
+  if (manifestBytes && !manifestJsonFailed && !isObject(manifest)) {
     addDiagnostic(diagnostics, {
       code: 'manifest-root',
       file: manifestFilename,
@@ -247,7 +249,7 @@ function readReviewedPair(options, diagnostics) {
         code: 'snapshot-filename',
         file: manifestFilename,
         field: 'snapshotFilename',
-        message: `Expected ${JSON.stringify(sourceFilename)}; received ${JSON.stringify(manifest.snapshotFilename)}.`,
+        message: `Snapshot filename must match selected source basename ${JSON.stringify(sourceFilename)}.`,
       });
     }
     if (sourceBytes) {
@@ -267,10 +269,6 @@ function readReviewedPair(options, diagnostics) {
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function diagnosticContext(context, field) {
-  return { ...context, field };
 }
 
 function validateClosedObject(value, field, required, allowed, file, diagnostics, context = {}) {
