@@ -245,6 +245,57 @@ test('a new period absent from the baseline is retained as an addition', t => {
   assert.match(readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8'), /Added: IWM\/2000/);
 });
 
+test('a genuinely new symbol uses its explicit manifest partition route', t => {
+  const f = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nNEW,New asset,equity_index,2025,0.1250\n',
+    provenance: {
+      assetScope: {
+        mode: 'subset',
+        symbols: ['NEW'],
+        rationale: 'Review the new symbol with an explicit partition decision.',
+      },
+      newSymbolPartitions: { NEW: 'stocks.json' },
+    },
+  });
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  const stocks = JSON.parse(readFileSync(path.join(f.output, 'stocks.json'), 'utf8'));
+  const indices = JSON.parse(readFileSync(path.join(f.output, 'indices.json'), 'utf8'));
+  assert.deepEqual(stocks.NEW, {
+    symbol: 'NEW',
+    name: 'New asset',
+    assetClass: 'equity_index',
+    startDate: '2025-01-01',
+    endDate: '2025-12-31',
+    returns: [{ date: '2025', return: 0.125 }],
+  });
+  assert.equal(Object.hasOwn(indices, 'NEW'), false);
+});
+
+test('new symbols without a route and stale routes block candidates', t => {
+  const missingRoute = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nNEW,New asset,equity_stock,2025,0.1250\n',
+    provenance: {
+      assetScope: {
+        mode: 'subset',
+        symbols: ['NEW'],
+        rationale: 'Review the new symbol without a route for this negative case.',
+      },
+    },
+  });
+  assertBlockingReport(missingRoute, /new-symbol-route-required/);
+
+  const existingRoute = fixture(t, {
+    provenance: { newSymbolPartitions: { QQQ: 'stocks.json' } },
+  });
+  assertBlockingReport(existingRoute, /new-symbol-route-stale/);
+
+  const absentRoute = fixture(t, {
+    provenance: { newSymbolPartitions: { ABSENT: 'stocks.json' } },
+  });
+  assertBlockingReport(absentRoute, /new-symbol-route-stale/);
+});
+
 test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
   const f = fixture(t);
   fails(run([]), /missing required --source/i);

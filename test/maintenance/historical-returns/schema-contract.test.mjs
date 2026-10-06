@@ -127,6 +127,12 @@ test('all nine manifest fields, methodology, scope and exception definitions are
   const filename = property(manifestSchema, manifestSchema, 'snapshotFilename', 'string');
   assert.equal(filename.minLength, 1);
   assert.equal(filename.pattern, '^[^/\\\\\\r\\n]+\\.(csv|json)$');
+  const newPartitions = property(manifestSchema, manifestSchema, 'newSymbolPartitions', 'object');
+  assert.equal(newPartitions.additionalProperties.type, 'string');
+  assert.deepEqual(newPartitions.additionalProperties.enum, ['stocks.json', 'indices.json']);
+  assert.equal(newPartitions.propertyNames.type, 'string');
+  assert.equal(newPartitions.propertyNames.minLength, 1);
+  assert(!manifestSchema.required.includes('newSymbolPartitions'));
   const sha = property(manifestSchema, manifestSchema, 'snapshotSha256', 'string');
   assert.equal(sha.pattern, '^[0-9a-f]{64}$');
   assert.equal(sha.minLength, 64);
@@ -208,6 +214,17 @@ for (const value of [-1, 0, 0.1, -0.1004, 0.0218, 0.1681, 0.0588, 9.6639]) {
 }
 expectFixture('valid complete manifest with empty exceptions', validateManifest, manifest, true);
 expectFixture('valid explicit subset manifest', validateManifest, { ...manifest, assetScope: subset }, true);
+expectFixture('valid manifest with reviewed new-symbol partition', validateManifest,
+  { ...manifest, newSymbolPartitions: { NEW: 'stocks.json' } }, true);
+for (const [label, routeMap] of [
+  ['wrong partition', { NEW: 'funds.json' }],
+  ['blank symbol key', { ' ': 'stocks.json' }],
+  ['wrong route type', { NEW: true }],
+  ['non-object map', ['stocks.json']],
+]) {
+  expectFixture(`invalid new-symbol partition map: ${label}`, validateManifest,
+    { ...manifest, newSymbolPartitions: routeMap }, false);
+}
 expectFixture('valid zero-valued exception', validateManifest,
   { ...manifest, exceptions: [{ ...yearException, acceptedValueOrPolicy: '0' }] }, true);
 expectFixture('valid fully evidenced year and metadata exceptions', validateManifest,
