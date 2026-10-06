@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import {
   closeSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -30,6 +31,9 @@ function parseArguments(args) {
     if (Object.hasOwn(options, flag)) throw new Error(`Duplicate flag: ${flag}. ${usage}`);
     const value = args[index + 1];
     if (!value || value.startsWith('--')) throw new Error(`Missing value for ${flag}. ${usage}`);
+    if (flag === '--output-dir' && value.split(/[\\/]/).includes('..')) {
+      throw new Error('Output directory must not contain traversal segments (..).');
+    }
     options[flag] = path.resolve(value);
   }
   for (const flag of ['--source', '--manifest', '--output-dir']) {
@@ -1266,28 +1270,65 @@ function renderReport(pair, assets, diagnostics, changes = null) {
   ].join('\n');
 }
 
-function assertOutputDirectory(outputPath) {
-  const presets = realpathSync(presetDirectory);
-  const absoluteOutput = path.resolve(outputPath);
-  let ancestor = absoluteOutput;
+function resolvePhysicalPath(absolutePath) {
+  let ancestor = absolutePath;
   const missing = [];
   while (!existsSync(ancestor)) {
     missing.unshift(path.basename(ancestor));
     ancestor = path.dirname(ancestor);
   }
-  const physicalOutput = path.join(realpathSync(ancestor), ...missing);
+  return path.join(realpathSync(ancestor), ...missing);
+}
+
+function assertOutputOutsidePresets(physicalOutput) {
+  const presets = realpathSync(presetDirectory);
   const relative = path.relative(presets, physicalOutput);
   if (relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))) {
     throw new Error('Output directory must be outside src/data/presets.');
   }
-  mkdirSync(absoluteOutput, { recursive: true });
-  if (readdirSync(absoluteOutput).length) {
-    throw new Error('Output directory must be absent or empty.');
+
+  const firstRelativeSegment = path.relative(path.dirname(presets), physicalOutput).split(path.sep)[0];
+  if (firstRelativeSegment.startsWith(`${path.basename(presets)}-`)) {
+    throw new Error('Output directory must not use a neighboring preset-prefix path.');
   }
 }
 
+function outputEntryExists(filename) {
+  try {
+    lstatSync(filename);
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+function preflightOutputTargets(outputPath, names) {
+  for (const name of names) {
+    if (outputEntryExists(path.join(outputPath, name))) {
+      throw new Error(`Output target already exists: ${name}.`);
+    }
+  }
+}
+
+function assertOutputDirectory(outputPath) {
+  const absoluteOutput = path.resolve(outputPath);
+  assertOutputOutsidePresets(resolvePhysicalPath(absoluteOutput));
+  mkdirSync(absoluteOutput, { recursive: true });
+  const physicalOutput = realpathSync(absoluteOutput);
+  assertOutputOutsidePresets(physicalOutput);
+  if (readdirSync(physicalOutput).length) {
+    throw new Error('Output directory must be absent or empty.');
+  }
+  preflightOutputTargets(physicalOutput, ['stocks.json', 'indices.json', 'dry-run-report.md']);
+  return physicalOutput;
+}
+
 function writeReport(outputPath, report) {
-  const filename = path.join(outputPath, 'dry-run-report.md');
+  const physicalOutput = realpathSync(outputPath);
+  assertOutputOutsidePresets(physicalOutput);
+  preflightOutputTargets(physicalOutput, ['dry-run-report.md']);
+  const filename = path.join(physicalOutput, 'dry-run-report.md');
   const fd = openSync(filename, 'wx');
   try {
     writeFileSync(fd, report, 'utf8');
@@ -1297,13 +1338,16 @@ function writeReport(outputPath, report) {
 }
 
 function writeOutputs(outputPath, candidates, report) {
+  const physicalOutput = realpathSync(outputPath);
+  assertOutputOutsidePresets(physicalOutput);
   const files = new Map([
     ['stocks.json', orderedJson(candidates.stocks)],
     ['indices.json', orderedJson(candidates.indices)],
     ['dry-run-report.md', report],
   ]);
+  preflightOutputTargets(physicalOutput, [...files.keys()]);
   for (const [name, contents] of files) {
-    const filename = path.join(outputPath, name);
+    const filename = path.join(physicalOutput, name);
     const fd = openSync(filename, 'wx');
     try {
       writeFileSync(fd, contents, 'utf8');
@@ -1315,7 +1359,7 @@ function writeOutputs(outputPath, candidates, report) {
 
 function main(args) {
   const options = parseArguments(args);
-  assertOutputDirectory(options['--output-dir']);
+  const outputDirectory = assertOutputDirectory(options['--output-dir']);
   const diagnostics = [];
   const pair = readReviewedPair(options, diagnostics);
   const assets = parseSourceRecords(pair, diagnostics);
@@ -1335,19 +1379,19 @@ function main(args) {
   const sortedDiagnostics = sortDiagnostics(diagnostics);
   const blockingCount = sortedDiagnostics.filter(item => item.severity === 'blocking').length;
   if (blockingCount) {
-    writeReport(options['--output-dir'], renderReport(pair, assets, sortedDiagnostics, changes));
+    writeReport(outputDirectory, renderReport(pair, assets, sortedDiagnostics, changes));
     console.error(`refresh:dry-run: blocked by ${blockingCount} validation error(s). Report: dry-run-report.md`);
     process.exitCode = 1;
     return;
   }
 
   const report = renderReport(pair, assets, sortedDiagnostics, changes);
-  writeOutputs(options['--output-dir'], candidates, report);
+  writeOutputs(outputDirectory, candidates, report);
   console.log([
     'Dry run completed successfully.',
-    `stocks.json: ${path.join(options['--output-dir'], 'stocks.json')}`,
-    `indices.json: ${path.join(options['--output-dir'], 'indices.json')}`,
-    `dry-run-report.md: ${path.join(options['--output-dir'], 'dry-run-report.md')}`,
+    `stocks.json: ${path.join(outputDirectory, 'stocks.json')}`,
+    `indices.json: ${path.join(outputDirectory, 'indices.json')}`,
+    `dry-run-report.md: ${path.join(outputDirectory, 'dry-run-report.md')}`,
   ].join('\n'));
 }
 

@@ -1,17 +1,20 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
+  closeSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   rmSync,
   symlinkSync,
+  writeSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
@@ -412,6 +415,58 @@ test('non-empty output directories are rejected without replacing entries or wri
       existsSync(path.join(f.output, name))),
     [],
   );
+});
+
+test('output targets appearing after preflight are never replaced', async t => {
+  const f = fixture(t);
+  rmSync(f.source);
+  const fifo = spawnSync('mkfifo', [f.source], { encoding: 'utf8' });
+  if (fifo.error || fifo.status !== 0) {
+    t.skip('mkfifo is unavailable for the concurrent output collision test');
+    return;
+  }
+
+  const child = spawn(process.execPath, [
+    command,
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', f.output,
+  ], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  let stdout = '';
+  let stderr = '';
+  child.stdout.setEncoding('utf8').on('data', chunk => { stdout += chunk; });
+  child.stderr.setEncoding('utf8').on('data', chunk => { stderr += chunk; });
+  const closed = new Promise(resolve => {
+    child.once('close', status => resolve({ status, stdout, stderr }));
+  });
+
+  try {
+    let waited = 0;
+    while (!existsSync(f.output) && waited < 5000) {
+      if (child.exitCode !== null) break;
+      await new Promise(resolve => setTimeout(resolve, 10));
+      waited += 10;
+    }
+    assert.equal(existsSync(f.output), true, 'CLI should create output directory before reading source');
+
+    const candidatePath = path.join(f.output, 'stocks.json');
+    writeFileSync(candidatePath, 'preserve raced file');
+    const fd = openSync(f.source, 'w');
+    writeSync(fd, f.sourceBytes);
+    closeSync(fd);
+
+    const result = await closed;
+    assert.equal(result.status, 1, result.stderr || result.stdout);
+    assert.match(result.stderr, /output target already exists: stocks\.json/i);
+    assert.equal(readFileSync(candidatePath, 'utf8'), 'preserve raced file');
+    assert.equal(existsSync(path.join(f.output, 'indices.json')), false);
+    assert.equal(existsSync(path.join(f.output, 'dry-run-report.md')), false);
+  } finally {
+    if (child.exitCode === null) {
+      child.kill();
+      await closed;
+    }
+  }
 });
 
 test('lexical traversal in output paths is rejected before directory creation', t => {
