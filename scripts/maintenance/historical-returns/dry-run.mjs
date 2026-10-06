@@ -11,6 +11,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
+import { TextDecoder } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
 
@@ -174,6 +175,20 @@ function parseJson(text, file, diagnostics) {
   }
 }
 
+function decodeUtf8(bytes, file, field, diagnostics) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    addDiagnostic(diagnostics, {
+      code: `${field}-encoding`,
+      file,
+      field,
+      message: `Selected ${field} file is not valid UTF-8.`,
+    });
+    return null;
+  }
+}
+
 function readReviewedPair(options, diagnostics) {
   const sourcePath = options['--source'];
   const manifestPath = options['--manifest'];
@@ -233,12 +248,18 @@ function readReviewedPair(options, diagnostics) {
     });
   }
 
+  const sourceText = sourceBytes
+    ? decodeUtf8(sourceBytes, sourceFilename, 'source', diagnostics)
+    : null;
   const diagnosticsBeforeManifest = diagnostics.length;
-  const manifest = manifestBytes
-    ? parseJson(manifestBytes.toString('utf8'), manifestFilename, diagnostics)
+  const manifestText = manifestBytes
+    ? decodeUtf8(manifestBytes, manifestFilename, 'manifest', diagnostics)
+    : null;
+  const manifest = manifestText !== null
+    ? parseJson(manifestText, manifestFilename, diagnostics)
     : null;
   const manifestJsonFailed = diagnostics.slice(diagnosticsBeforeManifest)
-    .some(item => item.code === 'json-syntax');
+    .some(item => ['manifest-encoding', 'json-syntax'].includes(item.code));
   if (manifestBytes && !manifestJsonFailed && !isObject(manifest)) {
     addDiagnostic(diagnostics, {
       code: 'manifest-root',
@@ -268,7 +289,7 @@ function readReviewedPair(options, diagnostics) {
       }
     }
   }
-  return { sourceFilename, sourceFormat, sourceBytes, manifest, manifestFilename };
+  return { sourceFilename, sourceFormat, sourceBytes, sourceText, manifest, manifestFilename };
 }
 
 function isObject(value) {
@@ -614,8 +635,8 @@ function validateException(exception, index, file, diagnostics) {
 }
 
 function parseSourceRecords(pair, diagnostics) {
-  if (!pair.sourceBytes) return [];
-  const text = pair.sourceBytes.toString('utf8');
+  if (pair.sourceText === null) return [];
+  const text = pair.sourceText;
   if (pair.sourceFormat === 'csv') return parseCsv(text, pair.sourceFilename, diagnostics);
   if (pair.sourceFormat === 'json') {
     const source = parseJson(text, pair.sourceFilename, diagnostics);

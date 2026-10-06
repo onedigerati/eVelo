@@ -132,6 +132,7 @@ test('all nine manifest fields, methodology, scope and exception definitions are
   assert.deepEqual(newPartitions.additionalProperties.enum, ['stocks.json', 'indices.json']);
   assert.equal(newPartitions.propertyNames.type, 'string');
   assert.equal(newPartitions.propertyNames.minLength, 1);
+  assert.equal(newPartitions.propertyNames.pattern, '^\\S(?:[\\s\\S]*\\S)?$');
   assert(!manifestSchema.required.includes('newSymbolPartitions'));
   const sha = property(manifestSchema, manifestSchema, 'snapshotSha256', 'string');
   assert.equal(sha.pattern, '^[0-9a-f]{64}$');
