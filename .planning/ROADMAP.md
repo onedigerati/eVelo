@@ -17,7 +17,7 @@ The v1.0 Historical Data Refresh Workflow productizes the existing reviewed hist
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Source Contract & Review Governance** - Define reviewed annual-return inputs, methodology, coverage policy, and traceable provenance. (completed 2026-10-05)
-- [ ] **Phase 2: Deterministic Validation & Dry-Run Diff** - Reject invalid or incomplete data and produce deterministic candidates and a complete non-mutating report.
+- [x] **Phase 2: Deterministic Validation & Dry-Run Diff** - Reject invalid or incomplete data and produce deterministic candidates and a complete non-mutating report. (completed 2026-10-06)
 - [ ] **Phase 3: Gated Apply & Maintenance** - Apply reviewed candidates narrowly, verify compatibility, and document the repeatable maintenance and rollback workflow.
 
 ## Phase Details
@@ -48,7 +48,7 @@ Plans:
   2. A default dry run checks the complete bundled asset set and reports missing or unexpected assets and periods; a subset is accepted only when its scope is explicitly declared and the report identifies it.
   3. Repeating a dry run with the same reviewed inputs produces the same candidate preset files outside `src/data/presets` and a complete human-readable report of added, removed, and changed assets and periods, while leaving bundled presets untouched.
 
-**Plans**: 4/4 plans executed
+**Plans**: 4/4 plans complete
 - [x] 02-01-PLAN.md
 - [x] 02-02-PLAN.md
 - [x] 02-03-PLAN.md
@@ -64,7 +64,12 @@ Plans:
   2. From a normal repository checkout, a maintainer can run regression checks for malformed inputs, coverage, determinism, and compatibility with the preset data shape without machine-specific absolute paths.
   3. A maintainer can follow the runbook to prepare and review sources, apply and verify updates, document exceptions, and restore the prior bundled data; the process neither fetches provider data nor schedules silent updates.
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Freshness-gated explicit apply CLI and isolated end-to-end tracer
+- [ ] 03-02-PLAN.md — Fail-closed apply checks, preset compatibility, and regression coverage
+- [ ] 03-03-PLAN.md — Tested maintainer runbook for review, apply, verification, and rollback
 
 ## Progress
 
@@ -74,5 +79,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Source Contract & Review Governance | 2/2 | Complete    | 2026-10-05 |
-| 2. Deterministic Validation & Dry-Run Diff | 4/4 | In Progress | - |
+| 2. Deterministic Validation & Dry-Run Diff | 4/4 | Complete    | 2026-10-06 |
 | 3. Gated Apply & Maintenance | 0/TBD | Not started | - |
