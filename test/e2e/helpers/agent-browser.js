@@ -97,6 +97,24 @@ export async function isVisible(element) {
  */
 export async function findRole(role, action, value) {
   const args = ['find', 'role', role, action];
+  if (value) {
+    if (action === 'click') {
+      args.push('--name', value);
+    } else {
+      args.push(value);
+    }
+  }
+  await agentBrowser(args);
+}
+
+/**
+ * Find an element by CSS selector and perform an action
+ * @param {string} selector - CSS selector
+ * @param {string} action - Action to perform
+ * @param {string} [value] - Value for action (optional)
+ */
+export async function findSelector(selector, action, value) {
+  const args = ['find', 'first', selector, action];
   if (value) args.push(value);
   await agentBrowser(args);
 }
@@ -145,6 +163,16 @@ export async function evalJs(code) {
   } catch {
     return result.stdout.trim();
   }
+}
+
+/**
+ * Get an input's current value
+ * @param {string} selector - Element selector
+ * @returns {Promise<string>}
+ */
+export async function getValue(selector) {
+  const result = await agentBrowser(['get', 'value', selector]);
+  return result.stdout.trim();
 }
 
 /**
