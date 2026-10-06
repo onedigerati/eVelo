@@ -8,13 +8,30 @@ A portfolio strategy simulator for modeling the "Buy, Borrow, Die" (BBD) tax opt
 
 Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes — enabling users to make informed decisions about leveraged wealth preservation.
 
+## Current Milestone: v1.0 Historical Data Refresh Workflow
+
+**Goal:** Make future updates to eVelo's bundled historical returns repeatable, deterministic, and reviewable.
+
+**Target features:**
+- Standardized, reviewed CSV/JSON annual-return inputs with documented provenance and methodology
+- Strict validation, deterministic candidate generation, and a complete dry-run diff
+- Explicit apply step, regression verification, and a maintainer runbook
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- **DATAREF-01** — A repository-local command identifies explicitly selected CSV/JSON snapshots and adjacent manifests without source discovery or provider fetching.
+- **DATAREF-02** — The reviewed return methodology, period and coverage rules, units, precision, and inherited exceptions are documented with bounded source citations.
+- **DATAREF-03** — New reviewed snapshots have a manifest contract for attribution, exact-byte identity/checksum, methodology, covered period, reviewer, and exception rationale.
 
 ### Active
+
+**Historical Data Refresh**
+- [ ] Maintainer can update bundled annual-return presets from reviewed CSV/JSON source files
+- [ ] The refresh process validates complete asset coverage and rejects malformed or ambiguous data
+- [ ] The process previews deterministic changes and provenance before explicit application
+- [ ] The workflow documents verification, exceptions, review, and rollback
 
 **Simulation Engine**
 - [ ] Monte Carlo simulation with configurable iteration count (1,000 - 100,000)
@@ -125,11 +142,31 @@ Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visu
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| Reviewed snapshots are explicitly selected CSV/JSON files paired with adjacent manifests | Keep source identity and review provenance attached without discovery or provider fetching | Phase 1 |
+| The Phase 1 command reports exact-byte identity only and never claims semantic validation | Keep identity/provenance reporting read-only and defer source-record validation to Phase 2 | Phase 1 |
+| Historical evidence uses a sanitized cited record rather than importing the raw untracked archive | Preserve rationale while disclosing unavailable raw snapshots, per-asset records, and historical checksums | Phase 1 |
 | TypeScript + Web Components over React/Vue | Framework-free for maximum portability and easy single-file bundling | — Pending |
 | Chart.js over TradingView Lightweight | Need donut charts for portfolio composition; Chart.js handles all chart types | — Pending |
 | IndexedDB over LocalStorage | Larger storage capacity needed for cached historical data | — Pending |
 | Hybrid offline data approach | Balance between bundle size and offline capability | — Pending |
 | Remove Single Asset analysis | Focus on Monte Carlo as core value; simplifies UI and reduces scope | — Pending |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2025-01-17 after initialization*
+*Last updated: 2026-10-05 after Phase 1*
