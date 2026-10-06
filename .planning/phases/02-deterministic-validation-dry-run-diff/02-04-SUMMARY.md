@@ -95,7 +95,7 @@ status: complete
 - Added lexical traversal rejection, real-path containment checks against presets, neighboring-prefix rejection, absent-or-empty directory handling, and target preflight before source processing.
 - Candidate and report writes use exclusive creation; a target introduced after preflight remains unchanged and prevents subsequent artifact writes.
 - Added repeated-run byte comparisons, host-path/timestamp checks, concise-stdout assertions, all-preset byte snapshots for successful/warning/blocking outcomes, and explicit no-provider/no-IndexedDB/raw-price boundary tests.
-- Ran the complete maintenance regression chain: identity tests 11/11, schema-contract tests 203/203, and dry-run tests 47/47.
+- Ran the complete maintenance regression chain: identity tests 11/11, schema-contract tests 204/204, and dry-run tests 48/48.
 
 ## Task Commits
 
@@ -103,6 +103,8 @@ Each task was committed atomically:
 
 1. **Task 1: Harden output containment, clean-directory checks, and exclusive writes** - `b4b7301` (RED tests), `d666523` (implementation)
 2. **Task 2: Verify stable artifact bytes and non-mutation across all run outcomes** - `3a2b9c3` (RED tests), `3aaba54` (test coverage completion)
+
+**Code-review follow-up:** `43ebdc7` (RED regression tests), `207b93e` (fatal UTF-8 decoding and schema/runtime routing consistency).
 
 ## Files Created/Modified
 
@@ -124,6 +126,7 @@ None - plan executed as specified. Task 2 confirmed the serializer already met i
 
 - The initial RED traversal test demonstrated that the prior CLI accepted the path and wrote test outputs under `src/data`; the exact temporary output directories were removed. The corrected test now verifies rejection before directory creation.
 - The existing preset snapshot helper covered only `stocks.json` and `indices.json`; the RED test exposed the omitted `sp500.json`. The helper now snapshots every file in `src/data/presets`.
+- Code review found malformed UTF-8 was being decoded with replacement characters and the schema accepted padded new-symbol route keys that runtime rejected. Both findings now have regression tests and fixes: invalid UTF-8 blocks source/manifest parsing, and schema property names reject leading or trailing whitespace.
 
 ## User Setup Required
 
@@ -135,6 +138,7 @@ None - no external service configuration required.
 - **Task 1 GREEN:** `npm run test:refresh-dry-run` passed 43/43 after filesystem hardening; the later full suite passed 47/47.
 - **Task 2 RED:** `preset byte snapshots include every preset file` failed because the helper returned only two unnamed base64 values while the preset directory contained three files. The classifier returned `RED_EVIDENCE_OK`.
 - **Task 2 GREEN:** The snapshot helper now enumerates filenames and bytes for every preset file; all deterministic and non-mutation tests pass. No production serializer change was necessary because the existing implementation already satisfied the verified byte contract.
+- **Code-review RED:** The malformed UTF-8 tests showed the CLI returned success and wrote candidates; the padded route-key schema test showed the manifest schema accepted a key rejected by runtime validation. Both tests pass after the follow-up fix.
 
 ## Next Phase Readiness
 
@@ -144,8 +148,8 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - `npm run test:refresh-identify` passed (11/11).
-- `node --test test/maintenance/historical-returns/schema-contract.test.mjs` passed (203/203).
-- `npm run test:refresh-dry-run` passed (47/47).
+- `node --test test/maintenance/historical-returns/schema-contract.test.mjs` passed (204/204).
+- `npm run test:refresh-dry-run` passed (48/48).
 - `node --check` passed for the CLI and test file; scoped `git diff --check` passed.
 - Test assertions cover additions, removals, changes, blocking errors, warnings, deterministic artifacts, output-path attacks/collisions, and exact preset-byte preservation.
 
