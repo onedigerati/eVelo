@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -361,6 +369,100 @@ test('explicit CLI flags are required and duplicate or unknown flags are rejecte
     '--output-dir', f.output,
     '--apply',
   ]), /unknown argument: --apply/i);
+});
+
+test('output directory is created when absent and accepts an existing empty directory', t => {
+  const absent = fixture(t);
+  const absentResult = run([
+    '--source', absent.source,
+    '--manifest', absent.manifest,
+    '--output-dir', absent.output,
+  ]);
+  assert.equal(absentResult.status, 0, absentResult.stderr);
+  assert.equal(existsSync(path.join(absent.output, 'dry-run-report.md')), true);
+
+  const empty = fixture(t);
+  mkdirSync(empty.output);
+  const emptyResult = run([
+    '--source', empty.source,
+    '--manifest', empty.manifest,
+    '--output-dir', empty.output,
+  ]);
+  assert.equal(emptyResult.status, 0, emptyResult.stderr);
+  assert.equal(existsSync(path.join(empty.output, 'stocks.json')), true);
+});
+
+test('non-empty output directories are rejected without replacing entries or writing artifacts', t => {
+  const f = fixture(t);
+  mkdirSync(f.output);
+  const existingPath = path.join(f.output, 'notes.txt');
+  writeFileSync(existingPath, 'keep this file');
+
+  const result = run([
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', f.output,
+  ]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /output directory must be absent or empty/i);
+  assert.equal(readFileSync(existingPath, 'utf8'), 'keep this file');
+  assert.deepEqual(
+    ['stocks.json', 'indices.json', 'dry-run-report.md'].filter(name =>
+      existsSync(path.join(f.output, name))),
+    [],
+  );
+});
+
+test('lexical traversal in output paths is rejected before directory creation', t => {
+  const f = fixture(t);
+  const traversingOutput = `${root}/src/data/presets/../refresh-output-${process.pid}`;
+  const result = run([
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', traversingOutput,
+  ]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /output directory.*traversal/i);
+  assert.equal(existsSync(path.resolve(traversingOutput)), false);
+});
+
+test('neighboring preset-prefix output paths are rejected before directory creation', t => {
+  const f = fixture(t);
+  const neighboringOutput = path.join(root, 'src/data/presets-output');
+  const result = run([
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', neighboringOutput,
+  ]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /output directory.*preset/i);
+  assert.equal(existsSync(neighboringOutput), false);
+});
+
+test('direct and symlinked preset output destinations are rejected without preset mutation', t => {
+  const before = presetBytes();
+  const direct = fixture(t);
+  const directResult = run([
+    '--source', direct.source,
+    '--manifest', direct.manifest,
+    '--output-dir', path.join(root, 'src/data/presets'),
+  ]);
+  assert.equal(directResult.status, 1);
+  assert.match(directResult.stderr, /output directory must be outside src\/data\/presets/i);
+
+  const symlinked = fixture(t);
+  symlinkSync(path.join(root, 'src/data/presets'), symlinked.output, 'dir');
+  const symlinkResult = run([
+    '--source', symlinked.source,
+    '--manifest', symlinked.manifest,
+    '--output-dir', symlinked.output,
+  ]);
+  assert.equal(symlinkResult.status, 1);
+  assert.match(symlinkResult.stderr, /output directory must be outside src\/data\/presets/i);
+  assert.deepEqual(presetBytes(), before);
 });
 
 test('valid CSV quoting preserves embedded commas in metadata', t => {
