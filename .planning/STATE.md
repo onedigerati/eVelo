@@ -5,16 +5,16 @@ milestone_name: Historical Data Refresh Workflow
 current_phase: 3
 current_phase_name: Gated Apply & Maintenance
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-10-06T20:10:46.622Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-10-06T20:21:02.133Z"
 last_activity: 2026-10-06
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: dca5920dc44751c1687319dd7fcfa05c522aceec
+last_activity_desc: Phase 3 execution started
+state_head: 981bf614bc58a325fc3f0be808f64ada09c016ba
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-06)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes.
-**Current focus:** Phase 03 — Gated Apply & Maintenance
+**Current focus:** Phase 3 — Gated Apply & Maintenance
 
 ## Current Position
 
-Phase: 3 (Gated Apply & Maintenance) — READY TO EXECUTE
-Plan: Not started
+Phase: 3 (Gated Apply & Maintenance) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-10-06 — Phase 02 complete, transitioned to Phase 3
+Last activity: 2026-10-06 — Phase 3 execution started
 
 Progress: [███████░░░] 67%
 
@@ -51,6 +51,7 @@ Progress: [███████░░░] 67%
 | Phase 02 P02 | 8 min | 2 tasks | 2 files |
 | Phase 02 P03 | 9 min | 3 tasks | 5 files |
 | Phase 02 P04 | 10min | 2 tasks | 2 files |
+| Phase 3 P1 | 9min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@ Progress: [███████░░░] 67%
 - [Phase 02]: Complete coverage is the default; subsets require exact declared symbol/year sets, preserve out-of-scope records, and route genuinely new symbols through explicit reviewed manifest entries.
 - [Phase 02]: Emit deterministic candidates and reports only to safe external destinations with exclusive writes; bundled presets remain unchanged.
 - [Phase 02]: Refuse overwrite and preset-path aliases, but do not claim an all-output transaction guarantee for interruption or concurrent runs.
+- [Phase 3]: Use --confirm-apply as the distinct affirmative mutation signal. — The separate flag keeps ordinary refresh runs preview-only and makes the mutation boundary explicit in the command and its regression tests.
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ None currently.
 
 ## Session Continuity
 
-Last session: 2026-10-06T19:26:38.454Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-gated-apply-maintenance/03-CONTEXT.md
+Last session: 2026-10-06T20:21:02.100Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
