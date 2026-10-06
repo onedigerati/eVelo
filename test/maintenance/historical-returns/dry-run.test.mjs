@@ -6,6 +6,7 @@ import {
   mkdirSync,
   mkdtempSync,
   openSync,
+  readdirSync,
   readFileSync,
   rmSync,
   symlinkSync,
@@ -372,6 +373,131 @@ test('explicit CLI flags are required and duplicate or unknown flags are rejecte
     '--output-dir', f.output,
     '--apply',
   ]), /unknown argument: --apply/i);
+});
+
+test('preset byte snapshots include every preset file', () => {
+  assert.deepEqual(
+    presetBytes().map(([name]) => name),
+    readdirSync(path.join(root, 'src/data/presets')).sort(),
+  );
+});
+
+test('identical reviewed bytes produce byte-identical candidates and reports', t => {
+  const sourceText = [
+    'symbol,name,assetClass,year,return',
+    'QQQ,Reviewed Nasdaq,equity_stock,2025,0.2500',
+    'NEW,New asset,equity_stock,2025,0.1250',
+    'AAPL,Apple Inc,equity_stock,2025,0.1000',
+    '',
+  ].join('\n');
+  const provenance = {
+    coveredCalendarYears: [2025],
+    assetScope: {
+      mode: 'subset',
+      symbols: ['AAPL', 'NEW', 'QQQ'],
+      rationale: 'Compare repeat runs from identical reviewed bytes.',
+    },
+    newSymbolPartitions: { NEW: 'stocks.json' },
+  };
+  const first = fixture(t, { sourceText, provenance });
+  const second = fixture(t, { sourceText, provenance });
+  const firstResult = run([
+    '--source', first.source,
+    '--manifest', first.manifest,
+    '--output-dir', first.output,
+  ]);
+  const secondResult = run([
+    '--source', second.source,
+    '--manifest', second.manifest,
+    '--output-dir', second.output,
+  ]);
+
+  assert.equal(firstResult.status, 0, firstResult.stderr);
+  assert.equal(secondResult.status, 0, secondResult.stderr);
+  assert.match(firstResult.stdout,
+    /^Dry run completed successfully\.\nstocks\.json: .+\nindices\.json: .+\ndry-run-report\.md: .+\n?$/);
+  assert.doesNotMatch(firstResult.stdout, /# Historical Return Dry-Run Report/);
+  for (const name of ['stocks.json', 'indices.json', 'dry-run-report.md']) {
+    const firstBytes = readFileSync(path.join(first.output, name));
+    const secondBytes = readFileSync(path.join(second.output, name));
+    assert.deepEqual(firstBytes, secondBytes, `${name} must be byte-identical`);
+    assert.equal(firstBytes.at(-1), 0x0a, `${name} must end in a newline`);
+    assert.equal(firstBytes.includes(0x0d), false, `${name} must use LF line endings`);
+  }
+
+  const stockBytes = readFileSync(path.join(first.output, 'stocks.json'), 'utf8');
+  const report = readFileSync(path.join(first.output, 'dry-run-report.md'), 'utf8');
+  assert.match(stockBytes, /^\{\n  "AAPL":/);
+  assert.match(report, /### Added assets[\s\S]*NEW/);
+  assert.match(report, /### Changed assets[\s\S]*AAPL[\s\S]*QQQ/);
+  assert.match(report, /### Changed periods[\s\S]*AAPL\/2025[\s\S]*QQQ\/2025/);
+  assert.match(report, /## Metadata changes[\s\S]*QQQ\/name/);
+  assert.doesNotMatch(report, new RegExp(first.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.doesNotMatch(report, new RegExp(second.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.doesNotMatch(report, /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+});
+
+test('dry runs leave all preset bytes unchanged for success, warnings, and blocking errors', t => {
+  const before = presetBytes();
+  const success = fixture(t);
+  const successResult = run([
+    '--source', success.source,
+    '--manifest', success.manifest,
+    '--output-dir', success.output,
+  ]);
+  assert.equal(successResult.status, 0, successResult.stderr);
+  assert.deepEqual(presetBytes(), before, 'successful dry run must not mutate presets');
+
+  const warning = rowsFixture(t, [
+    ['QQQ', 'Nasdaq-100 ETF', 'equity_index', String(new Date().getUTCFullYear() - 1), '-0.9001'],
+  ]);
+  const warningResult = run([
+    '--source', warning.source,
+    '--manifest', warning.manifest,
+    '--output-dir', warning.output,
+  ]);
+  assert.equal(warningResult.status, 0, warningResult.stderr);
+  assert.match(readFileSync(path.join(warning.output, 'dry-run-report.md'), 'utf8'), /outlier-low/);
+  assert.deepEqual(presetBytes(), before, 'warning-only dry run must not mutate presets');
+
+  const blocking = fixture(t, { sourceText: 'invalid reviewed source\n' });
+  assertBlockingReport(blocking, /header/i);
+  assert.deepEqual(presetBytes(), before, 'blocking dry run must not mutate presets');
+});
+
+test('dry-run uses no provider or browser storage and does not calculate raw-price returns', t => {
+  const f = fixture(t);
+  const guardPath = path.join(f.dir, 'guard.cjs');
+  writeFileSync(guardPath, [
+    "const http = require('node:http');",
+    "const https = require('node:https');",
+    "http.request = http.get = https.request = https.get = () => { throw new Error('unexpected network access'); };",
+    "globalThis.fetch = () => { throw new Error('unexpected provider fetch'); };",
+    "Object.defineProperty(globalThis, 'indexedDB', { configurable: true, get() { throw new Error('unexpected IndexedDB access'); } });",
+    '',
+  ].join('\n'));
+  const result = spawnSync(process.execPath, [
+    '--require', guardPath,
+    command,
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', f.output,
+  ], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+
+  const rawPrices = fixture(t, {
+    extension: 'json',
+    sourceText: JSON.stringify({
+      assets: [{
+        symbol: 'QQQ',
+        name: 'Nasdaq-100 ETF',
+        assetClass: 'equity_index',
+        returns: [{ year: 2025, return: 0.2078 }],
+        prices: [{ date: '2025-12-31', adjustedClose: 600 }],
+      }],
+    }),
+  });
+  assertBlockingReport(rawPrices, /prices/i);
 });
 
 test('output directory is created when absent and accepts an existing empty directory', t => {
