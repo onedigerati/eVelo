@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Source Contract & Review Governance** - Define reviewed annual-return inputs, methodology, coverage policy, and traceable provenance. (completed 2026-10-05)
 - [x] **Phase 2: Deterministic Validation & Dry-Run Diff** - Reject invalid or incomplete data and produce deterministic candidates and a complete non-mutating report. (completed 2026-10-06)
-- [ ] **Phase 3: Gated Apply & Maintenance** - Apply reviewed candidates narrowly, verify compatibility, and document the repeatable maintenance and rollback workflow.
+- [x] **Phase 3: Gated Apply & Maintenance** - Apply reviewed candidates narrowly, verify compatibility, and document the repeatable maintenance and rollback workflow. (completed 2026-10-06)
 
 ## Phase Details
 
@@ -64,7 +64,7 @@ Plans:
   2. From a normal repository checkout, a maintainer can run regression checks for malformed inputs, coverage, determinism, and compatibility with the preset data shape without machine-specific absolute paths.
   3. A maintainer can follow the runbook to prepare and review sources, apply and verify updates, document exceptions, and restore the prior bundled data; the process neither fetches provider data nor schedules silent updates.
 
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -83,4 +83,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Source Contract & Review Governance | 2/2 | Complete    | 2026-10-05 |
 | 2. Deterministic Validation & Dry-Run Diff | 4/4 | Complete    | 2026-10-06 |
-| 3. Gated Apply & Maintenance | 3/3 | In Progress | - |
+| 3. Gated Apply & Maintenance | 3/3 | Complete    | 2026-10-06 |
