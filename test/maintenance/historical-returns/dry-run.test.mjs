@@ -172,7 +172,8 @@ test('reviewed CSV subset produces full merged candidates and a concise report p
   assert.match(report, /subset/i);
   assert.match(report, /QQQ/);
   assert.match(report, /Test reviewer/);
-  assert.match(report, /Changed: QQQ\/2025/);
+  assert.match(report, /### Changed periods[\s\S]*QQQ\/2025: 0\.2077 → 0\.2078/);
+  assert.match(report, /### Changed assets[\s\S]*QQQ/);
   assert.doesNotMatch(report, new RegExp(f.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.deepEqual(presetBytes(), before);
 });
@@ -186,6 +187,8 @@ test('complete scope blocks removed baseline assets and previously covered perio
   assert.match(report, /removed-period/);
   assert.match(report, /\|\s*APD\s*\|/);
   assert.match(report, /\|\s*QQQ\s*\|\s*2024\s*\|/);
+  assert.match(report, /### Removed assets[\s\S]*APD/);
+  assert.match(report, /### Removed periods[\s\S]*QQQ\/2024/);
 });
 
 test('complete scope accepts the full physical baseline without removals', t => {
@@ -242,7 +245,8 @@ test('a new period absent from the baseline is retained as an addition', t => {
     { date: '2000', return: 0.0178 },
     { date: '2001', return: 0.0178 },
   ]);
-  assert.match(readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8'), /Added: IWM\/2000/);
+  assert.match(readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8'),
+    /### Added periods[\s\S]*IWM\/2000: 0\.0178/);
 });
 
 test('a genuinely new symbol uses its explicit manifest partition route', t => {
@@ -270,6 +274,9 @@ test('a genuinely new symbol uses its explicit manifest partition route', t => {
     returns: [{ date: '2025', return: 0.125 }],
   });
   assert.equal(Object.hasOwn(indices, 'NEW'), false);
+  const report = readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8');
+  assert.match(report, /### Added assets[\s\S]*NEW.*stocks\.json/);
+  assert.match(report, /### Added periods[\s\S]*NEW\/2025: 0\.125/);
 });
 
 test('new symbols without a route and stale routes block candidates', t => {
@@ -313,6 +320,28 @@ test('new symbol keys are serialized as data rather than object prototypes', t =
   const stocks = JSON.parse(readFileSync(path.join(f.output, 'stocks.json'), 'utf8'));
   assert.equal(Object.hasOwn(stocks, '__proto__'), true);
   assert.equal(stocks.__proto__.name, 'Reviewed symbol');
+});
+
+test('report and candidates preserve literal metadata and show complete period changes', t => {
+  const f = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\nQQQ,Reviewed Nasdaq fund,equity_stock,2025,0.2500\n',
+  });
+  const before = presetBytes();
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+
+  const stocks = JSON.parse(readFileSync(path.join(f.output, 'stocks.json'), 'utf8'));
+  const indices = JSON.parse(readFileSync(path.join(f.output, 'indices.json'), 'utf8'));
+  assert.equal(stocks.QQQ.name, 'Reviewed Nasdaq fund');
+  assert.equal(stocks.QQQ.assetClass, 'equity_stock');
+  assert.deepEqual(stocks.QQQ, indices.QQQ);
+
+  const report = readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8');
+  assert.match(report, /### Changed assets[\s\S]*QQQ/);
+  assert.match(report, /### Changed periods[\s\S]*QQQ\/2025: 0\.2077 → 0\.25/);
+  assert.match(report, /## Metadata changes[\s\S]*QQQ\/name: "Nasdaq-100 ETF" → "Reviewed Nasdaq fund"/);
+  assert.match(report, /QQQ\/assetClass: "equity_index" → "equity_stock"/);
+  assert.deepEqual(presetBytes(), before);
 });
 
 test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
