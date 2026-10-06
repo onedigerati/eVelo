@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 milestone: v1.0
 milestone_name: Historical Data Refresh Workflow
-current_phase: 02
-current_phase_name: Deterministic Validation & Dry-Run Diff
-status: verifying
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-10-06T15:18:46.201Z"
+current_phase: 3
+current_phase_name: Gated Apply & Maintenance
+status: planning
+stopped_at: Phase 3 context gathered
+last_updated: "2026-10-06T19:26:38.527Z"
 last_activity: 2026-10-06
-last_activity_desc: Plan 02-03 completed and summarized; Plan 02-04 is ready
-state_head: b2d3f5743964f8df7c7cec6d5ba2cde6c3557a08
+last_activity_desc: Phase 02 complete, transitioned to Phase 3
+state_head: 947d6c8d203e4449bfc84d8624ebe4583e20687e
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
   completed_plans: 6
 ---
@@ -21,19 +21,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-05)
+See: .planning/PROJECT.md (updated 2026-10-06)
 
 **Core value:** Accurate, trustworthy Monte Carlo simulation of the BBD strategy with clear visualization of risk and outcomes.
-**Current focus:** Phase 02 — Deterministic Validation & Dry-Run Diff
+**Current focus:** Phase 03 — Gated Apply & Maintenance
 
 ## Current Position
 
-Phase: 02 (Deterministic Validation & Dry-Run Diff) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-10-06 — Plan 02-03 completed and summarized; Plan 02-04 is ready
+Phase: 3 — Gated Apply & Maintenance
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-06 — Phase 02 complete, transitioned to Phase 3
 
-Progress: [████████████████░░░░] 5/6 plans
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -42,7 +42,7 @@ Progress: [████████████████░░░░] 5/6 pla
 - Average duration: 3.9 min
 - Total execution time: 445.25 min
 
-**Current milestone:** 5 plans completed; Phase 2 has 3/4 plans complete.
+**Current milestone:** 6 plans completed; Phase 2 has 4/4 plans complete.
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
@@ -65,12 +65,10 @@ Progress: [████████████████░░░░] 5/6 pla
 - Phase 1's identify command reports exact-byte identity and unvalidated manifest claims only; semantic input checks and dry-run candidates belong to Phase 2.
 - Duplicate manifest object keys are rejected before JSON parsing, and annual returns cannot be below a total loss.
 - Historical decision citations are preserved in the committed sanitized evidence record; raw snapshots and historical source-byte checksums are not available or claimed.
-- [Phase 02]: Keep the Phase 2 tracer scoped to reviewed-source end-to-end output and retain Phase 1 identity inspection as a separate CLI. — This plan proves the safe candidate/report path first; strict semantic validation expands in Plan 02-02, while the Phase 1 identity-only contract remains independently testable.
-- [Phase 02]: Validate reviewed source and manifest literals against closed contracts without coercion; only completed UTC calendar years proceed, diagnostics sort deterministically, and outlier thresholds remain warning-only.
-- [Phase 02]: Reject parent-traversal segments in caller output paths before normalization.
-- [Phase 02]: Canonicalize and re-check output directories after creation; write through the resolved physical path.
-- [Phase 02]: Use exclusive per-artifact writes; interrupted runs may leave partial output and have no transaction guarantee.
-- [Phase 02]: Keep the existing deterministic serializer; byte tests confirmed stable output without a production rewrite.
+- [Phase 02]: Keep Phase 1 identity inspection separate from strict, non-normalizing Phase 2 semantic validation; completed UTC years proceed, diagnostics sort deterministically, and outlier thresholds remain warning-only.
+- [Phase 02]: Complete coverage is the default; subsets require exact declared symbol/year sets, preserve out-of-scope records, and route genuinely new symbols through explicit reviewed manifest entries.
+- [Phase 02]: Emit deterministic candidates and reports only to safe external destinations with exclusive writes; bundled presets remain unchanged.
+- [Phase 02]: Refuse overwrite and preset-path aliases, but do not claim an all-output transaction guarantee for interruption or concurrent runs.
 
 ### Pending Todos
 
@@ -78,7 +76,7 @@ None recorded.
 
 ### Blockers/Concerns
 
-None currently. Phase 2 owns semantic validation of source records and the provenance sufficiency limits documented in the Phase 1 contract.
+None currently.
 
 ## Deferred Items
 
@@ -89,6 +87,6 @@ None currently. Phase 2 owns semantic validation of source records and the prove
 
 ## Session Continuity
 
-Last session: 2026-10-06T15:18:46.157Z
-Stopped at: Completed 02-04-PLAN.md
-Resume file: None
+Last session: 2026-10-06T19:26:38.454Z
+Stopped at: Phase 3 context gathered
+Resume file: .planning/phases/03-gated-apply-maintenance/03-CONTEXT.md
