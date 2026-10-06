@@ -14,9 +14,9 @@
 
 ### Validation and Preview
 
-- [ ] **DATAREF-04**: The refresh tool validates schema, symbols, unique periods, finite return values, and required metadata, and fails closed on malformed or ambiguous input without silently filling or correcting data.
-- [ ] **DATAREF-05**: The default dry run checks the complete bundled asset set, reports missing or unexpected assets and periods, and allows a subset only when the maintainer explicitly identifies its scope.
-- [ ] **DATAREF-06**: The dry run produces deterministic candidate preset files outside the tracked preset directory and a complete human-readable report of added, removed, and changed assets and periods without modifying bundled presets.
+- [x] **DATAREF-04**: The refresh tool validates schema, symbols, unique periods, finite return values, and required metadata, and fails closed on malformed or ambiguous input without silently filling or correcting data.
+- [x] **DATAREF-05**: The default dry run checks the complete bundled asset set, reports missing or unexpected assets and periods, and allows a subset only when the maintainer explicitly identifies its scope.
+- [x] **DATAREF-06**: The dry run produces deterministic candidate preset files outside the tracked preset directory and a complete human-readable report of added, removed, and changed assets and periods without modifying bundled presets.
 
 ### Apply and Maintenance
 

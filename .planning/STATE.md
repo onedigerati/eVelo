@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: Historical Data Refresh Workflow
 current_phase: 02
 current_phase_name: Deterministic Validation & Dry-Run Diff
-status: executing
-stopped_at: Completed 02-03; ready to execute 02-04
-last_updated: "2026-10-06T13:33:24.000Z"
+status: verifying
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-10-06T15:18:46.201Z"
 last_activity: 2026-10-06
 last_activity_desc: Plan 02-03 completed and summarized; Plan 02-04 is ready
-state_head: c3e2e0f
+state_head: b2d3f5743964f8df7c7cec6d5ba2cde6c3557a08
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-10-05)
 
 Phase: 02 (Deterministic Validation & Dry-Run Diff) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-10-06 — Plan 02-03 completed and summarized; Plan 02-04 is ready
 
 Progress: [████████████████░░░░] 5/6 plans
@@ -50,6 +50,7 @@ Progress: [████████████████░░░░] 5/6 pla
 | Phase 02 P01 | 7 min | 2 tasks | 3 files |
 | Phase 02 P02 | 8 min | 2 tasks | 2 files |
 | Phase 02 P03 | 9 min | 3 tasks | 5 files |
+| Phase 02 P04 | 10min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,10 @@ Progress: [████████████████░░░░] 5/6 pla
 - Historical decision citations are preserved in the committed sanitized evidence record; raw snapshots and historical source-byte checksums are not available or claimed.
 - [Phase 02]: Keep the Phase 2 tracer scoped to reviewed-source end-to-end output and retain Phase 1 identity inspection as a separate CLI. — This plan proves the safe candidate/report path first; strict semantic validation expands in Plan 02-02, while the Phase 1 identity-only contract remains independently testable.
 - [Phase 02]: Validate reviewed source and manifest literals against closed contracts without coercion; only completed UTC calendar years proceed, diagnostics sort deterministically, and outlier thresholds remain warning-only.
+- [Phase 02]: Reject parent-traversal segments in caller output paths before normalization.
+- [Phase 02]: Canonicalize and re-check output directories after creation; write through the resolved physical path.
+- [Phase 02]: Use exclusive per-artifact writes; interrupted runs may leave partial output and have no transaction guarantee.
+- [Phase 02]: Keep the existing deterministic serializer; byte tests confirmed stable output without a production rewrite.
 
 ### Pending Todos
 
@@ -84,6 +89,6 @@ None currently. Phase 2 owns semantic validation of source records and the prove
 
 ## Session Continuity
 
-Last session: 2026-10-06T13:33:24.000Z
-Stopped at: Completed 02-03; ready to execute 02-04
-Resume file: .planning/phases/02-deterministic-validation-dry-run-diff/02-04-PLAN.md
+Last session: 2026-10-06T15:18:46.157Z
+Stopped at: Completed 02-04-PLAN.md
+Resume file: None
