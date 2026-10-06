@@ -1,10 +1,11 @@
 ---
 phase: "02"
 slug: "deterministic-validation-dry-run-diff"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-06"
+updated: "2026-10-06"
 ---
 
 # Phase 02 — Validation Strategy
@@ -19,18 +20,18 @@ created: "2026-10-06"
 |----------|-------|
 | **Framework** | Node.js built-in `node:test` |
 | **Config file** | None for maintenance `.mjs` tests; run directly with Node |
-| **Quick run command** | `node --test test/maintenance/historical-returns/dry-run.test.mjs` |
-| **Full suite command** | `npm run test:refresh-identify && node --test test/maintenance/historical-returns/schema-contract.test.mjs && node --test test/maintenance/historical-returns/dry-run.test.mjs` |
-| **Estimated runtime** | Local test suite; measure after Wave 0 adds the dry-run suite |
+| **Quick run command** | `npm run test:refresh-dry-run` |
+| **Full suite command** | `npm run test:refresh-identify && node --test test/maintenance/historical-returns/schema-contract.test.mjs && npm run test:refresh-dry-run` |
+| **Estimated runtime** | Under 10 seconds for the focused maintenance regression chain |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `node --test test/maintenance/historical-returns/dry-run.test.mjs`
-- **After every plan wave:** Run the full suite command above
-- **Before `/gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** Keep the focused dry-run suite under 10 seconds
+- **After every task commit:** Run `npm run test:refresh-dry-run` for CLI changes; run the schema-contract suite when changing the manifest schema.
+- **After every plan wave:** Run the full maintenance regression chain above.
+- **Before phase verification:** The full maintenance regression chain must be green.
+- **Max feedback latency:** 10 seconds for the focused dry-run suite.
 
 ---
 
@@ -38,9 +39,15 @@ created: "2026-10-06"
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| Assigned in PLAN | 02 | 0/1 | DATAREF-04 | N/A | Blocking errors create no candidates; malformed inputs are never normalized | unit / CLI | `node --test test/maintenance/historical-returns/dry-run.test.mjs` | ❌ Wave 0 | ⬜ pending |
-| Assigned in PLAN | 02 | 0/1 | DATAREF-05 | N/A | Coverage and explicit subset claims fail closed; no periods are silently filled | integration | `node --test test/maintenance/historical-returns/dry-run.test.mjs` | ❌ Wave 0 | ⬜ pending |
-| Assigned in PLAN | 02 | 0/1 | DATAREF-06 | N/A | Writes stay outside `src/data/presets`; IndexedDB and bundled preset bytes remain unchanged | CLI integration | `node --test test/maintenance/historical-returns/dry-run.test.mjs` | ❌ Wave 0 | ⬜ pending |
+| 02-01-01 | 02-01 | 1 | DATAREF-04, DATAREF-05, DATAREF-06 | T-02-01, T-02-02 | Explicit reviewed inputs; candidate output never writes bundled presets | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-01-02 | 02-01 | 1 | DATAREF-04, DATAREF-05, DATAREF-06 | — | Package commands retain separate identity and dry-run boundaries | CLI integration | `npm run test:refresh-dry-run && npm run test:refresh-identify` | ✅ both suites | ✅ green |
+| 02-02-01 | 02-02 | 2 | DATAREF-04 | T-02-03, T-02-04 | Strict parsing rejects malformed or ambiguous input without normalization | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-02-02 | 02-02 | 2 | DATAREF-04 | T-02-03 | All blocking diagnostics are stable and suppress candidates; outlier warnings remain nonblocking | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-03-01 | 02-03 | 3 | DATAREF-05, DATAREF-06 | T-02-05 | Full and declared-subset coverage compare exact symbol/year sets without filling gaps | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-03-02 | 02-03 | 3 | DATAREF-05, DATAREF-06 | T-02-06 | New symbols require explicit reviewed partition routing; existing memberships remain authoritative | Contract and CLI integration | `node --test test/maintenance/historical-returns/schema-contract.test.mjs && npm run test:refresh-dry-run` | ✅ both suites | ✅ green |
+| 02-03-03 | 02-03 | 3 | DATAREF-05, DATAREF-06 | T-02-05, T-02-06 | Complete diffs and candidates preserve out-of-scope records and synchronized QQQ memberships | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-04-01 | 02-04 | 4 | DATAREF-06 | T-02-07, T-02-08 | Output paths are physically contained and exclusive writes refuse replacement | CLI integration | `npm run test:refresh-dry-run` | ✅ `dry-run.test.mjs` | ✅ green |
+| 02-04-02 | 02-04 | 4 | DATAREF-04, DATAREF-05, DATAREF-06 | T-02-09 | Outputs are deterministic; presets remain byte-identical and no provider/browser storage path is used | CLI integration | Full maintenance regression chain | ✅ all three suites | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,25 +55,31 @@ created: "2026-10-06"
 
 ## Wave 0 Requirements
 
-- [ ] `test/maintenance/historical-returns/dry-run.test.mjs` — strict parsing, aggregate diagnostics, complete/subset coverage, candidate partitioning, output-path safety, deterministic output, and preset non-mutation tests
-- [ ] Add a package script for the focused dry-run test command
-- [ ] No new dependency is required; use the existing Node.js and Papa Parse dependencies
+Existing Node.js and `node:test` infrastructure covers all phase requirements. No Wave 0 dependencies or framework installation were required.
 
 ---
 
 ## Manual-Only Verifications
 
-All phase behaviors have automated verification.
+All Phase 2 behaviors have automated verification. No manual-only checks remain.
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have automated verification.
+- [x] Sampling continuity is maintained; no three consecutive tasks lack automated verification.
+- [x] Existing test infrastructure covers all requirements; no Wave 0 gaps remain.
+- [x] Commands are one-shot and contain no watch-mode flags.
+- [x] Focused test feedback latency target is under 10 seconds.
+- [x] `nyquist_compliant: true` is set in frontmatter.
 
-**Approval:** pending
+**Approval:** Automated coverage audited; no human-only verification is required.
+
+## Validation Audit 2026-10-06
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
