@@ -17,6 +17,8 @@
     "test:refresh-identify": "node --test test/maintenance/historical-returns/identify-source.test.mjs",
     "refresh:dry-run": "node scripts/maintenance/historical-returns/dry-run.mjs",
     "test:refresh-dry-run": "node --test test/maintenance/historical-returns/dry-run.test.mjs",
+    "refresh:apply": "node scripts/maintenance/historical-returns/apply.mjs",
+    "test:refresh-apply": "node --test test/maintenance/historical-returns/apply.test.mjs",
     "test:e2e": "node test/e2e/run-all.js",
     "test:e2e:smoke": "node test/e2e/smoke.js",
     "test:e2e:workflow": "node test/e2e/workflow.js",

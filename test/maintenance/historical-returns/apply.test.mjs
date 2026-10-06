@@ -136,6 +136,9 @@ function fixture(t) {
     manifest,
     stockPath,
     indexPath,
+    dryRunPath: path.join(repository, dryRunRelative),
+    applyPath: path.join(repository, applyRelative),
+    baselineStocks: readFileSync(stockPath),
     reviewedStocks: readFileSync(path.join(candidatesDirectory, 'stocks.json')),
     baselineIndices: readFileSync(indexPath),
   };
@@ -144,7 +147,7 @@ function fixture(t) {
 test('confirmed apply writes only changed preset partitions', t => {
   const f = fixture(t);
   const result = run(process.execPath, [
-    path.join(f.repository, applyRelative),
+    f.applyPath,
     '--source', f.source,
     '--manifest', f.manifest,
     '--candidates-dir', f.candidatesDirectory,
@@ -160,4 +163,52 @@ test('confirmed apply writes only changed preset partitions', t => {
   const status = run('git', ['status', '--short'], f.repository);
   assert.equal(status.status, 0, status.stderr);
   assert.deepEqual(status.stdout.trimEnd().split('\n'), [' M src/data/presets/stocks.json']);
+});
+
+test('apply preview shows the proposed diff without changing preset bytes', t => {
+  const f = fixture(t);
+  const result = run(process.execPath, [
+    f.applyPath,
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--candidates-dir', f.candidatesDirectory,
+  ], f.repository);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout,
+    /diff --git a\/src\/data\/presets\/stocks\.json b\/src\/data\/presets\/stocks\.json/);
+  assert.match(result.stdout, /-\s+"return": 0\.25\n\+\s+"return": 0\.3/);
+  assert.match(result.stdout, /Preview only.*--confirm-apply/);
+  assert.deepEqual(readFileSync(f.stockPath), f.baselineStocks);
+  assert.deepEqual(readFileSync(f.indexPath), f.baselineIndices);
+  const status = run('git', ['status', '--short'], f.repository);
+  assert.equal(status.status, 0, status.stderr);
+  assert.equal(status.stdout, '');
+});
+
+test('dry-run remains separate and rejects apply-only confirmation', t => {
+  const f = fixture(t);
+  const outputDirectory = path.join(f.repository, 'dry-run-apply-flag-output');
+  const result = run(process.execPath, [
+    f.dryRunPath,
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', outputDirectory,
+    '--confirm-apply',
+  ], f.repository);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /unknown argument: --confirm-apply/i);
+  assert.equal(existsSync(outputDirectory), false);
+  assert.deepEqual(readFileSync(f.stockPath), f.baselineStocks);
+  assert.deepEqual(readFileSync(f.indexPath), f.baselineIndices);
+});
+
+test('apply usage discloses that concurrent invocations are unsupported', t => {
+  const f = fixture(t);
+  const result = run(process.execPath, [f.applyPath], f.repository);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Usage: npm run refresh:apply/);
+  assert.match(result.stderr, /concurrent apply invocations are unsupported/i);
 });
