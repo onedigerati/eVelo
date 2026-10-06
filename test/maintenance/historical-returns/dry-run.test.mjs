@@ -555,7 +555,7 @@ test('outlier thresholds are strict and warning-only data still produces candida
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(path.join(f.output, 'stocks.json')), true);
   const report = readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8');
-  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Changes')[0];
+  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Asset changes')[0];
   const warningRows = warningSection.split('\n').filter(line => line.startsWith('| review.csv |'));
   assert.equal(warningRows.length, 2);
   assert.deepEqual(warningRows.map(line => line.split('|')[6].trim()), ['outlier-low', 'outlier-high']);
@@ -584,7 +584,7 @@ test('independent diagnostics retain stable source-row and field ordering and su
     ['3', 'year', 'incomplete-calendar-year'],
     ['4', 'return', 'return-number'],
   ]);
-  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Changes')[0];
+  const warningSection = report.split('## Warnings\n\n')[1].split('\n## Asset changes')[0];
   assert.match(warningSection, /outlier-high/);
   assert.match(warningSection, /outlier-low/);
 });

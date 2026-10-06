@@ -1011,6 +1011,15 @@ function compareCoverageAndBuildCandidates(sourceAssets, manifest, stocks, indic
 
   const sourceBySymbol = new Map(sourceAssets.map(asset => [asset.symbol, asset]));
   const routes = manifest.newSymbolPartitions ?? {};
+  const changes = {
+    addedAssets: [],
+    removedAssets: [],
+    changedAssets: [],
+    addedPeriods: [],
+    removedPeriods: [],
+    changedPeriods: [],
+    metadataChanges: [],
+  };
   for (const symbol of sourceBySymbol.keys()) {
     if (!baseline.has(symbol) && !Object.hasOwn(routes, symbol)) {
       addDiagnostic(diagnostics, {
@@ -1038,31 +1047,120 @@ function compareCoverageAndBuildCandidates(sourceAssets, manifest, stocks, indic
   }
 
   if (manifest.assetScope.mode === 'complete') {
-    for (const [symbol, record] of baseline) {
-      const sourceAsset = sourceBySymbol.get(symbol);
-      const file = record.partitions.join(', ');
-      if (!sourceAsset) {
-        addDiagnostic(diagnostics, {
-          file, symbol, field: 'symbol', code: 'removed-asset',
-          message: 'Complete source omitted an asset present in the bundled baseline.',
-        });
-        continue;
-      }
-
-      const sourceYears = new Set(sourceAsset.returns.map(item => item.year));
-      for (const item of record.asset.returns) {
-        const year = Number(item.date);
-        if (!sourceYears.has(year)) {
+    for (const [symbol, record] of [...baseline].sort(([left], [right]) => compareText(left, right))) {
+      if (!sourceBySymbol.has(symbol)) {
+        changes.removedAssets.push({ symbol, ...record });
+        for (const item of record.asset.returns) {
+          const year = Number(item.date);
+          changes.removedPeriods.push({
+            symbol, year, before: item.return, partitions: record.partitions,
+          });
           addDiagnostic(diagnostics, {
-            file, symbol, year, field: 'year', code: 'removed-period',
+            file: record.partitions.join(', '), symbol, year, field: 'year', code: 'removed-period',
             message: 'Complete source omitted a previously covered bundled period.',
           });
         }
+        addDiagnostic(diagnostics, {
+          file: record.partitions.join(', '), symbol, field: 'symbol', code: 'removed-asset',
+          message: 'Complete source omitted an asset present in the bundled baseline.',
+        });
       }
     }
   }
 
-  return mergeReviewedAssets(sourceAssets, stocks, indices, routes);
+  for (const asset of [...sourceAssets].sort((left, right) => compareText(left.symbol, right.symbol))) {
+    const record = baseline.get(asset.symbol);
+    if (!record) {
+      changes.addedAssets.push({
+        symbol: asset.symbol,
+        name: asset.name,
+        assetClass: asset.assetClass,
+        partition: routes[asset.symbol],
+      });
+      for (const item of [...asset.returns].sort((left, right) => left.year - right.year)) {
+        changes.addedPeriods.push({
+          symbol: asset.symbol,
+          year: item.year,
+          after: item.return,
+          partitions: [routes[asset.symbol]],
+        });
+      }
+      continue;
+    }
+
+    const changedKinds = new Set();
+    for (const field of ['name', 'assetClass']) {
+      if (record.asset[field] !== asset[field]) {
+        changes.metadataChanges.push({
+          symbol: asset.symbol,
+          field,
+          before: record.asset[field],
+          after: asset[field],
+        });
+        changedKinds.add('metadata');
+      }
+    }
+
+    const baselineReturns = new Map(record.asset.returns.map(item => [Number(item.date), item.return]));
+    const sourceYears = new Set(asset.returns.map(item => item.year));
+    for (const item of [...asset.returns].sort((left, right) => left.year - right.year)) {
+      if (!baselineReturns.has(item.year)) {
+        changes.addedPeriods.push({
+          symbol: asset.symbol, year: item.year, after: item.return, partitions: record.partitions,
+        });
+        changedKinds.add('periods');
+      } else if (baselineReturns.get(item.year) !== item.return) {
+        changes.changedPeriods.push({
+          symbol: asset.symbol,
+          year: item.year,
+          before: baselineReturns.get(item.year),
+          after: item.return,
+          partitions: record.partitions,
+        });
+        changedKinds.add('periods');
+      }
+    }
+
+    if (manifest.assetScope.mode === 'complete') {
+      for (const item of record.asset.returns) {
+        const year = Number(item.date);
+        if (!sourceYears.has(year)) {
+          changes.removedPeriods.push({
+            symbol: asset.symbol, year, before: item.return, partitions: record.partitions,
+          });
+          addDiagnostic(diagnostics, {
+            file: record.partitions.join(', '), symbol: asset.symbol, year, field: 'year', code: 'removed-period',
+            message: 'Complete source omitted a previously covered bundled period.',
+          });
+          changedKinds.add('periods');
+        }
+      }
+    }
+
+    if (changedKinds.size) {
+      changes.changedAssets.push({
+        symbol: asset.symbol,
+        partitions: record.partitions,
+        kinds: [...changedKinds].sort(compareText),
+      });
+    }
+  }
+
+  const compareSymbolYear = (left, right) =>
+    compareText(left.symbol, right.symbol) || left.year - right.year;
+  changes.addedAssets.sort((left, right) => compareText(left.symbol, right.symbol));
+  changes.removedAssets.sort((left, right) => compareText(left.symbol, right.symbol));
+  changes.changedAssets.sort((left, right) => compareText(left.symbol, right.symbol));
+  changes.addedPeriods.sort(compareSymbolYear);
+  changes.removedPeriods.sort(compareSymbolYear);
+  changes.changedPeriods.sort(compareSymbolYear);
+  changes.metadataChanges.sort((left, right) =>
+    compareText(left.symbol, right.symbol) || compareText(left.field, right.field));
+
+  return {
+    candidates: mergeReviewedAssets(sourceAssets, stocks, indices, routes),
+    changes,
+  };
 }
 
 function orderedJson(value) {
@@ -1092,33 +1190,17 @@ function renderDiagnostics(diagnostics, severity) {
   ];
 }
 
-function renderReport(pair, assets, stocks, indices, diagnostics) {
+function renderReport(pair, assets, diagnostics, changes = null) {
   const manifest = pair.manifest ?? {};
   const symbols = assets.map(asset => asset.symbol).filter(value => typeof value === 'string').sort(compareText);
   const years = [...new Set(assets.flatMap(asset => asset.returns.map(item => item.year)))]
     .sort((left, right) => left - right);
-  const changes = [];
-  if (stocks && indices) {
-    for (const asset of [...assets].sort((left, right) => compareText(left.symbol, right.symbol))) {
-      const baseline = Object.hasOwn(stocks, asset.symbol)
-        ? stocks[asset.symbol]
-        : Object.hasOwn(indices, asset.symbol) ? indices[asset.symbol] : null;
-      if (!baseline) continue;
-      for (const field of ['name', 'assetClass']) {
-        if (baseline[field] !== asset[field]) {
-          changes.push(`- Changed metadata: ${asset.symbol}/${field} (${JSON.stringify(baseline[field])} → ${JSON.stringify(asset[field])})`);
-        }
-      }
-      const existingReturns = new Map(baseline.returns.map(item => [Number(item.date), item.return]));
-      for (const item of [...asset.returns].sort((left, right) => left.year - right.year)) {
-        if (!existingReturns.has(item.year)) {
-          changes.push(`- Added: ${asset.symbol}/${item.year} (${item.return})`);
-        } else if (existingReturns.get(item.year) !== item.return) {
-          changes.push(`- Changed: ${asset.symbol}/${item.year} (${existingReturns.get(item.year)} → ${item.return})`);
-        }
-      }
-    }
-  }
+  const diff = changes ?? {
+    addedAssets: [], removedAssets: [], changedAssets: [],
+    addedPeriods: [], removedPeriods: [], changedPeriods: [], metadataChanges: [],
+  };
+  const display = value => markdownCell(JSON.stringify(value));
+  const renderItems = (items, format) => items.length ? items.map(format) : ['None.'];
   return [
     '# Historical Return Dry-Run Report',
     '',
@@ -1142,9 +1224,44 @@ function renderReport(pair, assets, stocks, indices, diagnostics) {
     '',
     ...renderDiagnostics(diagnostics, 'warning'),
     '',
-    '## Changes',
+    '## Asset changes',
     '',
-    ...(changes.length ? changes : ['No changes detected for the reviewed periods.']),
+    '### Added assets',
+    '',
+    ...renderItems(diff.addedAssets, asset =>
+      `- ${markdownCell(asset.symbol)}: ${display(asset.name)} (${markdownCell(asset.assetClass)}); destination ${markdownCell(asset.partition)}`),
+    '',
+    '### Removed assets',
+    '',
+    ...renderItems(diff.removedAssets, asset =>
+      `- ${markdownCell(asset.symbol)}: ${display(asset.asset.name)} (${markdownCell(asset.asset.assetClass)}); baseline partitions ${markdownCell(asset.partitions.join(', '))}`),
+    '',
+    '### Changed assets',
+    '',
+    ...renderItems(diff.changedAssets, asset =>
+      `- ${markdownCell(asset.symbol)} (${asset.kinds.map(markdownCell).join(', ')}; baseline partitions ${markdownCell(asset.partitions.join(', '))})`),
+    '',
+    '## Period changes',
+    '',
+    '### Added periods',
+    '',
+    ...renderItems(diff.addedPeriods, item =>
+      `- ${markdownCell(item.symbol)}/${item.year}: ${display(item.after)} (partition ${markdownCell(item.partitions.join(', '))})`),
+    '',
+    '### Removed periods',
+    '',
+    ...renderItems(diff.removedPeriods, item =>
+      `- ${markdownCell(item.symbol)}/${item.year}: ${display(item.before)} (baseline; partition ${markdownCell(item.partitions.join(', '))})`),
+    '',
+    '### Changed periods',
+    '',
+    ...renderItems(diff.changedPeriods, item =>
+      `- ${markdownCell(item.symbol)}/${item.year}: ${display(item.before)} → ${display(item.after)} (partition ${markdownCell(item.partitions.join(', '))})`),
+    '',
+    '## Metadata changes',
+    '',
+    ...renderItems(diff.metadataChanges, item =>
+      `- ${markdownCell(item.symbol)}/${markdownCell(item.field)}: ${display(item.before)} → ${display(item.after)}`),
     '',
   ].join('\n');
 }
@@ -1207,23 +1324,24 @@ function main(args) {
   let stocks = null;
   let indices = null;
   let candidates = null;
+  let changes = null;
   if (!diagnostics.some(item => item.severity === 'blocking')) {
     stocks = loadBaseline('stocks.json');
     indices = loadBaseline('indices.json');
-    candidates = compareCoverageAndBuildCandidates(
+    ({ candidates, changes } = compareCoverageAndBuildCandidates(
       assets, pair.manifest, stocks, indices, diagnostics,
-    );
+    ));
   }
   const sortedDiagnostics = sortDiagnostics(diagnostics);
   const blockingCount = sortedDiagnostics.filter(item => item.severity === 'blocking').length;
   if (blockingCount) {
-    writeReport(options['--output-dir'], renderReport(pair, assets, stocks, indices, sortedDiagnostics));
+    writeReport(options['--output-dir'], renderReport(pair, assets, sortedDiagnostics, changes));
     console.error(`refresh:dry-run: blocked by ${blockingCount} validation error(s). Report: dry-run-report.md`);
     process.exitCode = 1;
     return;
   }
 
-  const report = renderReport(pair, assets, stocks, indices, sortedDiagnostics);
+  const report = renderReport(pair, assets, sortedDiagnostics, changes);
   writeOutputs(options['--output-dir'], candidates, report);
   console.log([
     'Dry run completed successfully.',
