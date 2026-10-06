@@ -79,6 +79,36 @@ function rowsFixture(t, records) {
   });
 }
 
+function completeFixture(t, { omittedSymbols = [], omittedPeriods = [] } = {}) {
+  const assetsBySymbol = new Map();
+  for (const presetPath of [stocksPath, indicesPath]) {
+    const partition = JSON.parse(readFileSync(presetPath, 'utf8'));
+    for (const asset of Object.values(partition)) {
+      if (assetsBySymbol.has(asset.symbol)) continue;
+      assetsBySymbol.set(asset.symbol, {
+        symbol: asset.symbol,
+        name: asset.name,
+        assetClass: asset.assetClass,
+        returns: asset.returns
+          .filter(item => !omittedPeriods.some(period =>
+            period.symbol === asset.symbol && period.year === Number(item.date)))
+          .map(item => ({ year: Number(item.date), return: item.return })),
+      });
+    }
+  }
+  const assets = [...assetsBySymbol.values()].filter(asset => !omittedSymbols.includes(asset.symbol));
+  const years = [...new Set(assets.flatMap(asset => asset.returns.map(item => item.year)))]
+    .sort((left, right) => left - right);
+  return fixture(t, {
+    extension: 'json',
+    sourceText: JSON.stringify({ assets }),
+    provenance: {
+      coveredCalendarYears: years,
+      assetScope: { mode: 'complete' },
+    },
+  });
+}
+
 function run(args, cwd = root) {
   return spawnSync(process.execPath, [command, ...args], { cwd, encoding: 'utf8' });
 }
@@ -145,6 +175,26 @@ test('reviewed CSV subset produces full merged candidates and a concise report p
   assert.match(report, /Changed: QQQ\/2025/);
   assert.doesNotMatch(report, new RegExp(f.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.deepEqual(presetBytes(), before);
+});
+
+test('complete scope blocks removed baseline assets and previously covered periods', t => {
+  const f = completeFixture(t, {
+    omittedSymbols: ['APD'],
+    omittedPeriods: [{ symbol: 'QQQ', year: 2024 }],
+  });
+  const report = assertBlockingReport(f, /removed-asset/);
+  assert.match(report, /removed-period/);
+  assert.match(report, /\|\s*APD\s*\|/);
+  assert.match(report, /\|\s*QQQ\s*\|\s*2024\s*\|/);
+});
+
+test('complete scope accepts the full physical baseline without removals', t => {
+  const f = completeFixture(t);
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  const report = readFileSync(path.join(f.output, 'dry-run-report.md'), 'utf8');
+  assert.match(report, /Scope: complete/i);
+  assert.doesNotMatch(report, /removed-asset|removed-period/);
 });
 
 test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
