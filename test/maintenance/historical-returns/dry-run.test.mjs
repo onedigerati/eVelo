@@ -21,10 +21,13 @@ import test from 'node:test';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const command = path.join(root, 'scripts/maintenance/historical-returns/dry-run.mjs');
+const presetDirectory = path.join(root, 'src/data/presets');
 const stocksPath = path.join(root, 'src/data/presets/stocks.json');
 const indicesPath = path.join(root, 'src/data/presets/indices.json');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
-const presetBytes = () => [stocksPath, indicesPath].map(file => readFileSync(file).toString('base64'));
+const presetBytes = () => readdirSync(presetDirectory)
+  .sort()
+  .map(name => [name, readFileSync(path.join(presetDirectory, name)).toString('base64')]);
 
 function fixture(t, { extension = 'csv', sourceText, provenance: overrides = {} } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'evelo-dry-run-'));
