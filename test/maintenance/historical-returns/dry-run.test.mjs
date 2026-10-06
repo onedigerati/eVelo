@@ -20,7 +20,7 @@ function fixture(t) {
   const manifest = `${source}.manifest.json`;
   const output = path.join(dir, 'output');
   const sourceBytes = Buffer.from(
-    'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2077\n',
+    'symbol,name,assetClass,year,return\nQQQ,Nasdaq-100 ETF,equity_index,2025,0.2078\n',
   );
   const provenance = {
     sourceAttribution: 'Reviewed local historical return snapshot',
@@ -38,7 +38,13 @@ function fixture(t) {
     assetScope: { mode: 'subset', symbols: ['QQQ'], rationale: 'Review only the QQQ 2025 period.' },
     reviewer: 'Test reviewer',
     reviewDate: '2026-01-02',
-    exceptions: [],
+    exceptions: [{
+      symbols: ['QQQ'],
+      years: [2025],
+      acceptedValueOrPolicy: '0.2078',
+      rationale: 'Reviewer approved the corrected annual return.',
+      evidence: 'Reviewed CSV record QQQ/2025 and source comparison.',
+    }],
   };
   writeFileSync(source, sourceBytes);
   writeFileSync(manifest, JSON.stringify(provenance, null, 2));
@@ -70,11 +76,12 @@ test('reviewed CSV subset produces full merged candidates and a concise report p
 
   const stocks = JSON.parse(readFileSync(path.join(f.output, 'stocks.json'), 'utf8'));
   const indices = JSON.parse(readFileSync(path.join(f.output, 'indices.json'), 'utf8'));
-  assert.deepEqual(stocks.QQQ, baselineStocks.QQQ);
-  assert.deepEqual(indices.QQQ, baselineIndices.QQQ);
+  assert.equal(stocks.QQQ.returns.find(item => item.date === '2025').return, 0.2078);
+  assert.equal(indices.QQQ.returns.find(item => item.date === '2025').return, 0.2078);
   assert.deepEqual(stocks.QQQ, indices.QQQ);
   assert.deepEqual(stocks.AAPL, baselineStocks.AAPL);
   assert.deepEqual(indices.IWM, baselineIndices.IWM);
+  assert.equal(stocks.QQQ.returns.length, baselineStocks.QQQ.returns.length);
   assert.equal(Object.keys(stocks).length, Object.keys(baselineStocks).length);
   assert.equal(Object.keys(indices).length, Object.keys(baselineIndices).length);
 
@@ -82,6 +89,7 @@ test('reviewed CSV subset produces full merged candidates and a concise report p
   assert.match(report, /subset/i);
   assert.match(report, /QQQ/);
   assert.match(report, /Test reviewer/);
+  assert.match(report, /Changed: QQQ\/2025/);
   assert.doesNotMatch(report, new RegExp(f.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.deepEqual(presetBytes(), before);
 });
