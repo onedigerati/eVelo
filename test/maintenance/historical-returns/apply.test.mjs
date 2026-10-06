@@ -113,6 +113,7 @@ function fixture(t) {
     return result;
   };
   git('init', '--quiet');
+  writeFileSync(path.join(repository, '.git/info/exclude'), '\n/node_modules\n', { flag: 'a' });
   git('config', 'user.name', 'Apply Fixture');
   git('config', 'user.email', 'apply-fixture@example.invalid');
   git('add', 'src/data/presets', 'scripts/maintenance/historical-returns/dry-run.mjs');
@@ -151,9 +152,12 @@ test('confirmed apply writes only changed preset partitions', t => {
   ], f.repository);
 
   assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout,
+    /diff --git a\/src\/data\/presets\/stocks\.json b\/src\/data\/presets\/stocks\.json/);
+  assert.match(result.stdout, /-\s+"return": 0\.25\n\+\s+"return": 0\.3/);
   assert.deepEqual(readFileSync(f.stockPath), f.reviewedStocks);
   assert.deepEqual(readFileSync(f.indexPath), f.baselineIndices);
   const status = run('git', ['status', '--short'], f.repository);
   assert.equal(status.status, 0, status.stderr);
-  assert.deepEqual(status.stdout.trim().split('\n'), [' M src/data/presets/stocks.json']);
+  assert.deepEqual(status.stdout.trimEnd().split('\n'), [' M src/data/presets/stocks.json']);
 });
