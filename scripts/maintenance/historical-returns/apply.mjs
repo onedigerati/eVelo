@@ -19,6 +19,7 @@ const usage = [
   'Run one apply process at a time; concurrent apply invocations are unsupported.',
 ].join('\n');
 const reviewedArtifacts = ['stocks.json', 'indices.json', 'dry-run-report.md'];
+const presetAssetClasses = new Set(['equity_index', 'equity_stock', 'bond', 'commodity']);
 const targets = [
   { filename: 'stocks.json', relativePath: 'src/data/presets/stocks.json' },
   { filename: 'indices.json', relativePath: 'src/data/presets/indices.json' },
@@ -92,6 +93,55 @@ function assertReviewedArtifactsMatch(candidatesDirectory, freshArtifacts) {
   }
 }
 
+function assertPresetDataShape(filename, bytes, source) {
+  let partition;
+  try {
+    partition = JSON.parse(bytes.toString('utf8'));
+  } catch (error) {
+    throw new Error(`Invalid PresetData shape in ${filename} (${source}): cannot parse JSON (${error.message}).`);
+  }
+  if (!partition || typeof partition !== 'object' || Array.isArray(partition)) {
+    throw new Error(`Invalid PresetData shape in ${filename} (${source}): root must be an object keyed by symbol.`);
+  }
+  for (const [key, value] of Object.entries(partition)) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key} must map to an object.`);
+    }
+    if (value.symbol !== key) {
+      throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.symbol must equal the keyed symbol.`);
+    }
+    for (const field of ['name', 'startDate', 'endDate']) {
+      if (typeof value[field] !== 'string') {
+        throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.${field} must be a string.`);
+      }
+    }
+    if (Object.hasOwn(value, 'assetClass') &&
+        (typeof value.assetClass !== 'string' || !presetAssetClasses.has(value.assetClass))) {
+      throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.assetClass is not canonical.`);
+    }
+    if (!Array.isArray(value.returns)) {
+      throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.returns must be an array.`);
+    }
+    for (const [index, item] of value.returns.entries()) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.returns[${index}] must be an object.`);
+      }
+      if (typeof item.date !== 'string') {
+        throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.returns[${index}].date must be a string.`);
+      }
+      if (typeof item.return !== 'number' || !Number.isFinite(item.return)) {
+        throw new Error(`Invalid PresetData shape in ${filename} (${source}): ${key}.returns[${index}].return must be a finite number.`);
+      }
+    }
+  }
+}
+
+function assertCandidatesPresetShape(freshArtifacts) {
+  for (const filename of ['stocks.json', 'indices.json']) {
+    assertPresetDataShape(filename, freshArtifacts.get(filename), 'fresh candidate');
+  }
+}
+
 function changedTargets(freshArtifacts) {
   return targets.filter(target =>
     !readFileSync(path.join(repositoryRoot, target.relativePath))
@@ -156,15 +206,18 @@ function writeChangedTargets(changed, freshArtifacts) {
     const targetPath = path.join(repositoryRoot, target.relativePath);
     const expectedBytes = freshArtifacts.get(target.filename);
     writeFileSync(targetPath, expectedBytes);
-    if (!readFileSync(targetPath).equals(expectedBytes)) {
+    const actualBytes = readFileSync(targetPath);
+    if (!actualBytes.equals(expectedBytes)) {
       throw new Error(`Written bytes do not match the validated candidate: ${target.relativePath}`);
     }
+    assertPresetDataShape(target.filename, actualBytes, 'written target');
   }
 }
 
 function main(args) {
   const options = parseApplyArguments(args);
   const freshArtifacts = rerunDryRun(options);
+  assertCandidatesPresetShape(freshArtifacts);
   assertReviewedArtifactsMatch(options.candidatesDirectory, freshArtifacts);
   const changed = changedTargets(freshArtifacts);
   if (!changed.length) {
