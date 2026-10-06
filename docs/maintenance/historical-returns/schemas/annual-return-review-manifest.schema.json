@@ -40,6 +40,19 @@
     "exceptions": {
       "type": "array",
       "items": { "$ref": "#/$defs/exception" }
+    },
+    "newSymbolPartitions": {
+      "type": "object",
+      "description": "Explicit reviewed destination for each source symbol absent from both bundled preset partitions.",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["stocks.json", "indices.json"]
+      }
     }
   },
   "$defs": {

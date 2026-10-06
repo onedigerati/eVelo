@@ -400,7 +400,7 @@ function validateManifest(manifest, file, diagnostics) {
     ['sourceAttribution', 'snapshotFilename', 'snapshotSha256', 'methodology', 'coveredCalendarYears',
       'assetScope', 'reviewer', 'reviewDate', 'exceptions'],
     ['sourceAttribution', 'snapshotFilename', 'snapshotSha256', 'methodology', 'coveredCalendarYears',
-      'assetScope', 'reviewer', 'reviewDate', 'exceptions'],
+      'assetScope', 'reviewer', 'reviewDate', 'exceptions', 'newSymbolPartitions'],
     file,
     diagnostics,
   );
@@ -516,6 +516,27 @@ function validateManifest(manifest, file, diagnostics) {
     });
   } else {
     object.exceptions.forEach((exception, index) => validateException(exception, index, file, diagnostics));
+  }
+
+  if (Object.hasOwn(object, 'newSymbolPartitions')) {
+    if (!isObject(object.newSymbolPartitions)) {
+      addDiagnostic(diagnostics, {
+        file, field: 'newSymbolPartitions', code: 'partition-map-type',
+        message: 'New-symbol partitions must be an object mapping symbols to preset filenames.',
+      });
+    } else {
+      for (const symbol of Object.keys(object.newSymbolPartitions).sort(compareText)) {
+        validateSourceSymbol(symbol, {
+          file, symbol, field: `newSymbolPartitions.${symbol}`,
+        }, diagnostics);
+        if (!['stocks.json', 'indices.json'].includes(object.newSymbolPartitions[symbol])) {
+          addDiagnostic(diagnostics, {
+            file, symbol, field: `newSymbolPartitions.${symbol}`, code: 'partition-route',
+            message: 'Partition route must be stocks.json or indices.json.',
+          });
+        }
+      }
+    }
   }
 }
 
@@ -931,14 +952,31 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function mergeReviewedAssets(sourceAssets, stocks, indices) {
+function mergeReviewedAssets(sourceAssets, stocks, indices, routes = {}) {
   const candidates = { stocks: clone(stocks), indices: clone(indices) };
   for (const asset of sourceAssets) {
     const symbol = asset.symbol;
     const locations = [];
     if (Object.hasOwn(candidates.stocks, symbol)) locations.push(candidates.stocks);
     if (Object.hasOwn(candidates.indices, symbol)) locations.push(candidates.indices);
-    if (!locations.length) throw new Error(`New symbol ${symbol} requires an explicit reviewed partition route.`);
+    if (!locations.length) {
+      const partition = routes[symbol] === 'stocks.json' ? candidates.stocks : candidates.indices;
+      const returns = [...asset.returns].sort((left, right) => left.year - right.year);
+      Object.defineProperty(partition, symbol, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: {
+          symbol,
+          name: asset.name,
+          assetClass: asset.assetClass,
+          startDate: `${returns[0].year}-01-01`,
+          endDate: `${returns.at(-1).year}-12-31`,
+          returns: returns.map(item => ({ date: String(item.year), return: item.return })),
+        },
+      });
+      continue;
+    }
     for (const partition of locations) {
       const current = partition[symbol];
       const byYear = new Map(current.returns.map(item => [Number(item.date), item.return]));
@@ -972,6 +1010,33 @@ function compareCoverageAndBuildCandidates(sourceAssets, manifest, stocks, indic
   }
 
   const sourceBySymbol = new Map(sourceAssets.map(asset => [asset.symbol, asset]));
+  const routes = manifest.newSymbolPartitions ?? {};
+  for (const symbol of sourceBySymbol.keys()) {
+    if (!baseline.has(symbol) && !Object.hasOwn(routes, symbol)) {
+      addDiagnostic(diagnostics, {
+        file: manifest.snapshotFilename, symbol, field: `newSymbolPartitions.${symbol}`,
+        code: 'new-symbol-route-required',
+        message: 'A genuinely new source symbol requires an explicit reviewed partition route.',
+      });
+    }
+    if (baseline.has(symbol) && Object.hasOwn(routes, symbol)) {
+      addDiagnostic(diagnostics, {
+        file: manifest.snapshotFilename, symbol, field: `newSymbolPartitions.${symbol}`,
+        code: 'new-symbol-route-stale',
+        message: 'Partition routes are only valid for symbols absent from both bundled partitions.',
+      });
+    }
+  }
+  for (const symbol of Object.keys(routes)) {
+    if (!sourceBySymbol.has(symbol)) {
+      addDiagnostic(diagnostics, {
+        file: manifest.snapshotFilename, symbol, field: `newSymbolPartitions.${symbol}`,
+        code: 'new-symbol-route-stale',
+        message: 'Partition route does not match a symbol in the selected source.',
+      });
+    }
+  }
+
   if (manifest.assetScope.mode === 'complete') {
     for (const [symbol, record] of baseline) {
       const sourceAsset = sourceBySymbol.get(symbol);
@@ -997,7 +1062,7 @@ function compareCoverageAndBuildCandidates(sourceAssets, manifest, stocks, indic
     }
   }
 
-  return mergeReviewedAssets(sourceAssets, stocks, indices);
+  return mergeReviewedAssets(sourceAssets, stocks, indices, routes);
 }
 
 function orderedJson(value) {
@@ -1035,7 +1100,9 @@ function renderReport(pair, assets, stocks, indices, diagnostics) {
   const changes = [];
   if (stocks && indices) {
     for (const asset of [...assets].sort((left, right) => compareText(left.symbol, right.symbol))) {
-      const baseline = stocks[asset.symbol] ?? indices[asset.symbol];
+      const baseline = Object.hasOwn(stocks, asset.symbol)
+        ? stocks[asset.symbol]
+        : Object.hasOwn(indices, asset.symbol) ? indices[asset.symbol] : null;
       if (!baseline) continue;
       for (const field of ['name', 'assetClass']) {
         if (baseline[field] !== asset[field]) {

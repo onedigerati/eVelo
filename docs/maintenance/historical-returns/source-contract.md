@@ -121,6 +121,7 @@ or that the named reviewer is authorized.
 | `reviewer` | At least 3 non-placeholder characters identifying the person approving the snapshot |
 | `reviewDate` | Real calendar date `YYYY-MM-DD`; no timestamp or impossible date |
 | `exceptions` | Array, including an explicit empty array when none apply; entries described below |
+| `newSymbolPartitions` | Optional symbol-to-partition map; every genuinely new source symbol requires exactly one explicit `stocks.json` or `indices.json` destination |
 
 The required methodology declaration is:
 
@@ -157,6 +158,24 @@ An intentionally limited review must explicitly declare a subset:
 Subset symbols must be nonempty, unique, nonblank strings; its scope rationale
 must be nonblank. Subset scope must be visible in the review/report, not treated
 as a complete refresh. Complete mode does not accept hidden subset fields.
+
+When a source includes a symbol absent from both physical preset files, the
+adjacent manifest must explicitly review its destination:
+
+```json
+{
+  "newSymbolPartitions": {
+    "EXAMPLE": "stocks.json"
+  }
+}
+```
+
+Only the literal filenames `stocks.json` and `indices.json` are accepted.
+Routing is checked against both physical baseline partitions: a missing route,
+a route for a symbol already present in either partition, or a route for a
+symbol absent from the selected source blocks candidate generation. Existing
+partition membership is retained (including QQQ in both files); `assetClass`
+is never used to infer a destination.
 
 Every exception is a closed object requiring `symbols` (nonempty unique symbol
 array), `acceptedValueOrPolicy` (nonblank text stating the exact decimal value

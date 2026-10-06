@@ -296,6 +296,25 @@ test('new symbols without a route and stale routes block candidates', t => {
   assertBlockingReport(absentRoute, /new-symbol-route-stale/);
 });
 
+test('new symbol keys are serialized as data rather than object prototypes', t => {
+  const f = fixture(t, {
+    sourceText: 'symbol,name,assetClass,year,return\n__proto__,Reviewed symbol,equity_stock,2025,0.1250\n',
+    provenance: {
+      assetScope: {
+        mode: 'subset',
+        symbols: ['__proto__'],
+        rationale: 'Exercise safe serialization of the reviewed symbol key.',
+      },
+      newSymbolPartitions: JSON.parse('{"__proto__":"stocks.json"}'),
+    },
+  });
+  const result = run(['--source', f.source, '--manifest', f.manifest, '--output-dir', f.output]);
+  assert.equal(result.status, 0, result.stderr);
+  const stocks = JSON.parse(readFileSync(path.join(f.output, 'stocks.json'), 'utf8'));
+  assert.equal(Object.hasOwn(stocks, '__proto__'), true);
+  assert.equal(stocks.__proto__.name, 'Reviewed symbol');
+});
+
 test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
   const f = fixture(t);
   fails(run([]), /missing required --source/i);
