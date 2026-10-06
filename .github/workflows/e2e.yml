@@ -29,6 +29,9 @@ jobs:
         run: npm ci
         # Note: postinstall script runs agent-browser install automatically
 
+      - name: Install matching Chromium
+        run: npx --no-install playwright-core install chromium
+
       - name: Verify agent-browser installation
         run: npx agent-browser --version || echo "agent-browser version check failed"
 

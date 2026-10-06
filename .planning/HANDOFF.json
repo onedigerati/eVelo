@@ -1,0 +1,124 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-10-05T19:33:29.159Z",
+  "phase": "1",
+  "phase_name": "Source Contract & Review Governance",
+  "phase_dir": ".planning/phases/01-source-contract-review-governance",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "name": "Archive previous planning cycle",
+      "status": "done",
+      "details": "Moved all phase directories intact to .planning/milestones/legacy-2026-10-05-phases/ and preserved PROJECT.md, ROADMAP.md, STATE.md, and REQUIREMENTS.md snapshots there."
+    },
+    {
+      "name": "Initialize v1.0 Historical Data Refresh Workflow",
+      "status": "done",
+      "details": "Created milestone metadata, updated PROJECT.md and STATE.md, defined DATAREF-01 through DATAREF-09, and created a three-phase roadmap with all requirements mapped exactly once."
+    },
+    {
+      "name": "Research the reviewed-file refresh workflow",
+      "status": "done",
+      "details": "Created and committed project research artifacts. Latest research-context commit is 680ad20."
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "name": "Discuss Phase 1",
+      "status": "not_started",
+      "details": "Clarify the source contract and review governance before planning implementation."
+    },
+    {
+      "name": "Plan and execute the three v1.0 phases",
+      "status": "not_started",
+      "details": "Begin with Phase 1: Source Contract & Review Governance."
+    }
+  ],
+  "blockers": [],
+  "async_jobs": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {
+      "decision": "Start a clean planning cycle at milestone v1.0 with phase numbering reset to 1.",
+      "rationale": "User requested archiving all phases and starting clean while preserving project context."
+    },
+    {
+      "decision": "Archive all previous phase directories, including in-progress/untracked phase work, intact under .planning/milestones/legacy-2026-10-05-phases/.",
+      "rationale": "User explicitly confirmed this archival scope; quick-task directories remain in place."
+    },
+    {
+      "decision": "Productize the existing Quick Task 021 refresh workflow instead of repeating the 45-asset verification.",
+      "rationale": "The prior task records that all 45 assets were refreshed through 2025 and contains the source research, corrections, and artifacts."
+    },
+    {
+      "decision": "Use explicit reviewed CSV/JSON annual-return snapshots; exclude direct provider fetching, scheduled updates, raw-price return calculation, and IndexedDB custom-data updates.",
+      "rationale": "Keeps the workflow provider-neutral, reviewable, and separate from runtime user overrides."
+    },
+    {
+      "decision": "Require complete-set coverage by default, permit only declared subsets, use completed calendar years, generate deterministic dry-run candidates outside src/data/presets, then apply explicitly.",
+      "rationale": "Prevents silent gaps and unreviewed mutation of the bundled baseline."
+    }
+  ],
+  "uncommitted_files": {
+    "measured_with": "git status --porcelain",
+    "total_entries_before_handoff_files": 402,
+    "included_entries": [
+      " M .claude/settings.local.json",
+      " M .findings/FINDINGS-01-31-2026.md",
+      " M .github/workflows/deploy-pages.yml",
+      " M .github/workflows/e2e.yml",
+      " M .planning/PROJECT.md",
+      " M .planning/REQUIREMENTS.md",
+      " M .planning/ROADMAP.md",
+      " M .planning/STATE.md",
+      " M .planning/config.json",
+      " D .planning/phases/01-foundation/01-01-PLAN.md",
+      " D .planning/phases/01-foundation/01-01-SUMMARY.md",
+      " D .planning/phases/01-foundation/01-02-PLAN.md",
+      " D .planning/phases/01-foundation/01-02-SUMMARY.md",
+      " D .planning/phases/01-foundation/01-VERIFICATION.md",
+      " D .planning/phases/02-core-math/02-01-PLAN.md",
+      " D .planning/phases/02-core-math/02-01-SUMMARY.md",
+      " D .planning/phases/02-core-math/02-02-PLAN.md",
+      " D .planning/phases/02-core-math/02-02-SUMMARY.md",
+      " D .planning/phases/02-core-math/02-VERIFICATION.md",
+      " D .planning/phases/03-simulation-engine/03-01-PLAN.md",
+      " D .planning/phases/03-simulation-engine/03-01-SUMMARY.md",
+      " D .planning/phases/03-simulation-engine/03-02-PLAN.md",
+      " D .planning/phases/03-simulation-engine/03-02-SUMMARY.md",
+      " D .planning/phases/03-simulation-engine/03-03-PLAN.md",
+      " D .planning/phases/03-simulation-engine/03-03-SUMMARY.md",
+      " D .planning/phases/03-simulation-engine/03-04-PLAN.md",
+      " D .planning/phases/03-simulation-engine/03-04-SUMMARY.md",
+      " D .planning/phases/03-simulation-engine/03-RESEARCH.md",
+      " D .planning/phases/03-simulation-engine/03-VERIFICATION.md",
+      " D .planning/phases/04-sbloc-engine/04-01-PLAN.md",
+      " D .planning/phases/04-sbloc-engine/04-01-SUMMARY.md",
+      " D .planning/phases/04-sbloc-engine/04-02-PLAN.md",
+      " D .planning/phases/04-sbloc-engine/04-02-SUMMARY.md",
+      " D .planning/phases/04-sbloc-engine/04-03-PLAN.md",
+      " D .planning/phases/04-sbloc-engine/04-03-SUMMARY.md",
+      " D .planning/phases/04-sbloc-engine/04-VERIFICATION.md",
+      " D .planning/phases/05-financial-calculations/05-01-PLAN.md",
+      " D .planning/phases/05-financial-calculations/05-01-SUMMARY.md",
+      " D .planning/phases/05-financial-calculations/05-02-PLAN.md",
+      " D .planning/phases/05-financial-calculations/05-02-SUMMARY.md",
+      " D .planning/phases/05-financial-calculations/05-03-PLAN.md",
+      " D .planning/phases/05-financial-calculations/05-03-SUMMARY.md",
+      " D .planning/phases/05-financial-calculations/05-VERIFICATION.md",
+      " D .planning/phases/06-visualizations/06-01-PLAN.md",
+      " D .planning/phases/06-visualizations/06-01-SUMMARY.md",
+      " D .planning/phases/06-visualizations/06-02-PLAN.md",
+      " D .planning/phases/06-visualizations/06-02-SUMMARY.md",
+      " D .planning/phases/06-visualizations/06-03-PLAN.md",
+      " D .planning/phases/06-visualizations/06-03-SUMMARY.md"
+    ],
+    "elided_entries": 352,
+    "note": "The worktree contains many pre-existing modified, deleted, renamed, and untracked files, including user code/UI/data edits. Do not stage, revert, reset, or commit them wholesale. The archive move is represented by deletions in .planning/phases/ and untracked preserved contents under .planning/milestones/legacy-2026-10-05-phases/."
+  },
+  "next_action": "Resume with /gsd-resume-work, read .planning/STATE.md and .planning/ROADMAP.md, then start /gsd-discuss-phase 1 (or /gsd-plan-phase 1 if discussion is unnecessary).",
+  "context_notes": "No active phase plan or implementation task exists yet. The v1.0 roadmap is approved as the current default plan, but the user has not selected discuss versus direct plan. Research is complete. The current State says Phase 1 is ready to plan. No background jobs or servers were started for this paused GSD workflow."
+}

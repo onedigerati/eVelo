@@ -3,7 +3,7 @@
 import { startServer, stopServer, getBaseUrl } from './helpers/server.js';
 import {
   open, close, isVisible, snapshot, screenshot, wait,
-  findRole, evalJs
+  findRole, findSelector, agentBrowser, getValue
 } from './helpers/agent-browser.js';
 
 // Components to verify visibility
@@ -139,29 +139,15 @@ async function runSmokeTest() {
     console.log('  [6a] Range Slider Interaction');
     try {
       // Find a slider in the accessibility tree and interact with it
-      const sliderBefore = await evalJs(`
-        const slider = document.querySelector('range-slider');
-        if (slider && slider.shadowRoot) {
-          const input = slider.shadowRoot.querySelector('input[type="range"]');
-          return input ? input.value : null;
-        }
-        return null;
-      `);
+      const sliderBefore = await getValue('#time-horizon input[type="range"]');
 
-      if (sliderBefore !== null) {
+      if (sliderBefore) {
         // Use keyboard to change slider value (more reliable than drag)
-        await findRole('slider', 'focus');
-        await findRole('slider', 'press', 'ArrowRight');
-        await findRole('slider', 'press', 'ArrowRight');
+        await agentBrowser(['focus', '#time-horizon input[type="range"]']);
+        await agentBrowser(['press', 'ArrowRight']);
+        await agentBrowser(['press', 'ArrowRight']);
 
-        const sliderAfter = await evalJs(`
-          const slider = document.querySelector('range-slider');
-          if (slider && slider.shadowRoot) {
-            const input = slider.shadowRoot.querySelector('input[type="range"]');
-            return input ? input.value : null;
-          }
-          return null;
-        `);
+        const sliderAfter = await getValue('#time-horizon input[type="range"]');
 
         if (sliderAfter !== sliderBefore) {
           console.log(`    [PASS] Slider responded to keyboard: ${sliderBefore} -> ${sliderAfter}`);
@@ -180,34 +166,16 @@ async function runSmokeTest() {
     // Test 6b: Number input keyboard interaction
     console.log('  [6b] Number Input Interaction');
     try {
-      // Find number input and verify keyboard input works
-      const inputBefore = await evalJs(`
-        const numInput = document.querySelector('number-input');
-        if (numInput && numInput.shadowRoot) {
-          const input = numInput.shadowRoot.querySelector('input[type="number"]');
-          return input ? input.value : null;
-        }
-        return null;
-      `);
+      // Find number input and verify it accepts a new value
+      const inputBefore = await getValue('#initial-investment input[type="number"]');
 
-      if (inputBefore !== null) {
-        // Focus and type new value
-        await findRole('spinbutton', 'focus');
-        await findRole('spinbutton', 'press', 'End');  // Move to end
-        await findRole('spinbutton', 'press', 'Backspace');  // Delete last char
-        await findRole('spinbutton', 'fill', '5');  // Type new digit
+      if (inputBefore) {
+        await findSelector('#initial-investment input[type="number"]', 'fill', '500000');
 
-        const inputAfter = await evalJs(`
-          const numInput = document.querySelector('number-input');
-          if (numInput && numInput.shadowRoot) {
-            const input = numInput.shadowRoot.querySelector('input[type="number"]');
-            return input ? input.value : null;
-          }
-          return null;
-        `);
+        const inputAfter = await getValue('#initial-investment input[type="number"]');
 
         if (inputAfter !== inputBefore) {
-          console.log(`    [PASS] Number input responded to keyboard: ${inputBefore} -> ${inputAfter}`);
+          console.log(`    [PASS] Number input accepted value: ${inputBefore} -> ${inputAfter}`);
           passed++;
         } else {
           console.log(`    [WARN] Number input unchanged after keyboard input`);

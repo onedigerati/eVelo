@@ -4,13 +4,12 @@
 import { startServer, stopServer, getBaseUrl } from './helpers/server.js';
 import {
   open, close, isVisible, snapshot, screenshot, wait,
-  findRole, findLabel, evalJs
+  findRole, findSelector, evalJs
 } from './helpers/agent-browser.js';
 
-// Test parameters (known good values)
 const TEST_PARAMS = {
   initialPortfolio: '1000000',
-  timeHorizon: '30',
+  timeHorizon: '10',
   annualWithdrawal: '50000',
 };
 
@@ -39,7 +38,7 @@ async function runWorkflowTest() {
 
     // Set Initial Portfolio value
     try {
-      await findLabel('Initial Portfolio', 'fill', TEST_PARAMS.initialPortfolio);
+      await findSelector('number-input input[type="number"]', 'fill', TEST_PARAMS.initialPortfolio);
       console.log(`  [PASS] Set Initial Portfolio to $${TEST_PARAMS.initialPortfolio}`);
       passed++;
     } catch (e) {
@@ -49,7 +48,7 @@ async function runWorkflowTest() {
 
     // Set Time Horizon (range slider)
     try {
-      await findLabel('Time Horizon', 'fill', TEST_PARAMS.timeHorizon);
+      await findSelector('range-slider input[type="range"]', 'fill', TEST_PARAMS.timeHorizon);
       console.log(`  [PASS] Set Time Horizon to ${TEST_PARAMS.timeHorizon} years`);
       passed++;
     } catch (e) {
@@ -59,7 +58,7 @@ async function runWorkflowTest() {
 
     // Set Annual Withdrawal (if visible)
     try {
-      await findLabel('Annual Withdrawal', 'fill', TEST_PARAMS.annualWithdrawal);
+      await findSelector('#annual-withdrawal input[type="number"]', 'fill', TEST_PARAMS.annualWithdrawal);
       console.log(`  [PASS] Set Annual Withdrawal to $${TEST_PARAMS.annualWithdrawal}`);
       passed++;
     } catch (e) {
@@ -104,8 +103,9 @@ async function runWorkflowTest() {
 
     try {
       // Find and click the Run Simulation button
-      await findRole('button', 'click', 'Run');
-      console.log('  [PASS] Clicked Run Simulation button');
+      await findRole('button', 'click', 'Run Your First Simulation');
+      await findRole('button', 'click', 'Run Demo (60/40)');
+      console.log('  [PASS] Started the demo simulation');
       passed++;
     } catch (e) {
       console.log(`  [FAIL] Could not click Run Simulation: ${e.message}`);
@@ -136,7 +136,7 @@ async function runWorkflowTest() {
     const RESULT_COMPONENTS = [
       { element: 'probability-cone-chart', description: 'Probability cone chart' },
       { element: 'histogram-chart', description: 'Histogram chart' },
-      { element: 'percentile-spectrum', description: 'Percentile spectrum' },
+      { element: '#net-worth-spectrum', description: 'Percentile spectrum' },
     ];
 
     for (const { element, description } of RESULT_COMPONENTS) {
@@ -160,14 +160,16 @@ async function runWorkflowTest() {
 
     try {
       const hasData = await evalJs(`
-        const chart = document.querySelector('probability-cone-chart');
-        if (chart && chart.shadowRoot) {
-          const canvas = chart.shadowRoot.querySelector('canvas');
-          if (canvas && canvas.chart) {
-            return canvas.chart.data.datasets.length > 0;
+        (() => {
+          const chart = document.querySelector('probability-cone-chart');
+          if (chart && chart.shadowRoot) {
+            const canvas = chart.shadowRoot.querySelector('canvas');
+            if (canvas && canvas.chart) {
+              return canvas.chart.data.datasets.length > 0;
+            }
           }
-        }
-        return false;
+          return false;
+        })()
       `);
 
       if (hasData === true || hasData === 'true') {

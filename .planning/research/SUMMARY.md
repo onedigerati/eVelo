@@ -1,245 +1,145 @@
-# Research Summary: eVelo Portfolio Strategy Simulator
+# Project Research Summary
 
-**Synthesized:** 2026-01-17
-**Domain:** Monte Carlo financial simulation for Buy-Borrow-Die strategy
-**Project Type:** Greenfield (v1.0)
-**Overall Confidence:** HIGH
-
----
+**Project:** eVelo
+**Domain:** Maintainer-run refresh of bundled historical market-return presets
+**Researched:** 2026-10-05
+**Confidence:** MEDIUM
 
 ## Executive Summary
 
-eVelo is building a Monte Carlo portfolio simulator focused on the Buy-Borrow-Die tax optimization strategy. Research across stack, features, architecture, and pitfalls reveals:
+This milestone is best understood as a repository-side governance workflow, not as a live market-data integration. The research across stack, features, architecture, and pitfalls converges on an offline, deterministic process: a human reviews source CSV/JSON snapshots, a local Node-based script validates them, and the maintainer reviews a candidate diff and provenance manifest before any checked-in preset file is updated. User-chosen, standardized reviewed input files are the intended trust boundary; direct API fetching is intentionally excluded.
 
-1. **Stack validated**: TypeScript + Web Components + Chart.js + IndexedDB is correct. Add **Vite + vite-plugin-singlefile** for build, **Comlink** for Web Worker ergonomics, **Dexie.js** for IndexedDB wrapper, and **simple-statistics** for statistical functions.
+The strongest recommendation is to keep this workflow outside browser runtime services and outside user custom-data flows. `src/data/presets/*.json` should remain the checked-in bundled baseline, while IndexedDB custom imports remain a separate override layer. That boundary matters because a refresh should never silently mutate user-owned data or depend on a provider's availability, credentials, or rate-limit behavior. The stack recommendations are intentionally minimal: existing Node ESM, Papa Parse for CSV parsing, and Vitest for validation and determinism checks are enough for this scope.
 
-2. **SBLOC modeling is the primary differentiator**: No existing tool (Portfolio Visualizer, FireCalc, cFIREsim, FI Calc) models securities-backed lending with margin calls. This is eVelo's competitive moat.
+The primary risk is not technical complexity but trust and method. Historical return data can be wrong even when it parses cleanly: source provenance, return convention, coverage policy, and correction rationale all matter. The research is consistent that the maintainers should default to fail-closed validation, dry-run review, explicit apply steps, and a source ledger. Exact metadata layout and full-vs-subset refresh policy remain open design questions, and those questions should be resolved in planning because they affect auditability, reviewer effort, and what counts as a valid change.
 
-3. **Statistical accuracy is non-negotiable**: Users make real financial decisions based on outputs. Critical pitfalls (lognormal distributions, stress correlations, floating point precision, margin call cascades) must be addressed in Phase 1.
+Implementation context: `.planning/quick/021-refresh-preset-asset-data/STATE.md` records a completed but still-uncommitted refresh pass for 45 bundled assets. It is evidence that the project has already researched and rebuilt the historical bundle with `fetch_returns.mjs`, `rebuild_presets.mjs`, `computed_returns.json`, `corrections.json`, and verification artifacts; it also documents the critical caveat that the current Yahoo fetch script is a one-off research artifact, not the productized long-term boundary. The new milestone should productize/maintain this existing reviewed workflow rather than redoing a new refresh from scratch, while isolating or retiring the fetch path and preserving the decision history (including the dead `sp500.json` follow-up and methodology exceptions).
 
-4. **Web Workers mandatory for 100k iterations**: Main thread blocking would make the app unusable. Worker pool architecture with transferable ArrayBuffers enables responsive UI during computation.
+## Key Findings
 
----
+### Recommended Stack
 
-## Key Findings by Dimension
+The recommended stack is intentionally small and repo-native. Use the existing Node.js ESM environment with built-in filesystem/process APIs for a maintainer CLI; use Papa Parse for CSV ingestion where it is already present; and use Vitest for deterministic validation and regular regression coverage. This avoids introducing a new framework or bootstrap environment for a narrowly scoped tool. The workflow is repository-local and review-first, so an infrastructure layer or remote service would be a mismatch.
 
-### Stack (Confidence: HIGH)
+**Core technologies:**
+- Node.js ESM (`.mjs`) for the maintainer CLI — fits the project's package type and avoids app-level TS/Vite coupling.
+- Papa Parse 5.5.3 for CSV ingestion — already present in the repo and suitable for explicit validation and field normalization.
+- Native JSON parsing / serialization — enough for reviewed source files and the established preset shape.
+- Vitest for validation and determinism checks — supports malformed-row, duplicate-year, and byte-stable output tests.
 
-| Component | Recommendation | Version |
-|-----------|----------------|---------|
-| Build | Vite + vite-plugin-singlefile | 6.x / 2.x |
-| Runtime | TypeScript + Vanilla Web Components | 5.7+ |
-| Workers | Comlink (clean async API for workers) | 4.x |
-| Charts | Chart.js (handles all visualization needs) | 4.5.x |
-| Storage | Dexie.js (IndexedDB wrapper) | 4.x |
-| Statistics | simple-statistics | 7.8.x |
-| Testing | Vitest | 3.x |
+### Expected Features
 
-**What NOT to use:**
-- Frameworks (React/Vue/Svelte) — bundle size, lock-in, unnecessary for scope
-- WASM for Monte Carlo — JS with Web Workers is fast enough for 100k iterations
-- TradingView charts — no donut/histogram support needed for this use case
+**Must have (table stakes):**
+- Provider-neutral CSV and JSON source files — accepted source snapshots are reviewed before refresh; no live API fetch.
+- Strict syntax and semantic validation — reject malformed rows, duplicates, non-finite numbers, missing coverage, and ambiguous metadata.
+- No-write dry-run as the default — generate a candidate bundle and review diff before mutating repository assets.
+- Explicit apply boundary — writes occur only after a reviewed candidate passes validation.
+- Provenance and methodology tracking — source attribution, return convention, checksum, and reviewer rationale are kept with the change.
 
-### Features (Confidence: MEDIUM-HIGH)
+**Should have (competitive):**
+- Deterministic generation — stable symbol ordering, year ordering, formatting, and output hashing for reviewability.
+- Coverage and anomaly summaries — highlight new, removed, or suspicious changes without hiding a full diff.
+- Exception ledger — document source-specific corrections and methodology exceptions explicitly.
+- CI-friendly verification — validate updated outputs against the app's preset schema and build/test requirements.
 
-**Table Stakes** (must have or users abandon):
-- Historical returns simulation (30+ years data)
-- Configurable time horizon (10-50 years)
-- Success rate percentage (primary metric)
-- Probability cone visualization
-- Percentile outcomes (P10, P25, P50, P75, P90)
-- Export capability
+**Defer (v2+):**
+- Automatic provider acquisition or scheduled refresh jobs — incompatible with the reviewed-file boundary.
+- Heuristic gap-filling or silent corrections — too risky for a financial dataset used in simulations.
+- Multi-reviewer automation or remote orchestration — unnecessary for the initial maintainer workflow.
 
-**Core Differentiators** (eVelo's competitive advantage):
-- SBLOC modeling with interest accrual
-- Margin call detection and forced liquidation simulation
-- LTV ratio tracking by asset class
-- BBD vs Sell strategy comparison
-- Tax savings calculation (stepped-up basis)
-- Salary-equivalent display for tax-free withdrawals
+### Architecture Approach
 
-**Anti-Features** (deliberately NOT building):
-- Budgeting integration (kills UX)
-- RMD/tax bracket micro-optimization (false precision)
-- Account linking (security concerns, trust barrier)
-- Real-time market data (unnecessary complexity)
+The architecture is a staged offline pipeline: reviewed source snapshots live outside the app bundle, a local script reads explicit inputs, normalizes them, validates them, and generates candidate output in a staging area, then a reviewer compares output against the current tracked presets before an explicit apply step. The runtime app continues to consume `src/data/presets/*.json` through the static import/service layer, while custom user data remains a separate override path. That separation keeps the bundle update mechanism auditable and prevents accidental mutation of user-owned state.
 
-### Architecture (Confidence: MEDIUM)
+The quick-task archive (`.planning/quick/021-refresh-preset-asset-data/`) should be treated as implementation context and historical evidence, not as the active source of truth. It documents a real reviewed refresh exercise that produced `computed_returns.json` and `corrections.json`, but the milestone should convert that work into a repeatable maintainer workflow with a reviewed-source contract and explicit provenance—not a direct fetch script that remains coupled to Yahoo or to the project-local artifact directory.
 
-**Layered Architecture:**
-```
-UI Components → Event Bus/State → Services → Core/Math
-```
+**Major components:**
+1. Source snapshot selector — accepts explicit reviewed files or named snapshots and rejects ambiguous missing inputs.
+2. Parser + normalizer — converts CSV/JSON into canonical intermediate records with explicit units, field names, and policy rules.
+3. Validator + candidate builder — fails closed on malformed records, missing coverage, invalid periods, and conflicting metadata.
+4. Diff + provenance reporter — records exact old/new values, hashes, and rationale for accepted exceptions.
+5. Explicit apply boundary — writes only after human review to the checked-in preset bundle.
 
-**Key Patterns:**
-- Worker pool sized to `navigator.hardwareConcurrency - 1`
-- Transferable Float64Arrays for zero-copy data exchange
-- Event bus for cross-component communication
-- Three-tier caching: Memory → IndexedDB → Network
+### Critical Pitfalls
 
-**Simulation Engine Structure:**
-1. SimulationCoordinator (main thread): orchestrates workers, aggregates results
-2. SimulationWorker (worker thread): executes iteration batches
-3. CorrelationEngine: Cholesky decomposition for correlated draws
-4. BootstrapSampler: block bootstrap preserving autocorrelation
-5. SBLOCEngine: loan modeling with margin call cascade logic
-
-### Pitfalls (Confidence: HIGH)
-
-**CRITICAL (must address in Phase 1):**
-1. **Lognormal distributions** — normal distributions produce impossible negative values
-2. **Floating point errors** — `0.1 + 0.2 ≠ 0.3` compounds over 30 years
-3. **Margin call cascades** — forced liquidation triggers tax, which can trigger more margin calls
-4. **CAGR off-by-one** — periods = values - 1, not values
-
-**HIGH (must address in Phase 2):**
-1. **Main thread blocking** — 100k iterations freezes browser without Web Workers
-2. **Static correlations** — correlations spike during crashes; model must account for this
-3. **Memory leaks** — streaming statistics, don't store all 100k paths
-4. **Chart.js performance** — use decimation plugin for >10k points
-
----
+1. **Direct fetching / provider coupling** — live market-data acquisition conflicts with the user-selected reviewed-file process and makes rebuilds non-deterministic.
+2. **Silent partial or heuristic change** — dropping rows, filling gaps, or guessing conventions without review can create auditably wrong results.
+3. **Mixing custom user data with repository baseline** — custom overrides and bundled presets have different ownership and persistence.
+4. **Methodology ambiguity** — without explicit conventions for market-return type, coverage gaps, and corrections, the final data can be technically valid yet economically wrong.
+5. **Statistical / numeric assumptions in the product** — even correct data points can mislead if the simulation engine mishandles assumptions and floating-point precision.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Based on the combined research, the milestone should be structured around reviewability and trust, not provider integration.
 
-### Phase 1: Foundation & Simulation Core
-**Rationale:** Statistical accuracy and precision must be correct before anything else. Users make financial decisions based on results.
+### Phase 1: Source contract and review governance
+**Rationale:** The chosen boundary is explicit reviewed input files. The source schema, provenance fields, and file-policy rules must be decided first because they determine validation, diff behavior, and reviewer expectations. This phase should also productize the already-researched quick-task workflow rather than redoing a refresh from scratch.
+**Delivers:** A documented CSV/JSON contract, source snapshot structure, and a provenance model covering source attribution, methodology, reviewer, checksum, and explicit exception notes; preserve the historical exception ledger and `sp500.json` decision record without depending on the one-off fetch script.
+**Addresses:** provider-neutral inputs, provenance, maintenance cadence, the existing evidence from `.planning/quick/...`, and the lack of implicit source discovery.
+**Avoids:** silent heuristics, guessed units, unreviewed upstream sourcing, and re-running the same manual refresh in a way that loses the earlier decisions.
 
-**Addresses:**
-- P-STAT-01: Lognormal distributions
-- P-STAT-02: Regime-aware correlations (basic)
-- P-FIN-01: Floating point handling
-- P-FIN-02: CAGR calculation
-- P-SBLOC-01: Compound interest
-- P-SBLOC-03: Margin call cascade logic
+### Phase 2: Deterministic validation and dry-run diff generation
+**Rationale:** A refresh is only reviewable if it is deterministic, strict, and non-mutating by default. This phase creates the candidate bundle and the human-readable summary before any tracked file is changed.
+**Delivers:** A local CLI that parses explicit files, validates asset/year coverage and values, produces candidate preset JSON, and prints a clear diff report with added/changed/unchanged/missing assets.
+**Addresses:** strict validation, whole-batch integrity checks, reviewable diff output, and deterministic generation.
+**Avoids:** partial success, formatting churn, and threshold-only diffing that hides material changes.
 
-**Builds:**
-- Core types and interfaces
-- Mathematical utilities (Cholesky, statistics)
-- Event bus and state store
-- Web Worker simulation engine (batched execution)
-- Bootstrap resampling engine
-- SBLOC/margin call engine
-- Financial calculation suite with tests
-
-**Research flags:** Likely standard patterns; unlikely to need deeper research.
-
-### Phase 2: UI Components & Visualization
-**Rationale:** With accurate engine, build the interface. Performance pitfalls addressed here.
-
-**Addresses:**
-- P-PERF-01: Web Worker integration complete
-- P-PERF-02: Streaming statistics
-- P-PERF-03: Chart.js decimation
-- P-UX-01: Progressive disclosure
-- P-FIN-03: TWRR vs MWRR clarity
-
-**Builds:**
-- Web Component base class
-- Input components (asset selector, parameter sliders)
-- Chart components (probability cone, histogram, donut, bar)
-- Results dashboard
-- Progress indicator
-- Theme system (CSS custom properties)
-
-**Research flags:** Chart.js heatmap plugin may need evaluation; HTML table fallback for correlation matrix.
-
-### Phase 3: Data Layer & API Integration
-**Rationale:** Historical data loading, caching, and multi-source API support.
-
-**Addresses:**
-- P-PWA-02: Storage quota management
-
-**Builds:**
-- Dexie.js database schema
-- API service layer (FMP, EODHD, Alpha Vantage, Tiingo, Yahoo)
-- CORS proxy configuration
-- Cache invalidation strategy
-- Bundled data presets (S&P 500, major indices)
-
-**Research flags:** Standard patterns; Yahoo Finance API stability uncertain.
-
-### Phase 4: PWA, Export & Polish
-**Rationale:** Offline capability and single-file export as final integration.
-
-**Addresses:**
-- P-PWA-01: Service worker caching strategy
-- P-PWA-03: Cross-browser testing
-- P-TECH-03: Bundle size optimization
-
-**Builds:**
-- Service worker with stale-while-revalidate
-- Single-file HTML export via vite-plugin-singlefile
-- Print-friendly CSS
-- Help/guide content
-- Mobile responsive polish
-
-**Research flags:** SharedArrayBuffer compatibility with single-file export uncertain; may need transferables-only fallback.
+### Phase 3: Safe apply, manifest, and verification
+**Rationale:** Preview and apply must remain separate. The final step is not a “silent write,” but a gated transition to the repo-backed baseline with manifest capture and a reviewable audit trail.
+**Delivers:** explicit `--apply` gating, manifest output, validation/build checks, and a straightforward path for commit review and rollback.
+**Addresses:** safe apply, provenance retention, and separation from user custom-data flows.
+**Avoids:** destructive writes, accidental mutation of custom data, and changes that pass syntax but fail real data-quality checks.
 
 ### Phase Ordering Rationale
 
-1. **Foundation before UI:** Simulation engine can be fully tested without UI. Financial accuracy is verified early.
+- Source trust and schema come first; otherwise validation and review are unstable.
+- Validation and diff generation precede apply because the output must be reviewed as an artifact, not written in place.
+- Apply is intentionally narrow and last: it is the lowest-risk step after the repo has a clear audit trail.
+- This ordering directly avoids the major pitfalls of API coupling, silent corrections, and mixed ownership of custom vs bundled data.
 
-2. **UI before Data:** Components can use mock data initially. Decouples UI development from API rate limits.
+### Research Flags
 
-3. **Data before PWA:** PWA caching strategy depends on knowing what data needs caching.
+Phases likely needing deeper research during planning:
+- **Phase 1:** Source metadata contract, coverage policy, and the exact review workflow for accepted CSV/JSON snapshots.
+- **Phase 2:** Output-format determinism and human-readable diff/report rules for changed years and asset coverage.
 
-4. **PWA last:** Service worker + single-file export is integration work that touches everything.
-
-### Dependencies Between Phases
-
-```
-Phase 1 (Foundation)
-    ↓
-Phase 2 (UI) ←→ Phase 3 (Data)  [These can partially overlap]
-    ↓              ↓
-    └──────────────┘
-           ↓
-    Phase 4 (PWA/Export)
-```
-
----
+Phases with standard patterns (skip a dedicated research-phase):
+- **Phase 3:** Apply/verification flows are conventional repo data operations and do not require broad new research beyond the project-specific boundary rules.
 
 ## Confidence Assessment
 
-| Research Area | Confidence | Gaps |
-|--------------|------------|------|
-| Stack choices | HIGH | Lit 3 vs 4 version unclear; minimal impact |
-| Feature priorities | HIGH | None significant |
-| Architecture patterns | MEDIUM | Regime-switching JS implementation synthesized |
-| Statistical accuracy | HIGH | Extensively documented in financial literature |
-| Performance approach | HIGH | Well-documented JavaScript patterns |
-| PWA/Offline | HIGH | Standard patterns |
+| Area | Confidence | Notes |
+|------|------------|-------|
+| Stack | MEDIUM | Existing repo evidence strongly supports Node + Papa Parse + Vitest, but the final CLI structure remains a design choice. |
+| Features | MEDIUM-HIGH | Strong convergence on requirement boundaries: reviewed-file input, validation, dry-run diffing, and explicit apply. |
+| Architecture | MEDIUM | Repo boundaries are clear, but the exact source archive and manifest structure are still open design choices. |
+| Pitfalls | HIGH | The project and financial-domain risks are well documented; the operational and data-governance issues are understood. |
 
-### Open Questions (Defer to Implementation)
+**Overall confidence:** MEDIUM
 
-1. **Block bootstrap block size**: Literature suggests 12-24 months; needs empirical testing
-2. **Regime detection method**: HMM vs threshold-based (simpler)
-3. **Cholesky library choice**: ml-matrix vs math.js — benchmark during implementation
-4. **SharedArrayBuffer + single-file**: May not work with `file://` protocol
+### Gaps to Address
 
----
+- Final source schema and metadata contract — exact field names, conventions, and review metadata still require maintainer sign-off.
+- Coverage policy — full-refresh vs subset-refresh and rules for absent or corrected assets need explicit decision-making.
+- Provenance layout — whether source metadata sits in a manifest, snapshot-local README, or both should be chosen before implementation.
+- Review cadence — define when a refresh is required and how partial-year or corrected exceptions are handled.
 
-## Research Files Reference
+## Sources
 
-| File | Purpose | Key Insight |
-|------|---------|-------------|
-| [STACK.md](./STACK.md) | Technology choices | Vite + Comlink + Dexie.js validated |
-| [FEATURES.md](./FEATURES.md) | Feature priorities | SBLOC modeling is the moat |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design | Worker pool + event bus pattern |
-| [PITFALLS.md](./PITFALLS.md) | Risk mitigation | 24 pitfalls with prevention strategies |
+### Primary (HIGH confidence)
+- `.planning/research/STACK.md` — project-specific recommendation for a local Node ESM maintainer utility with reviewed-file input and no-fetch boundary.
+- `.planning/research/FEATURES.md` — required workflow and anti-feature guidance for a repeatable refresh process.
+- `.planning/research/ARCHITECTURE.md` — repository boundary recommendations, data flow, and separation between runtime imports and reviewed source snapshots.
+- `.planning/research/PITFALLS.md` — risk analysis for financial simulation quality and operational pitfalls relevant to the data-refresh boundary.
+- `src/data/services/preset-service.ts`, `src/data/services/bulk-import-service.ts`, `src/data/validation/data-validator.ts`, and `src/data/presets/` — repo evidence for current preset import patterns and validation precedents.
 
----
+### Secondary (MEDIUM confidence)
+- `.planning/STATE.md` and the current project structure — they support the Phase 33 bulk historical data scope and the repo's existing toolchain.
+- Existing bulk data import and validation code under `src/data/` — useful precedent for schema and validation patterns, but not a complete implementation of the reviewed-file refresh pipeline.
 
-## Next Steps
-
-1. **Define requirements** — Convert features research into testable requirements
-2. **Create roadmap** — Structure phases based on implications above
-3. **Begin Phase 1** — Foundation and simulation core
+### Tertiary (LOW confidence)
+- Exact file structure, manifest format, and review cadence are still unresolved design decisions; those should be validated during planning before implementation begins.
 
 ---
-
-*Research conducted: 2026-01-17*
-*Valid for: ~30 days (stable domain)*
+*Research completed: 2026-10-05*
+*Ready for roadmap: yes*

@@ -1056,3 +1056,96 @@ export default {
 ### UX (MEDIUM confidence)
 - [Nielsen Norman Group: Minimize Cognitive Load](https://www.nngroup.com/articles/minimize-cognitive-load/)
 - [UX Magazine: Cognitive Design Guidelines for Dashboards](https://uxmag.com/articles/four-cognitive-design-guidelines-for-effective-information-dashboards)
+
+---
+
+## Focused Addendum: Annual Historical Returns from Reviewed Files
+
+**Scope:** Converting human-reviewed CSV/JSON price data into eVelo's bundled annual-return presets. This addendum does not assume a particular provider, API, file schema, adjustment convention, or redistribution right.  
+**Researched:** 2026-10-05  
+**Confidence:** LOW for external-source conclusions: web search was unavailable, while repository code and IETF standards were inspected. Verify each source file's own methodology and license before using it.
+
+### Critical Pitfall: Price Return Is Not Necessarily Total Return
+**What goes wrong:** Unadjusted closing prices can count a dividend as a loss or omit the distribution from performance. A split can create a large apparent per-share price move even though the investor's share count changes correspondingly. Conversely, applying corporate-action adjustments again to an already-adjusted series double counts them.
+
+**Why it happens:** “Adjusted close” is not a universal definition; sources may make different adjustments or describe their treatment differently. A column name without its methodology is insufficient.
+
+**Prevention:**
+- Require the source documentation to specify price-only versus total-return series, cash distribution and reinvestment treatment, split handling, currency, and any other material corporate actions. Do not infer this from column labels or assume one vendor's convention applies to another.
+- Prefer a documented total-return series for a simulation intended to represent reinvested total returns. If deriving returns from unadjusted prices, require documented corporate-action inputs and a reviewed calculation; never combine a pre-adjusted series with a second adjustment.
+- For a total-return index level `TRI`, calculate full calendar-year return as `TRI(last valid close in year) / TRI(last valid close in prior year) - 1`. Independently check sample years against a documented reference.
+- Keep the source documentation and a review record alongside the generated preset. A plausible-looking annual series is not evidence of the right return basis.
+
+**Detection:** A sharp loss aligned with a split; annual returns that omit the approximate effect of distributions; mismatches against a documented total-return reference; or provenance that says only “adjusted.”
+
+**Repository relevance:** `src/data/services/preset-service.ts` documents bundled equity data as annual total returns with dividends reinvested, sourced from adjusted closes. `src/data/presets/*.json` stores annual `{ date, return }` values. Each source refresh should substantiate that claimed basis instead of transferring it to arbitrary imported data.
+
+### Critical Pitfall: Calendarization, Missing Sessions, and Partial Years
+**What goes wrong:** A return is assigned to the wrong year, calculated over a partial year but presented as full-year, or distorted by a missing/stale price. Timezone conversion may also shift a date-only trading session across the calendar boundary.
+
+**Prevention:**
+- Define date labels as exchange-local trading-session dates. If inputs are timestamps, apply the source's timezone/session convention before assigning a calendar year; do not treat a date-only label as a UTC instant.
+- For a full year, anchor on the last valid close of the prior year and end on the last valid close in the target year. A weekend or market holiday at year end is expected; a missing expected observation is not.
+- Exclude incomplete first/last years unless they are explicitly supported and labeled partial. Do not carry stale values forward across unexplained gaps, interpolate, or replace missing years with zero returns.
+- Check gaps against the relevant session calendar, normalize all annual labels to a single format, require unique years, and confirm that row coverage agrees with declared start/end dates.
+
+**Detection:** The first or final observation lies mid-year; gaps in expected sessions; duplicate/skipped annual periods; annual labels shift after parsing; or reported coverage does not match available endpoints.
+
+**Repository relevance:** `src/data/validation/data-validator.ts` accepts both `YYYY` and `YYYY-MM-DD`, detects exact-string duplicates and derives gap warnings from the first four label characters. Its JSON path does not require a uniform date granularity or validate calendar-date syntax. These checks do not by themselves prove that a series contains full calendar-year total returns.
+
+### Critical Pitfall: Survivorship and Look-Ahead Bias
+**What goes wrong:** A historical universe contains only securities that survive today, or uses index constituents/selection information that was not knowable at the time. Delisted or failed securities may vanish; future membership may influence historical selection.
+
+**Prevention:**
+- State whether a preset is one instrument's own realized history, an index total-return history, or a reconstructed constituent portfolio. These are not interchangeable.
+- If a historical strategy selects individual securities or reconstructs index membership, use point-in-time membership and preserve delisted/acquired/failed outcomes where the strategy requires them. Do not select the historical universe using today's survivors.
+- Record an explicit “known as of” date and do not let future membership, future classifications, or observations beyond the period being modeled determine historical selection.
+- Do not backfill an instrument's pre-inception history with an index or predecessor unless the splice is separately justified, documented, and labeled.
+
+**Detection:** A purported historical constituent set contains only current survivors; constituents are applied retroactively; or a series silently changes instrument/proxy before inception. Survivorship bias in performance studies is discussed in Brown, Goetzmann, Ibbotson, and Ross (1992).
+
+### Critical Pitfall: Source File or Derived Data Is Not Automatically Redistributable
+**What goes wrong:** A reviewed file is checked in and embedded in the web or portable build despite terms that allow viewing/internal use but restrict public redistribution, derived datasets, attribution, or onward distribution.
+
+**Prevention:**
+- Check the exact source terms for repository hosting, public app and portable-build distribution, derived annual values, attribution, and retention. Obtain legal review for unclear terms.
+- Do not infer permission from public availability, free download, or transformation to annual values. If permission is absent or ambiguous, do not bundle the source or its derived output.
+- Keep a provenance/license record: source identity and documentation, review/retrieval date, license/version and URL, permitted-use determination, attribution, and source checksum. Keep restricted raw data out of Git and public build assets.
+- Recheck terms when the source or distribution channel changes. Data rights are source- and use-specific; no provider-wide assumption is made here.
+
+**Detection:** No license/provenance accompanies a preset change; terms do not clearly allow the intended redistribution; or the included data cannot be traced to a specific reviewed source.
+
+### Moderate Pitfall: Permissive Parsing, Rounding, and Unit Confusion
+**What goes wrong:** Percent values are mistaken for decimal returns; numeric parsing accepts malformed prefixes; non-finite values pass; or premature rounding compounds into materially different annual results.
+
+**Prevention:** Declare the unit (`0.10` means 10%), parse the complete field strictly, reject non-finite values, and calculate from unrounded source observations. Round only for display or under a documented final serialization policy. Treat plausibility thresholds as warnings, not proof.
+
+**Repository relevance:** CSV validation expects decimal returns but uses `parseFloat`, which accepts a valid numeric prefix followed by extraneous text. JSON validation checks `isNaN` but does not explicitly reject all non-finite values (for example, a very large numeric exponent may parse to `Infinity`). Validate numeric domain and units before generating a preset.
+
+### Moderate Pitfall: False Diffs and Unreviewed Data Changes
+**What goes wrong:** Formatting, key/row order, locale-dependent numbers, timestamps, or serializer changes produce noisy diffs; overly broad tolerances hide genuine corrections.
+
+**Prevention:** Generate deterministically: sort by asset and year; use stable field order, encoding, newline, and locale-independent numeric serialization; omit changing generation timestamps from preset payloads. Preserve source hashes and transform version. Review both a text diff and a semantic diff listing asset/year, old/new value, and coverage changes. A tolerance may classify representation noise, but must not silently suppress changed returns.
+
+**Repository relevance:** Presets are statically imported JSON via `src/data/services/preset-service.ts`; formatting changes therefore affect bundled output. `src/data/formats/bulk-format-templates.ts` adds `exportedAt` to a downloaded template; that variable timestamp should not be copied into generated preset data if it creates a diff on every run.
+
+### Phase-Specific Warnings
+
+| Topic | Likely pitfall | Mitigation |
+|---|---|---|
+| Reviewing input files | Adjustment semantics or licensing assumed | Require methodology, provenance, and redistribution sign-off |
+| Annual conversion | Partial years, wrong year-end endpoint, timezone shifts, or missing sessions | Define exchange-local session dates and full-year boundary rules; manually check boundary years |
+| Validation | Mixed date formats, malformed numbers, gaps, or metadata conflicts | Normalize to one annual format; strictly validate dates, finite values, units, and source metadata |
+| Preset generation | Formatting-only diffs or hidden rounded changes | Deterministic output plus both textual and semantic value diffs |
+| Historical universe | Survivorship or future constituent information | Use point-in-time membership and include delisted outcomes where relevant |
+| Bundling | Source terms prohibit app/repository redistribution | Verify the specific license and intended distribution; omit data if unclear |
+
+### Sources
+
+- Repository evidence inspected: `src/data/validation/data-validator.ts`, `src/data/services/bulk-import-service.ts`, `src/data/services/preset-service.ts`, `src/data/presets/*.json`, and `src/data/formats/bulk-format-templates.ts`.
+- IETF, [RFC 3339: Date and Time on the Internet](https://www.rfc-editor.org/rfc/rfc3339.txt) — timestamps and timezone offsets (reachable during research).
+- IETF, [RFC 4180: Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180.txt) — common CSV structure (reachable during research).
+- IETF, [RFC 8785: JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785.txt) — deterministic serialization, not a financial validator or rounding policy (reachable during research).
+- S&P Dow Jones Indices, [Equity Indices Policies & Practices Methodology](https://www.spglobal.com/spdji/en/documents/methodologies/methodology-equity-indices-policies-practices.pdf) and [Licensing](https://www.spglobal.com/spdji/en/landing/topic/licensing/) — consult the current relevant methodology and terms; automated retrieval was denied in this run.
+- U.S. Securities and Exchange Commission, Investor.gov, [Stock Splits](https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks/stock-splits) — corporate-action background; automated retrieval was denied in this run.
+- Brown, Goetzmann, Ibbotson, and Ross, “Survivorship Bias in Performance Studies,” *The Review of Financial Studies* 5(4), 553–580 (1992), [doi:10.1093/rfs/5.4.553](https://doi.org/10.1093/rfs/5.4.553) — academic survivorship-bias reference; publisher content was not readable in this run.

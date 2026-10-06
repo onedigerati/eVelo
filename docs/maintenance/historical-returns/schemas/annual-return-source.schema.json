@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evelo:annual-return-source",
+  "title": "Reviewed annual-return JSON snapshot",
+  "description": "JSON equivalent of CSV symbol,name,assetClass,year,return records. Policy: complete bundled coverage unless an adjacent manifest explicitly declares a subset; completed calendar years only; no silent filling, correction, normalization or metadata inference. Cross-record consistency and coverage require Phase 2 semantic validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assets"],
+  "properties": {
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/asset" }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol", "name", "assetClass", "returns"],
+      "properties": {
+        "symbol": { "$ref": "#/$defs/identifier" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "assetClass": {
+          "type": "string",
+          "enum": ["equity_index", "equity_stock", "bond", "commodity"]
+        },
+        "returns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/annualReturn" }
+        }
+      }
+    },
+    "annualReturn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["year", "return"],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999,
+          "description": "Completed calendar year, not a partial current year; cutoff and unique periods are semantic checks."
+        },
+        "return": {
+          "type": "number",
+          "minimum": -1,
+          "multipleOf": 0.0001,
+          "description": "Calendar-year total return with dividends reinvested, last-trading-day to last-trading-day, in decimal units at four-decimal precision; cannot be less than a total loss. ETF presets use ETF-level returns, not index total-return substitutes."
+        }
+      }
+    }
+  }
+}

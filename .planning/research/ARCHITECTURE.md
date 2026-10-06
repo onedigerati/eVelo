@@ -1,8 +1,220 @@
-# Architecture Research: eVelo Monte Carlo Simulation
+# Architecture Patterns: eVelo Historical Preset Refresh
 
-**Researched:** 2026-01-17
-**Domain:** Client-side financial Monte Carlo simulation with Web Components
-**Confidence:** MEDIUM (verified patterns from multiple sources, some JavaScript-specific implementation details are synthesized)
+**Project:** eVelo
+**Researched:** 2026-10-05
+**Domain:** Reviewed-source, repository-time refresh of bundled historical return presets
+**Confidence:** LOW overall. The repository structure and code paths below were inspected directly. Official references were fetched, but the research-plan Brave provider was unavailable and the confidence seam classified the substitute webfetch/curated providers as LOW; treat recommendations as design guidance, not externally validated implementation claims.
+
+## Executive Summary
+
+Implement historical preset refresh as a deterministic **offline build-time data pipeline**, not as another application data service. Humans acquire, review, and commit CSV/JSON source files; a local generator consumes only those explicit files, validates them, produces candidate preset JSON plus a provenance manifest, and presents a complete diff. A separate explicit apply boundary updates the tracked runtime presets under `src/data/presets/`. There must be no HTTP client, provider key, or implicit fetch step in the refresh command.
+
+Keep unprocessed reviewed source snapshots and their source notes outside both `src/` and Vite's `public/` directory. Keep transformation and validation code in a repository tool area such as `scripts/presets/`. Keep the application outputs where they already live: `src/data/presets/{stocks,indices,sp500}.json`; `src/data/services/preset-service.ts` remains the runtime adapter. Store deterministic provenance next to the source collection, not in user IndexedDB and not in runtime bundles.
+
+The project already has the right runtime boundary: `preset-service.ts` statically imports bundled JSON, while `getEffectiveData()` checks user-imported overrides through `custom-data-service.ts` before falling back to bundled data. A repository refresh must replace only checked-in bundled files; it must never open, migrate, clear, or rewrite a user's IndexedDB custom data.
+
+The strongest operational safeguards are: raw-input and output checksums; stable sorting/number formatting; fail-closed structural and financial validation; per-symbol added/changed/unchanged/removed reports; no implicit removals; a non-mutating preview; and an apply mode that writes only after all candidates validate. Commit source snapshot, manifest, and generated preset changes together so Git history is the audit trail and reverting that isolated commit restores the prior bundled data.
+
+## Recommended Architecture
+
+```text
+Human-sourced CSV/JSON + review notes (committed, immutable snapshots)
+                 |
+                 v
+scripts/presets/refresh.mjs (local CLI; no network capability)
+   parse -> normalize -> domain validation -> deterministic generation
+                 |                                  |
+                 v                                  v
+       candidate output directory          diff + provenance manifest
+                 |                                  |
+        preview / review gate <----------------------+
+                 |
+          explicit --apply
+                 v
+src/data/presets/{stocks,indices,sp500}.json (tracked generated runtime inputs)
+                 |
+                 v
+src/data/services/preset-service.ts -> BUNDLED_PRESETS
+                 |
+                 +---- runtime custom-data-service.ts / IndexedDB override
+                        (separate; not managed by this pipeline)
+```
+
+The refresh process is a developer/maintainer tool, not a browser feature and not a build hook that silently rewrites source files. Vite's JSON import behavior makes the existing `src/data/presets/*.json` location appropriate for generated app inputs; Vite documents `public/` as copied to the output unchanged, so raw source files should not be stored there or they may be shipped as static assets. Keep the application importing only generated presets.
+
+### Suggested Repository Boundaries
+
+| Area | Recommended location | Responsibility |
+|---|---|---|
+| Reviewed source snapshots | `data/historical-presets/sources/<source-or-dataset>/<snapshot-id>/` | Exact reviewed CSV/JSON input bytes, committed and not edited in place. Snapshot ID should be a stable label/as-of value, not a generation timestamp. |
+| Source context | `data/historical-presets/README.md` and snapshot-local metadata | Source URL/citation, access/retrieval date, license/redistribution terms, asset coverage, whether values are price return or total return, currency, annual-period convention, human review disposition, and known caveats. |
+| Corrections | `data/historical-presets/corrections.json` or documented source-specific correction files | Only explicitly reviewed exceptions; each correction records symbol/period, chosen value, rationale, cited evidence, and reviewer. Never silently patch generated JSON. |
+| Pipeline | `scripts/presets/` | Pure parsing, normalization, validation, deterministic rendering, comparison report, manifest, and gated apply. Existing project scripts use ESM JavaScript; a small Node ESM CLI can run without adding a runtime dependency. Reuse Papa Parse where useful rather than implementing CSV quoting rules with string splitting. |
+| Candidate output | OS temp directory or ignored `.tmp/preset-refresh/<run-id>/` | Full generated files and manifest used for review. It is disposable and never the app's source of truth. |
+| Runtime generated output | `src/data/presets/` | Existing bundled JSON contract imported by `preset-service.ts`; generated and committed, not hand-edited. |
+| Manifest | `data/historical-presets/manifests/<snapshot-id>.json` | Versioned, non-overwritten record mapping source snapshot hashes and declared methodology/tool version to output-file hashes and review status. Avoid self-hashing the manifest. |
+| Tests | `src/data/presets/__tests__/` (matches the current Vitest `src/**/*.{test,spec}.{ts,tsx}` include) | Fixed fixture tests for parse/validation, output determinism, manifests, and classification of new/changed/removed assets. |
+
+Keep the source archive distinct from `.planning/quick/021-refresh-preset-asset-data/artifacts/`: that quick-task folder records a one-off investigation, and `fetch_returns.mjs` explicitly calls Yahoo endpoints and embeds a machine-specific repository path. Treat those artifacts as historical evidence only; do not promote that fetch script into the no-API refresh pipeline. The adjacent `rebuild_presets.mjs` is also a prototype rather than a safe reusable boundary: its `--apply` path writes directly to tracked files, and its dry-run output depends on the caller's working directory.
+
+### Component Boundaries
+
+| Component | Responsibility | Communicates with |
+|---|---|---|
+| Snapshot selector | Requires explicit input paths or a named committed snapshot; rejects missing and ambiguous inputs. | CLI, source archive |
+| CSV/JSON parser | Parses supplied bytes into untrusted intermediate records; reports all parse errors with source row/field. | Papa Parse / JSON parser, normalizer |
+| Normalizer | Canonicalizes symbol case, field names, periods, return units, order, and schema version using explicit rules. | Parser, validator |
+| Domain validator | Enforces schema and financial-series invariants; distinguishes blocking errors from review warnings. | Normalized records, candidate builder |
+| Candidate builder | Produces all expected preset files in a staging directory with stable order/format. Pure input -> output. | Validator, output renderer |
+| Comparator/reporter | Reports all new, changed, unchanged, and missing symbols, per-period differences, coverage changes, metadata changes, and warnings. | Existing tracked presets, candidate output |
+| Provenance writer | Records exact raw-byte hashes, reviewed source details, transformation version, corrections, and output hashes. No current-time field. | Snapshot metadata, candidate output |
+| Apply adapter | After validation and preview, replaces only allowlisted generated targets; retains pre-apply bytes for recovery and does not commit or stage Git changes. | Candidate outputs, `src/data/presets/` |
+| Runtime preset service | Imports generated JSON for synchronous app use and merges/selects presets; handles user custom override priority separately. | Generated JSON, IndexedDB service |
+
+### Data Flow and Apply Boundary
+
+1. A maintainer supplies a committed, reviewed CSV or JSON snapshot and its metadata. The command accepts a file or explicit snapshot identifier; it does not discover "latest" files by directory order.
+2. Parsing creates intermediate values only. Normalization has an explicit schema/version and declared policies (calendar-year boundaries, total-return semantics, rounding precision). No API fetch, web fallback, implicit FX conversion, guessed mapping, or dates based on current time.
+3. Validation fails the run on malformed records, conflicting duplicates, non-finite values, unknown classes, duplicate normalized symbols/periods, inconsistent declared and observed date ranges, or missing required outputs. Suspicious but potentially valid market observations—large return, gaps, partial first year—are surfaced as warnings requiring review, not silently repaired.
+4. Generation writes every expected output to a fresh staging directory. It should include the complete candidate output set even for files that appear unchanged, then compare candidates against the current tracked output.
+5. Preview prints a stable summary and unified diff without writing to `src/data/presets/`. The report separates **new symbol**, **changed symbol**, **unchanged symbol**, and **symbol absent from input**; changed records also show added/removed periods and old/new values (percentage-point delta). No tolerance threshold may hide a change from the report.
+6. Apply is a distinct, opt-in action (`--apply`) on the exact same explicit snapshot and policy inputs. It repeats validation, requires no blocking errors and explicit approval of additions/metadata changes, stages all files first, then replaces only configured generated targets. It must not modify user IndexedDB, source snapshots, unrelated files, or Git index/history.
+7. CI/local verification runs fixture tests, application tests, and production builds against the updated imports. Review and commit the source, manifest, and generated files together.
+
+Per-file rename after writing a temporary file is a useful protection against truncated individual output writes (Node documents filesystem write and rename APIs); it is **not** a transaction across three target files. For a multi-file refresh, preserve pre-apply copies and restore them if a replacement fails; use the reviewed Git commit as the durable cross-file rollback mechanism.
+
+## Reproducibility and Provenance
+
+- **Inputs are immutable snapshots.** Preserve exact original bytes, stable file names, documented attribution/license, and human-reviewed source facts. Do not overwrite yesterday's file with a newer export; add a new snapshot.
+- **No fetch stage.** The refresh command has no `fetch`, HTTP client, or provider credentials. Data acquisition and source review happen before the command. This is both the requested boundary and an important reproducibility property: same checked-in inputs can be rebuilt offline.
+- **Hash raw bytes and normalized content separately.** Record SHA-256 of each exact input file, then a digest of the normalized logical records (canonical JSON such as RFC 8785 is appropriate for hashing). Also hash each generated preset output. Keep pretty-printed application JSON readable; hashing canonical logical data and rendering readable JSON are separate concerns.
+- **Pin transformation semantics.** Manifest captures transformer/schema version, return calculation and period convention, units (decimal, not percent), rounding, inclusion/exclusion rules, selected source snapshot identifiers, and correction list. Changes to methodology increment a version or change a checked-in config that can be reviewed.
+- **Deterministic order and bytes.** Sort file names, symbols, and periods explicitly; fix indentation, newline convention, key insertion order, decimal precision, and negative-zero treatment. Avoid locale-sensitive sorting/formatting, filesystem enumeration order, random IDs, machine paths, generated timestamps, and environment-dependent calculations. Same declared inputs, options, and tool version must produce byte-identical outputs and manifest.
+- **No self-referential manifest fields.** Record output hashes inside a manifest that itself is not included in its own hash list; if a manifest digest is needed externally, calculate it after generation.
+- **Version the whole evidence chain.** Commit snapshots, metadata/review decision, corrections, manifest, generated outputs, and pipeline tests together. Never check in only the derived preset values without a traceable source snapshot.
+- **Keep generated files single-owner.** Any manual intervention belongs in a correction input with explanation and evidence; regeneration should reproduce it exactly. This prevents a later rebuild from erasing unexplained edits.
+
+The RFC Editor's RFC 4180 describes common CSV conventions (including quoting and records); use a compliant parser and retain row-level diagnostics. RFC 8785 explains deterministic JSON canonicalization for repeatable hashing. These standards support format and hash handling, but do not establish the financial correctness or licensing of any historical-return source.
+
+## Validation and Change Review
+
+**Blocking checks:** required columns/fields; valid UTF-8 and parse result; symbols non-empty and normalized uniquely; allowed `assetClass` values from `src/data/services/preset-service.ts`; return values finite and stored as decimal fractions; periods unique, valid, and strictly sorted after normalization; no duplicate asset keys across output files; non-empty series; declared start/end agree with first/last records; target mapping is explicit; generated output re-parses to the app's `PresetData` shape.
+
+**Review warnings:** gaps in annual coverage, unusually extreme returns, partial calendar years, new or changed display names/classes, changed period boundaries, and returns near common corporate-action events. Require review rather than autocompletion. The pipeline cannot determine from syntax alone whether a source uses price-only returns, total returns with reinvested dividends, NAV vs market-price ETF returns, split-adjusted series, successor/ticker continuity, or survivorship selection. These are documented per-source methodology decisions, not generic numeric validation.
+
+**Change report:** include source snapshot/hash and run options; per-file output hashes; totals for new/changed/unchanged/absent assets; for every changed asset, metadata/range changes and the full period-by-period delta (not only differences above a threshold); all warnings and corrections. Default behavior for absent assets is **do not delete**: flag them and require an explicit, reviewed removal decision. An unrecognized incoming symbol is **new**, not an update; require an explicit target/output mapping and app-contract review before inclusion.
+
+The existing `src/data/validation/data-validator.ts` and `bulk-import-service.ts` validate user-uploaded app data; they are useful references for the `PresetData` format but include IndexedDB-aware behavior and do not replace a pure repository-side preset validator. Keep build-time validation independent from user storage and testable without a browser.
+
+## Patterns to Follow
+
+### Pure transform plus explicit I/O shell
+
+**What:** Isolate file reading/writing from pure functions that parse, normalize, validate, compare, and render supplied values. Pass source metadata and correction policy explicitly rather than reading global state.
+
+**When:** Any refresh; especially when a human needs to reproduce or review a past correction.
+
+```text
+read(explicitSnapshotPaths)
+  -> parse(bytes)
+  -> normalize(records, declaredPolicy)
+  -> validate(records, appSchema)
+  -> buildCandidate(records, fixedFormatter)
+  -> compare(candidate, checkedInPresets)
+  -> preview(report)
+  -> [explicit approval] apply(candidate)
+```
+
+### Generate then review
+
+**What:** Produce a complete temporary candidate tree and manifest; compare before applying. Keep preview and apply as separate explicit modes, with apply revalidating rather than trusting stale preview files.
+
+**When:** Updates, additions, or any changed correction/methodology. CI can run validation/preview in read-only mode.
+
+### Additive, reversible updates
+
+**What:** Distinguish add/update/remove. New symbols require mapping review; absent symbols never disappear automatically. Apply should touch only known generated targets, preserve preimages for failure recovery, and avoid staging/committing.
+
+**When:** Every production refresh. A dedicated Git commit makes code review and `git revert` straightforward.
+
+## Anti-Patterns to Avoid
+
+### Network fetching inside regeneration
+
+**What:** Refresh invokes Yahoo/provider endpoints, retries requests, or selects whatever remote response happens to be current.
+
+**Why bad:** Violates the reviewed-file/no-API boundary; makes rebuilds time- and network-dependent; can silently change data, source conventions, or access behavior. The existing historical `fetch_returns.mjs` demonstrates this exact coupling and embeds a host-specific path.
+
+**Instead:** Humans obtain/review external source data separately, commit the exact CSV/JSON snapshot and attribution, then run an offline transformer over explicit paths.
+
+### `--apply` writes directly while transforming
+
+**What:** Read one asset, immediately overwrite its target file, then continue to the next asset.
+
+**Why bad:** Mid-run parse/write failure leaves a mixed-generation dataset; a partially reviewed new asset can replace good data.
+
+**Instead:** Build and validate all candidate files in staging first; only then apply an allowlisted output set with per-file recovery and Git review.
+
+### Reusing user-import persistence for repository refresh
+
+**What:** Call `saveAllCustomData`, `resetAllToDefaults`, or other IndexedDB services as a way to "refresh" bundled presets.
+
+**Why bad:** Bundled presets are static imported modules; user custom records intentionally override them and are separate, user-owned data. Changing those records would silently change personal data and conflate shipped defaults with user imports.
+
+**Instead:** Refresh only tracked JSON files under `src/data/presets/`. Preserve `custom-data-service.ts` and the IndexedDB schema/records as a separate runtime concern.
+
+### Silent heuristic corrections or threshold-only diffs
+
+**What:** Drop suspicious years, keep only above-threshold differences, or override values without citing a source/reason.
+
+**Why bad:** Can hide a real data error or normalize away a legitimate convention difference; reviewer cannot reproduce the decision.
+
+**Instead:** Make all transformations explicit and deterministic; report complete period deltas and record any accepted exception as provenance-backed correction metadata.
+
+## Scalability Considerations
+
+| Concern | Current (≈45 assets × annual history) | 10× assets/history | 100× assets/history |
+|---|---|---|---|
+| Parsing/generation | One local Node process, simple in-memory records; no database or service needed. | Still stream or batch source files only if measured memory becomes material. | Profile before optimizing; deterministic per-file transforms can be chunked, but retain one complete validated candidate set before apply. |
+| Human review | Per-symbol summary plus full diff and explicit correction notes. | Group diffs by asset class/source, retain machine-readable manifest and stable report. | Add review tooling/report filters, not unattended model/remote approvals. |
+| Runtime bundle | Existing static JSON imports; validate bundle/build size after changes. | Consider splitting imports only if measured build or startup costs require it. | Re-evaluate data delivery architecture with offline/PWA and portable-build constraints before any migration. |
+| Provenance | A handful of snapshot files and one manifest. | Manifest per refresh snapshot or versioned records for manageable history. | Content-addressed snapshots may reduce duplication; preserve attribution and review history. |
+
+## Repo-Specific Implications
+
+- `src/data/services/preset-service.ts` statically imports `stocks.json` and `indices.json` and constructs `BUNDLED_PRESETS`; generated files must retain this structure and asset class contract.
+- `src/data/presets/sp500.json` duplicates SPY, which is already present in `stocks.json`, and is not imported by `preset-service.ts`. Before generation targets include or omit `sp500.json`, audit all imports/build references and make its status an explicit decision; do not implicitly delete or regenerate a duplicate artifact.
+- `src/data/schemas/custom-market-data.ts`, `src/data/services/custom-data-service.ts`, and `src/data/db.ts` define the separate user override lane. Leave it untouched by the source pipeline.
+- `src/data/validation/data-validator.ts` and `src/data/services/bulk-import-service.ts` already show CSV parsing conventions and schema handling. Reuse format semantics where appropriate, but do not import browser/IndexedDB behavior into a local script.
+- `package.json` already includes `papaparse`, `vitest`, TypeScript, and Vite. Avoid adding a database, web service, or new data framework for a repository-local annual dataset. The currently visible Vitest suite has calculation/simulation tests but no preset-refresh test suite; add fixture-based coverage with this pipeline rather than relying only on `npm run build`.
+- Vite docs describe imported JSON as a supported asset and the `public/` directory as copied unchanged into output. Keep reviewed source snapshots outside `src/` and `public/`; use only generated runtime files in static imports.
+
+## Sources
+
+### Repository evidence (directly inspected)
+
+- `src/data/presets/stocks.json`, `src/data/presets/indices.json`, `src/data/presets/sp500.json` — current generated-looking JSON shape and period records.
+- `src/data/services/preset-service.ts` — static preset imports, runtime map, custom-first effective-data fallback.
+- `src/data/services/custom-data-service.ts`, `src/data/schemas/custom-market-data.ts`, `src/data/db.ts` — user-owned IndexedDB override storage boundary.
+- `src/data/services/bulk-import-service.ts`, `src/data/validation/data-validator.ts` — current CSV/JSON parsing and validation patterns.
+- `.planning/quick/021-refresh-preset-asset-data/STATE.md`, `.planning/quick/021-refresh-preset-asset-data/artifacts/fetch_returns.mjs`, `.planning/quick/021-refresh-preset-asset-data/artifacts/rebuild_presets.mjs` — past investigation and prototype limitations; not recommended as the new pipeline.
+- `package.json`, `vite.config.ts`, `vitest.config.ts`, `tsconfig.json` — existing runtime/development toolchain.
+
+### Authoritative references (provider-classified LOW; cite for narrow technical context)
+
+- Vite, [Features: JSON](https://vite.dev/guide/features.html) and [Static Asset Handling](https://vite.dev/guide/assets.html) — Vite JSON imports and static asset treatment.
+- Node.js, [File system](https://nodejs.org/api/fs.html) — filesystem write/rename APIs; rename is not a transaction across multiple target files.
+- IETF RFC Editor, [RFC 4180: Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180) — CSV records, fields, quoting conventions.
+- IETF RFC Editor, [RFC 8785: JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785) — invariant JSON representation for hashing/signing.
+- Git, [git-diff](https://git-scm.com/docs/git-diff) and [git-revert](https://git-scm.com/docs/git-revert) — reviewable comparisons and commit-based undo.
+- Vitest, [Guide](https://vitest.dev/guide/) — test organization and assertions for fixed-fixture determinism/validation checks.
+
+---
+
+# Legacy Application Architecture Research: eVelo Monte Carlo Simulation
+
+**Original research date:** 2026-01-17
+**Scope:** General application/simulation architecture; retained below as prior context, not as the refresh-pipeline recommendation.
 
 ## Executive Summary
 

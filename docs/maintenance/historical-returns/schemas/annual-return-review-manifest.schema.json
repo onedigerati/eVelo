@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evelo:annual-return-review-manifest",
+  "title": "Adjacent reviewed annual-return snapshot manifest",
+  "description": "Explicitly selected SOURCE_FILENAME.manifest.json adjacent to its CSV/JSON snapshot. SHA-256 binds exact original bytes, not normalized records. Claims require reviewer/source evidence; schema checks alone do not establish truth. Complete bundled-set coverage is the default policy; a subset must be explicitly declared. Completed calendar years only; no silent repair or inference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceAttribution", "snapshotFilename", "snapshotSha256", "methodology",
+    "coveredCalendarYears", "assetScope", "reviewer", "reviewDate", "exceptions"
+  ],
+  "properties": {
+    "sourceAttribution": {
+      "$ref": "#/$defs/descriptiveText",
+      "description": "Source owner/provider and durable reference identifying the reviewed snapshot."
+    },
+    "snapshotFilename": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\\\r\\n]+\\.(csv|json)$"
+    },
+    "snapshotSha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Lowercase SHA-256 of the exact selected snapshot bytes."
+    },
+    "methodology": { "$ref": "#/$defs/methodology" },
+    "coveredCalendarYears": { "$ref": "#/$defs/years" },
+    "assetScope": {
+      "description": "Complete is the policy default, never a synthesized value. Subset requires symbols and rationale.",
+      "oneOf": [
+        { "$ref": "#/$defs/completeScope" },
+        { "$ref": "#/$defs/subsetScope" }
+      ]
+    },
+    "reviewer": { "$ref": "#/$defs/provenanceText" },
+    "reviewDate": { "type": "string", "format": "date" },
+    "exceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exception" }
+    },
+    "newSymbolPartitions": {
+      "type": "object",
+      "description": "Explicit reviewed destination for each source symbol absent from both bundled preset partitions.",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["stocks.json", "indices.json"]
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "provenanceText": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "^[\\s]*(?:[Tt][Bb][Dd]|[Tt][Oo] [Bb][Ee] [Dd][Ee][Tt][Ee][Rr][Mm][Ii][Nn][Ee][Dd]|[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn]/?[Aa]|[Nn][Oo][Nn][Ee]|[Nn][Uu][Ll][Ll]|[Nn][Oo][Tt] [Aa][Pp][Pp][Ll][Ii][Cc][Aa][Bb][Ll][Ee]|[Xx]|\\?|-)\\s*$"
+      },
+      "description": "Nonblank provenance text with common placeholder-only values rejected."
+    },
+    "statementText": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "^[\\s]*(?:[Tt][Bb][Dd]|[Tt][Oo] [Bb][Ee] [Dd][Ee][Tt][Ee][Rr][Mm][Ii][Nn][Ee][Dd]|[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn]/?[Aa]|[Nn][Oo][Nn][Ee]|[Nn][Uu][Ll][Ll]|[Nn][Oo][Tt] [Aa][Pp][Pp][Ll][Ii][Cc][Aa][Bb][Ll][Ee]|[Xx]|\\?|-)\\s*$"
+      },
+      "description": "Nonblank statement that rejects common placeholder-only values."
+    },
+    "descriptiveText": {
+      "type": "string",
+      "minLength": 12,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "^[\\s]*(?:[Tt][Bb][Dd]|[Tt][Oo] [Bb][Ee] [Dd][Ee][Tt][Ee][Rr][Mm][Ii][Nn][Ee][Dd]|[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn]/?[Aa]|[Nn][Oo][Nn][Ee]|[Nn][Uu][Ll][Ll]|[Nn][Oo][Tt] [Aa][Pp][Pp][Ll][Ii][Cc][Aa][Bb][Ll][Ee]|[Xx]|\\?|-)\\s*$"
+      },
+      "description": "Provenance explanation with common placeholder-only values rejected."
+    },
+    "symbols": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/text" }
+    },
+    "years": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1, "maximum": 9999 }
+    },
+    "methodology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["returnConvention", "dividendsReinvested", "endpoints", "units", "decimalPlaces", "etfReturnPolicy"],
+      "properties": {
+        "returnConvention": { "type": "string", "const": "calendar-year total returns" },
+        "dividendsReinvested": { "type": "boolean", "const": true },
+        "endpoints": { "type": "string", "const": "last-trading-day to last-trading-day" },
+        "units": { "type": "string", "const": "decimal" },
+        "decimalPlaces": { "type": "integer", "const": 4 },
+        "etfReturnPolicy": { "type": "string", "const": "ETF-level returns" }
+      }
+    },
+    "completeScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": { "mode": { "type": "string", "const": "complete", "default": "complete" } }
+    },
+    "subsetScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "symbols", "rationale"],
+      "properties": {
+        "mode": { "type": "string", "const": "subset" },
+        "symbols": { "$ref": "#/$defs/symbols" },
+        "rationale": { "$ref": "#/$defs/descriptiveText" }
+      }
+    },
+    "exception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbols", "acceptedValueOrPolicy", "rationale", "evidence"],
+      "anyOf": [
+        { "required": ["years"], "properties": { "years": { "$ref": "#/$defs/years" } } },
+        { "required": ["metadataField"], "properties": { "metadataField": { "$ref": "#/$defs/provenanceText" } } }
+      ],
+      "properties": {
+        "symbols": { "$ref": "#/$defs/symbols" },
+        "years": { "$ref": "#/$defs/years" },
+        "metadataField": { "$ref": "#/$defs/provenanceText" },
+        "acceptedValueOrPolicy": {
+          "$ref": "#/$defs/statementText",
+          "description": "Explicit decimal value or accepted policy as text; no inference or coercion."
+        },
+        "rationale": { "$ref": "#/$defs/descriptiveText" },
+        "evidence": {
+          "$ref": "#/$defs/descriptiveText",
+          "description": "Reference traceable to the selected reviewed snapshot, such as a source record or documented source evidence."
+        }
+      }
+    }
+  }
+}
