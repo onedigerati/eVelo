@@ -67,7 +67,10 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
+**Wave 1**
 - [ ] 03-01-PLAN.md — Freshness-gated explicit apply CLI and isolated end-to-end tracer
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 03-02-PLAN.md — Fail-closed apply checks, preset compatibility, and regression coverage
 - [ ] 03-03-PLAN.md — Tested maintainer runbook for review, apply, verification, and rollback
 
