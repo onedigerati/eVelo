@@ -38,3 +38,16 @@ The canonical GSD discussion-log template was inaccessible during this session.
 This human-reference log records the complete questions, selections, and
 alternatives from the saved discussion checkpoint without reading or bypassing
 the denied template.
+
+## Follow-up decisions
+
+Research exposed four implementation choices not settled in the initial
+discussion. The user accepted the recommended fail-closed/full-candidate
+defaults:
+
+| Question | Selected answer |
+|---|---|
+| How should genuinely new symbols be assigned to `stocks.json` or `indices.json`? | Require an explicit reviewed partition decision; never infer from `assetClass`. Preserve known memberships, including QQQ's duplicate. |
+| What should subset candidates contain? | Full merged preset files: overlay reviewed records and preserve all out-of-scope bundled records unchanged. |
+| How should a clean output directory be interpreted? | It may be absent (create it) or empty; reject any existing entries. |
+| How should subset scope claims be checked? | Require exact equality between declared symbols and source symbols, and between declared covered years and unique source years. |

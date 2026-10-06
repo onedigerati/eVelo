@@ -18,10 +18,12 @@ Validate explicitly selected, reviewed CSV/JSON annual-return snapshots and adja
 - Aggregate all independently detectable errors in deterministic order with file, row, symbol, year, and field context instead of stopping at the first error.
 - Preserve the existing app's `return < -0.9` and `return > 3.0` checks as nonblocking outlier warnings; do not reuse its looser importer as the maintenance validator. Objective contract and semantic violations remain blocking.
 - Warning-only inputs may produce candidate files and exit successfully, with warnings clearly identified in the report.
+- In subset mode, require the manifest's declared symbol set to exactly equal the source's symbol set, and require `coveredCalendarYears` to exactly equal the source's unique years.
 
 ### Coverage & change handling
 - Full bundled-asset coverage is the default; a subset is accepted only when explicitly declared and reported as required by Phase 1.
 - A valid new symbol not currently bundled is reported as an added asset and included in the candidate; Phase 2 never applies it.
+- Every genuinely new symbol requires an explicit reviewed partition decision for `stocks.json` or `indices.json`; never infer the destination from `assetClass`. Preserve known memberships, including the synchronized QQQ duplicate.
 - A newly completed year beyond the bundled end is reported as an added period and included in the candidate.
 - If a previously covered year disappears from an asset, report the removal, fail coverage, and create no candidate unless a future explicit removal policy is approved.
 - Reviewed name or asset-class changes are carried into the candidate and shown as explicit metadata changes. Never normalize or alter source metadata silently.
@@ -29,8 +31,9 @@ Validate explicitly selected, reviewed CSV/JSON annual-return snapshots and adja
 ### Candidate & report outputs
 - Require an explicit `--output-dir`; reject any output destination inside `src/data/presets`.
 - Candidate files mirror the bundled `stocks.json` and `indices.json` shapes and partitions. Preserve established file decisions, including the synchronized QQQ duplicate in `indices.json`.
+- For subset input, emit full merged preset candidates: overlay only reviewed in-scope records and preserve every out-of-scope bundled record unchanged.
 - Write deterministic candidate JSON files and a deterministic Markdown report; stdout contains a concise status and output paths.
-- Refuse to overwrite any existing target file; require a clean output directory.
+- Refuse to overwrite any existing target file; the output directory must be absent or empty. Create it when absent and reject it if it contains any entries.
 - Dry run remains non-mutating with respect to tracked presets and IndexedDB. Applying reviewed candidates belongs to Phase 3.
 
 ### the agent's Discretion
