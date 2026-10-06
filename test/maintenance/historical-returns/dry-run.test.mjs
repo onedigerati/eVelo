@@ -56,6 +56,12 @@ function run(args, cwd = root) {
   return spawnSync(process.execPath, [command, ...args], { cwd, encoding: 'utf8' });
 }
 
+function fails(result, diagnostic) {
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, diagnostic);
+  assert.equal(result.stdout, '', 'invalid arguments must not print a success summary');
+}
+
 test('reviewed CSV subset produces full merged candidates and a concise report path', t => {
   const f = fixture(t);
   const before = presetBytes();
@@ -92,4 +98,23 @@ test('reviewed CSV subset produces full merged candidates and a concise report p
   assert.match(report, /Changed: QQQ\/2025/);
   assert.doesNotMatch(report, new RegExp(f.dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.deepEqual(presetBytes(), before);
+});
+
+test('explicit CLI flags are required and duplicate or unknown flags are rejected', t => {
+  const f = fixture(t);
+  fails(run([]), /missing required --source/i);
+  fails(run(['--source', f.source, '--manifest', f.manifest]), /missing required --output-dir/i);
+  fails(run(['--source', f.source, '--manifest', f.manifest, '--output-dir']), /missing value for --output-dir/i);
+  fails(run([
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', f.output,
+    '--source', f.source,
+  ]), /duplicate flag: --source/i);
+  fails(run([
+    '--source', f.source,
+    '--manifest', f.manifest,
+    '--output-dir', f.output,
+    '--apply',
+  ]), /unknown argument: --apply/i);
 });
